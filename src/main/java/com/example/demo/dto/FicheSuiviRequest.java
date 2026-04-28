@@ -1,6 +1,6 @@
 package com.example.demo.dto;
 
-import com.example.demo.model.FicheSuivi.IndicateurPerformance;
+import com.example.demo.model.FicheSuivi.*;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
 import java.util.List;
@@ -8,62 +8,34 @@ import java.util.List;
 public class FicheSuiviRequest {
     @NotBlank
     private String ficheProjetId;
+    
+    private String numeroRapport;
+    private LocalDate dateRapport;
 
-    private LocalDate dateSuivi;
+    private FicheSignaletique ficheSignaletique;
+    private ConstatGlobal constatGlobal;
+    private List<TacheSuivi> tachesSuivi;
+    private PlanningActuel planningActuel;
 
-    private String avancement;
+    // Getters and Setters
+    public String getFicheProjetId() { return ficheProjetId; }
+    public void setFicheProjetId(String ficheProjetId) { this.ficheProjetId = ficheProjetId; }
 
-    private String problemesRencontres;
+    public String getNumeroRapport() { return numeroRapport; }
+    public void setNumeroRapport(String numeroRapport) { this.numeroRapport = numeroRapport; }
 
-    private String decisionsPrises;
+    public LocalDate getDateRapport() { return dateRapport; }
+    public void setDateRapport(LocalDate dateRapport) { this.dateRapport = dateRapport; }
 
-    private List<IndicateurPerformance> indicateurs;
+    public FicheSignaletique getFicheSignaletique() { return ficheSignaletique; }
+    public void setFicheSignaletique(FicheSignaletique ficheSignaletique) { this.ficheSignaletique = ficheSignaletique; }
 
-    public String getFicheProjetId() {
-        return ficheProjetId;
-    }
+    public ConstatGlobal getConstatGlobal() { return constatGlobal; }
+    public void setConstatGlobal(ConstatGlobal constatGlobal) { this.constatGlobal = constatGlobal; }
 
-    public void setFicheProjetId(String ficheProjetId) {
-        this.ficheProjetId = ficheProjetId;
-    }
+    public List<TacheSuivi> getTachesSuivi() { return tachesSuivi; }
+    public void setTachesSuivi(List<TacheSuivi> tachesSuivi) { this.tachesSuivi = tachesSuivi; }
 
-    public LocalDate getDateSuivi() {
-        return dateSuivi;
-    }
-
-    public void setDateSuivi(LocalDate dateSuivi) {
-        this.dateSuivi = dateSuivi;
-    }
-
-    public String getAvancement() {
-        return avancement;
-    }
-
-    public void setAvancement(String avancement) {
-        this.avancement = avancement;
-    }
-
-    public String getProblemesRencontres() {
-        return problemesRencontres;
-    }
-
-    public void setProblemesRencontres(String problemesRencontres) {
-        this.problemesRencontres = problemesRencontres;
-    }
-
-    public String getDecisionsPrises() {
-        return decisionsPrises;
-    }
-
-    public void setDecisionsPrises(String decisionsPrises) {
-        this.decisionsPrises = decisionsPrises;
-    }
-
-    public List<IndicateurPerformance> getIndicateurs() {
-        return indicateurs;
-    }
-
-    public void setIndicateurs(List<IndicateurPerformance> indicateurs) {
-        this.indicateurs = indicateurs;
-    }
+    public PlanningActuel getPlanningActuel() { return planningActuel; }
+    public void setPlanningActuel(PlanningActuel planningActuel) { this.planningActuel = planningActuel; }
 }

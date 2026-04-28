@@ -47,11 +47,12 @@ public class FicheSuiviService {
 
         FicheSuivi ficheSuivi = new FicheSuivi();
         ficheSuivi.setFicheProjetId(request.getFicheProjetId());
-        ficheSuivi.setDateSuivi(request.getDateSuivi());
-        ficheSuivi.setAvancement(request.getAvancement());
-        ficheSuivi.setProblemesRencontres(request.getProblemesRencontres());
-        ficheSuivi.setDecisionsPrises(request.getDecisionsPrises());
-        ficheSuivi.setIndicateurs(request.getIndicateurs());
+        ficheSuivi.setNumeroRapport(request.getNumeroRapport());
+        ficheSuivi.setDateRapport(request.getDateRapport());
+        ficheSuivi.setFicheSignaletique(request.getFicheSignaletique());
+        ficheSuivi.setConstatGlobal(request.getConstatGlobal());
+        ficheSuivi.setTachesSuivi(request.getTachesSuivi());
+        ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setChefProjetId(chefProjetId);
         ficheSuivi.setDateCreation(LocalDateTime.now());
 
@@ -67,11 +68,12 @@ public class FicheSuiviService {
             throw new RuntimeException("Unauthorized: You can only update your own follow-up files");
         }
 
-        ficheSuivi.setDateSuivi(request.getDateSuivi());
-        ficheSuivi.setAvancement(request.getAvancement());
-        ficheSuivi.setProblemesRencontres(request.getProblemesRencontres());
-        ficheSuivi.setDecisionsPrises(request.getDecisionsPrises());
-        ficheSuivi.setIndicateurs(request.getIndicateurs());
+        ficheSuivi.setNumeroRapport(request.getNumeroRapport());
+        ficheSuivi.setDateRapport(request.getDateRapport());
+        ficheSuivi.setFicheSignaletique(request.getFicheSignaletique());
+        ficheSuivi.setConstatGlobal(request.getConstatGlobal());
+        ficheSuivi.setTachesSuivi(request.getTachesSuivi());
+        ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setDateModification(LocalDateTime.now());
 
         return ficheSuiviRepository.save(ficheSuivi);

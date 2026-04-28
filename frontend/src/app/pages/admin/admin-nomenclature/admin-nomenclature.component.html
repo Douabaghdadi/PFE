@@ -1,0 +1,334 @@
+<div class="w-full px-6 py-6 mx-auto">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Gestion de la Nomenclature</h2>
+      <p class="text-gray-600 dark:text-gray-400">Gérez les types, statuts et catégories du système</p>
+    </div>
+    <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors" data-bs-toggle="modal" data-bs-target="#createNomenclatureModal">
+      <i class="fas fa-plus mr-2"></i>
+      Nouvelle Nomenclature
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white dark:bg-slate-850 rounded-2xl shadow-xl p-4 mb-6">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input type="text" 
+               [(ngModel)]="searchTerm" 
+               (input)="filterNomenclatures()"
+               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+               placeholder="🔍 Rechercher par code, libellé ou description...">
+      </div>
+      <select [(ngModel)]="filterType" 
+              (change)="filterNomenclatures()"
+              class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500">
+        <option value="">Tous les types</option>
+        @for (type of nomenclatureTypes; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      <p class="mt-4 text-gray-600 dark:text-gray-400">Chargement...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (errorMessage()) {
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      <i class="fas fa-exclamation-circle mr-2"></i>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Nomenclatures Table -->
+  @if (!isLoading() && !errorMessage()) {
+    <div class="bg-white dark:bg-slate-850 rounded-2xl shadow-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-slate-800">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Type
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Code
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Libellé
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Statut
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Date de création
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-slate-850 divide-y divide-gray-200 dark:divide-slate-700">
+            @for (nomenclature of filteredNomenclatures(); track nomenclature.id) {
+              <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="getTypeBadgeClass(nomenclature.type)" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                    {{ getTypeLabel(nomenclature.type) }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ nomenclature.code }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-gray-900 dark:text-white">{{ nomenclature.libelle }}</div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="text-sm text-gray-500 dark:text-gray-400">{{ nomenclature.description || '-' }}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  @if (nomenclature.actif) {
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                      <i class="fas fa-check-circle mr-1"></i>
+                      Actif
+                    </span>
+                  } @else {
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                      <i class="fas fa-times-circle mr-1"></i>
+                      Inactif
+                    </span>
+                  }
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {{ formatDate(nomenclature.dateCreation) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button 
+                    (click)="editNomenclature(nomenclature.id)" 
+                    class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors mr-2"
+                    title="Modifier">
+                    <i class="fas fa-edit mr-1"></i>
+                    Modifier
+                  </button>
+                  <button 
+                    (click)="deleteNomenclature(nomenclature.id)" 
+                    class="inline-flex items-center px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                    title="Supprimer">
+                    <i class="fas fa-trash mr-1"></i>
+                    Supprimer
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="bg-gray-50 dark:bg-slate-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-slate-700">
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+          <div>
+            <p class="text-sm text-gray-700 dark:text-gray-400">
+              Affichage de <span class="font-medium">{{ filteredNomenclatures().length }}</span> résultat(s)
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modal Créer/Modifier Nomenclature - Design Luxe -->
+<div class="modal fade" id="createNomenclatureModal" tabindex="-1" aria-labelledby="createNomenclatureModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px; overflow: hidden;">
+      
+      <!-- Header avec gradient luxueux -->
+      <div class="modal-header border-0 p-0 position-relative" style="background: linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%); height: 140px;">
+        <!-- Effet de brillance animé -->
+        <div class="position-absolute w-100 h-100" style="background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%); background-size: 200% 200%; animation: shimmer 3s infinite;"></div>
+        
+        <div class="position-relative w-100 d-flex align-items-center justify-content-between p-4">
+          <div class="d-flex align-items-center">
+            <div>
+              <h5 class="modal-title mb-1 fw-bold text-white" id="createNomenclatureModalLabel" style="font-size: 26px; text-shadow: 0 2px 8px rgba(0,0,0,0.2); letter-spacing: -0.5px;">
+                @if (isEditMode()) {
+                  Modifier une nomenclature
+                } @else {
+                  Créer une nomenclature
+                }
+              </h5>
+              <p class="mb-0 text-white" style="opacity: 0.95; font-size: 14px; text-shadow: 0 1px 4px rgba(0,0,0,0.1);">
+                <i class="fas fa-sparkles me-1"></i>
+                @if (isEditMode()) {
+                  Modifiez les informations de la nomenclature
+                } @else {
+                  Ajoutez une nouvelle entrée au système
+                }
+              </p>
+            </div>
+          </div>
+          <button type="button" class="btn-close btn-close-white opacity-100" data-bs-dismiss="modal" aria-label="Close" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); font-size: 14px;"></button>
+        </div>
+
+        <!-- Vague décorative -->
+        <svg class="position-absolute bottom-0 w-100" style="height: 30px; margin-bottom: -1px;" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" fill="white"></path>
+        </svg>
+      </div>
+
+      <div class="modal-body p-5" style="background: linear-gradient(to bottom, #ffffff, #f8f9fa);">
+        @if (createError()) {
+          <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 16px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); animation: fadeIn 0.3s ease;">
+            <div class="d-flex align-items-center">
+              <div class="rounded-circle bg-white p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="fas fa-exclamation-triangle text-danger fs-5"></i>
+              </div>
+              <div class="flex-grow-1">
+                <strong class="d-block mb-1">Erreur de validation</strong>
+                <span>{{ createError() }}</span>
+              </div>
+            </div>
+            <button type="button" class="btn-close" (click)="createError.set('')"></button>
+          </div>
+        }
+
+        <form #createForm="ngForm">
+          <!-- Type -->
+          <div class="mb-4 position-relative">
+            <label for="newType" class="form-label fw-bold mb-3" style="color: #1f2937; font-size: 15px; letter-spacing: -0.2px;">
+              <i class="fas fa-tag me-2" style="color: #10b981;"></i>
+              Type
+              <span class="text-danger ms-1">*</span>
+            </label>
+            <select 
+              class="form-select luxury-input form-control-lg" 
+              id="newType" 
+              [(ngModel)]="newNomenclature.type"
+              name="type"
+              required
+              style="border-radius: 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;">
+              <option value="">Sélectionnez un type</option>
+              @for (type of nomenclatureTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Code -->
+          <div class="mb-4 position-relative">
+            <label for="newCode" class="form-label fw-bold mb-3" style="color: #1f2937; font-size: 15px; letter-spacing: -0.2px;">
+              <i class="fas fa-code me-2" style="color: #10b981;"></i>
+              Code
+              <span class="text-danger ms-1">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="form-control luxury-input form-control-lg" 
+              id="newCode" 
+              [(ngModel)]="newNomenclature.code"
+              name="code"
+              required
+              placeholder="Ex: STAT_EN_COURS"
+              style="border-radius: 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;">
+            <small class="form-text text-muted d-block mt-2 ms-1" style="font-size: 13px;">
+              <i class="fas fa-info-circle me-1" style="color: #10b981;"></i>
+              Code unique pour identifier la nomenclature
+            </small>
+          </div>
+
+          <!-- Libellé -->
+          <div class="mb-4 position-relative">
+            <label for="newLibelle" class="form-label fw-bold mb-3" style="color: #1f2937; font-size: 15px; letter-spacing: -0.2px;">
+              <i class="fas fa-text-width me-2" style="color: #10b981;"></i>
+              Libellé
+              <span class="text-danger ms-1">*</span>
+            </label>
+            <input 
+              type="text" 
+              class="form-control luxury-input form-control-lg" 
+              id="newLibelle" 
+              [(ngModel)]="newNomenclature.libelle"
+              name="libelle"
+              required
+              placeholder="Ex: En cours"
+              style="border-radius: 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;">
+          </div>
+
+          <!-- Description -->
+          <div class="mb-4 position-relative">
+            <label for="newDescription" class="form-label fw-bold mb-3" style="color: #1f2937; font-size: 15px; letter-spacing: -0.2px;">
+              <i class="fas fa-align-left me-2" style="color: #10b981;"></i>
+              Description
+            </label>
+            <textarea 
+              class="form-control luxury-input" 
+              id="newDescription" 
+              [(ngModel)]="newNomenclature.description"
+              name="description"
+              rows="3"
+              placeholder="Description optionnelle..."
+              style="border-radius: 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;"></textarea>
+          </div>
+
+          <!-- Actif -->
+          <div class="mb-4">
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="newActif" 
+                [(ngModel)]="newNomenclature.actif"
+                name="actif"
+                style="width: 48px; height: 24px; cursor: pointer;">
+              <label class="form-check-label fw-bold ms-2" for="newActif" style="color: #1f2937; font-size: 15px;">
+                <i class="fas fa-toggle-on me-2" style="color: #10b981;"></i>
+                Nomenclature active
+              </label>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Footer avec design luxe -->
+      <div class="modal-footer border-0 p-4" style="background: linear-gradient(to top, #f8f9fa, #ffffff);">
+        <button type="button" class="btn btn-lg px-5 me-2" data-bs-dismiss="modal" 
+                style="border-radius: 12px; border: 2px solid #e5e7eb; background: white; color: #6b7280; font-weight: 600; transition: all 0.3s ease;">
+          <i class="fas fa-times me-2"></i>
+          Annuler
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-lg luxury-btn px-5 position-relative" 
+          (click)="createNomenclature()"
+          [disabled]="isCreating() || !newNomenclature.type || !newNomenclature.code || !newNomenclature.libelle"
+          style="border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; font-weight: 600; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
+          @if (isCreating()) {
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+            @if (isEditMode()) {
+              Modification en cours...
+            } @else {
+              Création en cours...
+            }
+          } @else {
+            <i class="fas fa-magic me-2"></i>
+            @if (isEditMode()) {
+              Modifier la nomenclature
+            } @else {
+              Créer la nomenclature
+            }
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

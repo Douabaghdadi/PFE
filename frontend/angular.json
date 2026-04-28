@@ -26,6 +26,7 @@
               }
             ],
             "styles": [
+              "src/styles.css",
               "src/assets/scss/style.scss"
             ],
             "scripts": [

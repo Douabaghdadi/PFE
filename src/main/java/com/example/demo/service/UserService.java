@@ -133,7 +133,8 @@ public class UserService {
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                roles
+                roles,
+                user.getCreatedAt()
         );
     }
 }

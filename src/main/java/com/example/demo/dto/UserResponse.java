@@ -1,5 +1,6 @@
 package com.example.demo.dto;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 public class UserResponse {
@@ -7,12 +8,14 @@ public class UserResponse {
     private String username;
     private String email;
     private Set<String> roles;
+    private LocalDateTime createdAt;
 
-    public UserResponse(String id, String username, String email, Set<String> roles) {
+    public UserResponse(String id, String username, String email, Set<String> roles, LocalDateTime createdAt) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.roles = roles;
+        this.createdAt = createdAt;
     }
 
     public String getId() {
@@ -45,5 +48,13 @@ public class UserResponse {
 
     public void setRoles(Set<String> roles) {
         this.roles = roles;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

@@ -1,0 +1,611 @@
+<div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+  <div class="container mx-auto px-4" style="max-width: 1400px;">
+    
+    <!-- Header with Green Gradient -->
+    <div class="mb-8" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-4xl font-bold" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            @if (isEditMode()) {
+              <i class="fas fa-edit mr-3"></i>Modifier la Fiche de Suivi
+            } @else {
+              <i class="fas fa-file-alt mr-3"></i>Nouvelle Fiche de Suivi
+            }
+          </h1>
+          <p class="mt-2" style="color: rgba(255,255,255,0.9); font-size: 1.1rem;">
+            <i class="fas fa-chart-line mr-2"></i>Rapport de Suivi de Projet
+          </p>
+        </div>
+        <a routerLink="/projets" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center;">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Retour
+        </a>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    @if (errorMessage()) {
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+        <div style="display: flex; align-items: center; color: #991b1b;">
+          <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem;"></i>
+          <span style="font-weight: 600;">{{ errorMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+        <div style="display: flex; align-items: center; color: #065f46;">
+          <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>
+          <span style="font-weight: 600;">{{ successMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- Form Card with Luxury Design -->
+    <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden;">
+      
+      <!-- Tabs Navigation with Modern Design -->
+      <div style="background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%); border-bottom: 2px solid #e5e7eb; position: relative;">
+        <!-- Decorative top border -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #10b981 0%, #059669 50%, #10b981 100%);"></div>
+        
+        <nav class="flex space-x-2 px-8 py-2" style="overflow-x: auto;">
+          <button 
+            (click)="setTab('signaletique')"
+            [style.background]="currentTab() === 'signaletique' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'signaletique' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'signaletique' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-id-card mr-2"></i>
+            I. Fiche Signalétique
+          </button>
+          
+          <button 
+            (click)="setTab('constat')"
+            [style.background]="currentTab() === 'constat' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'constat' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'constat' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-clipboard-check mr-2"></i>
+            II. Constat Global
+          </button>
+          
+          <button 
+            (click)="setTab('taches')"
+            [style.background]="currentTab() === 'taches' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'taches' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'taches' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-tasks mr-2"></i>
+            III. État d'Avancement
+          </button>
+          
+          <button 
+            (click)="setTab('planning')"
+            [style.background]="currentTab() === 'planning' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'planning' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'planning' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-chart-gantt mr-2"></i>
+            IV. Planning Actuel
+          </button>
+        </nav>
+      </div>
+
+      <!-- Form Content -->
+      <form (ngSubmit)="onSubmit()" style="padding: 2.5rem;">
+        
+        <!-- Section I: Fiche Signalétique -->
+        @if (currentTab() === 'signaletique') {
+          <div class="space-y-6">
+            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                <i class="fas fa-id-card mr-3" style="color: #10b981;"></i>I. Fiche Signalétique
+              </h2>
+            </div>
+            
+            <!-- Info Rapport -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-hashtag mr-2" style="color: #10b981;"></i>Numéro de Rapport
+                </label>
+                <input type="text" [(ngModel)]="ficheSuivi.numeroRapport" name="numeroRapport"
+                       class="form-control" placeholder="Ex: CNI_Rapport_202401"
+                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-calendar mr-2" style="color: #10b981;"></i>Date du Rapport
+                </label>
+                <input type="date" [(ngModel)]="ficheSuivi.dateRapport" name="dateRapport"
+                       class="form-control" required
+                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+              </div>
+            </div>
+
+            <!-- Maître d'ouvrage / Maître d'œuvre -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-building mr-2" style="color: #10b981;"></i>Maître d'ouvrage
+                </label>
+                <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.maitreOuvrage" name="maitreOuvrage"
+                       class="form-control"
+                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+              </div>
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-hard-hat mr-2" style="color: #10b981;"></i>Maître d'œuvre
+                </label>
+                <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.maitreOeuvre" name="maitreOeuvre"
+                       class="form-control"
+                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+              </div>
+            </div>
+
+            <!-- Chef de projet -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
+              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-user-tie mr-2"></i>Chef de Projet
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Nom</label>
+                  <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.chefProjet.nom" name="chefProjetNom"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Suppléant</label>
+                  <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.chefProjet.suppleant" name="chefProjetSuppleant"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Équipe</label>
+                  <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.chefProjet.equipe" name="chefProjetEquipe"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Experts -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-users mr-2" style="color: #10b981;"></i>Experts
+              </label>
+              <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.experts" name="experts"
+                     class="form-control" placeholder="Liste des experts"
+                     style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+            </div>
+
+            <!-- Délais -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
+              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-clock mr-2"></i>Délais
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision)</label>
+                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutPrevision" name="dateDebutPrevision"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision)</label>
+                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinPrevision" name="dateFinPrevision"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Durée (Mois)</label>
+                  <input type="number" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dureeEnMois" name="dureeEnMois"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Réalisation)</label>
+                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutRealisation" name="dateDebutRealisation"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Réalisation)</label>
+                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinRealisation" name="dateFinRealisation"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart Conv. (jours)</label>
+                  <input type="number" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.ecartConventionnel" name="ecartConventionnel"
+                         class="form-control"
+                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Financier -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
+              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-dollar-sign mr-2"></i>Financier (Budget MDT)
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Prévision</label>
+                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetPrevision" name="budgetPrevision"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Réalisation</label>
+                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetRealisation" name="budgetRealisation"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart</label>
+                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.ecart" name="ecart"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+              </div>
+            </div>
+
+            <!-- Description du projet -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Description du Projet
+              </label>
+              <textarea [(ngModel)]="ficheSuivi.ficheSignaletique.descriptionProjet" name="descriptionProjet"
+                        rows="4" class="form-control"
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <!-- Caractéristiques Techniques -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Caractéristiques Techniques
+                </label>
+                <button type="button" (click)="addCaracteristique()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter
+                </button>
+              </div>
+              @for (carac of ficheSuivi.ficheSignaletique.caracteristiquesTechniques; track $index) {
+                <div class="flex gap-2 mb-2">
+                  <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.caracteristiquesTechniques[$index]" 
+                         [name]="'carac' + $index" class="form-control"
+                         style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;">
+                  <button type="button" (click)="removeCaracteristique($index)" 
+                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Section II: Constat Global -->
+        @if (currentTab() === 'constat') {
+          <div class="space-y-6">
+            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                <i class="fas fa-clipboard-check mr-3" style="color: #10b981;"></i>II. Constat Global
+              </h2>
+            </div>
+            
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-chart-line mr-2" style="color: #10b981;"></i>État d'Avancement
+              </label>
+              <textarea [(ngModel)]="ficheSuivi.constatGlobal.etatAvancement" name="etatAvancement"
+                        rows="3" class="form-control"
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-bullseye mr-2" style="color: #10b981;"></i>Objectif Principal
+              </label>
+              <textarea [(ngModel)]="ficheSuivi.constatGlobal.objectifPrincipal" name="objectifPrincipal"
+                        rows="3" class="form-control"
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <!-- Problèmes Rencontrés -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Les Problèmes Rencontrés
+                </label>
+                <button type="button" (click)="addProbleme()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter
+                </button>
+              </div>
+              @for (prob of ficheSuivi.constatGlobal.problemesRencontres; track $index) {
+                <div class="flex gap-2 mb-2">
+                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.problemesRencontres[$index]" 
+                           [name]="'prob' + $index" rows="2" class="form-control"
+                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
+                  <button type="button" (click)="removeProbleme($index)" 
+                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Principaux Risques -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-shield-alt mr-2" style="color: #ef4444;"></i>Les Principaux Risques
+                </label>
+                <button type="button" (click)="addRisque()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter
+                </button>
+              </div>
+              @for (risque of ficheSuivi.constatGlobal.principauxRisques; track $index) {
+                <div class="flex gap-2 mb-2">
+                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.principauxRisques[$index]" 
+                           [name]="'risque' + $index" rows="2" class="form-control"
+                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
+                  <button type="button" (click)="removeRisque($index)" 
+                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Recommandations -->
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-lightbulb mr-2" style="color: #10b981;"></i>Les Recommandations
+                </label>
+                <button type="button" (click)="addRecommandation()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter
+                </button>
+              </div>
+              @for (reco of ficheSuivi.constatGlobal.recommandations; track $index) {
+                <div class="flex gap-2 mb-2">
+                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.recommandations[$index]" 
+                           [name]="'reco' + $index" rows="2" class="form-control"
+                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
+                  <button type="button" (click)="removeRecommandation($index)" 
+                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Section III: Tâches de Suivi -->
+        @if (currentTab() === 'taches') {
+          <div class="space-y-4">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="display: flex; align-items: center;">
+                <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+                <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                  <i class="fas fa-tasks mr-3" style="color: #10b981;"></i>III. État d'Avancement Global du Projet
+                </h2>
+              </div>
+              <button type="button" (click)="addTache()" 
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-plus mr-2"></i> Ajouter une Tâche
+              </button>
+            </div>
+
+            <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+              <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
+                <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                  <tr>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Code</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Sujet</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Livrable</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Assigné à</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Début</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Échéance</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">%</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Statut</th>
+                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (tache of ficheSuivi.tachesSuivi; track $index) {
+                    <tr style="transition: all 0.2s ease;">
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="text" [(ngModel)]="tache.code" [name]="'tacheCode' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="text" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="text" [(ngModel)]="tache.livrable" [name]="'tacheLivrable' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="text" [(ngModel)]="tache.assigneA" [name]="'tacheAssigne' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="date" [(ngModel)]="tache.debut" [name]="'tacheDebut' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="date" [(ngModel)]="tache.echeance" [name]="'tacheEcheance' + $index" 
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <input type="number" [(ngModel)]="tache.pourcentageRealise" [name]="'tachePourcent' + $index" 
+                               min="0" max="100" style="width: 70px; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                        <select [(ngModel)]="tache.statut" [name]="'tacheStatut' + $index" 
+                                style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                          <option value="En cours">En cours</option>
+                          <option value="Terminé">Terminé</option>
+                          <option value="En retard">En retard</option>
+                          <option value="Bloqué">Bloqué</option>
+                        </select>
+                      </td>
+                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
+                        <button type="button" (click)="removeTache($index)" 
+                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        <!-- Section IV: Planning Actuel -->
+        @if (currentTab() === 'planning') {
+          <div class="space-y-4">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="display: flex; align-items: center;">
+                <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+                <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                  <i class="fas fa-chart-gantt mr-3" style="color: #10b981;"></i>IV. Planning Actuel (Gantt)
+                </h2>
+              </div>
+              <button type="button" (click)="addTacheGantt()" 
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-plus mr-2"></i> Ajouter une Tâche
+              </button>
+            </div>
+
+            @for (tache of ficheSuivi.planningActuel.taches; track $index) {
+              <div style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #e5e7eb; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div>
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                      <i class="fas fa-tag mr-2" style="color: #10b981;"></i>Nom de la Tâche
+                    </label>
+                    <input type="text" [(ngModel)]="tache.nom" [name]="'ganttNom' + $index" 
+                           style="width: 100%; border: 2px solid #d1d5db; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                      <i class="fas fa-calendar-plus mr-2" style="color: #10b981;"></i>Date Début
+                    </label>
+                    <input type="date" [(ngModel)]="tache.dateDebut" [name]="'ganttDebut' + $index" 
+                           style="width: 100%; border: 2px solid #d1d5db; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                      <i class="fas fa-calendar-check mr-2" style="color: #10b981;"></i>Date Fin
+                    </label>
+                    <input type="date" [(ngModel)]="tache.dateFin" [name]="'ganttFin' + $index" 
+                           style="width: 100%; border: 2px solid #d1d5db; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                      <i class="fas fa-percentage mr-2" style="color: #10b981;"></i>Taux d'Avancement (%)
+                    </label>
+                    <input type="number" [(ngModel)]="tache.tauxAvancement" [name]="'ganttTaux' + $index" 
+                           min="0" max="100" style="width: 100%; border: 2px solid #d1d5db; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  </div>
+                </div>
+                <div class="mt-3 flex justify-end">
+                  <button type="button" (click)="removeTacheGantt($index)" 
+                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
+                    <i class="fas fa-trash mr-2"></i> Supprimer
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Form Actions with Modern Design -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb;">
+          <div style="display: flex; gap: 1rem;">
+            <a routerLink="/projets" 
+               style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border: 2px solid #d1d5db; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <i class="fas fa-times mr-2"></i>
+              Annuler
+            </a>
+            @if (!isFirstTab()) {
+              <button type="button" (click)="previousTab()" 
+                      style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Précédent
+              </button>
+            }
+          </div>
+          
+          <div style="display: flex; gap: 1rem;">
+            @if (!isLastTab()) {
+              <button type="button" (click)="nextTab()" 
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
+                Suivant
+                <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            } @else {
+              <button type="submit" [disabled]="isLoading()"
+                      [style.opacity]="isLoading() ? '0.6' : '1'"
+                      [style.cursor]="isLoading() ? 'not-allowed' : 'pointer'"
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
+                @if (isLoading()) {
+                  <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.5rem;"></span>
+                  Enregistrement...
+                } @else {
+                  <i class="fas fa-save mr-2"></i>
+                  Enregistrer la Fiche de Suivi
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+}
+
+a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+}
+
+table tbody tr:hover {
+  background-color: #f9fafb;
+}
+</style>
