@@ -11,6 +11,7 @@ import { AdminLayoutComponent } from './components/admin-layout/admin-layout.com
 import { AdminDashboardComponent } from './pages/admin/admin-dashboard/admin-dashboard.component';
 import { AdminUsersComponent } from './pages/admin/admin-users/admin-users.component';
 import { AdminNomenclatureComponent } from './pages/admin/admin-nomenclature/admin-nomenclature.component';
+import { AdminProfileComponent } from './pages/admin/admin-profile/admin-profile.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -31,6 +32,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: AdminDashboardComponent },
       { path: 'users', component: AdminUsersComponent },
       { path: 'nomenclature', component: AdminNomenclatureComponent },
+      { path: 'profile', component: AdminProfileComponent },
     ]
   },
   { path: '**', redirectTo: '' }

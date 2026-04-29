@@ -111,10 +111,11 @@
               <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
                   <i class="fas fa-hashtag mr-2" style="color: #10b981;"></i>Numéro de Rapport
+                  <span style="color: #6b7280; font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem;">(Généré automatiquement)</span>
                 </label>
-                <input type="text" [(ngModel)]="ficheSuivi.numeroRapport" name="numeroRapport"
-                       class="form-control" placeholder="Ex: CNI_Rapport_202401"
-                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+                <input type="text" [(ngModel)]="ficheSuivi.numeroRapport" name="numeroRapport" readonly
+                       class="form-control" placeholder="Généré automatiquement"
+                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease; background-color: #f9fafb; cursor: not-allowed;">
               </div>
               <div>
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">

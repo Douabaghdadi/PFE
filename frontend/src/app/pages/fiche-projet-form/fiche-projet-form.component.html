@@ -1,0 +1,631 @@
+
+<div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+  <div class="container mx-auto px-4" style="max-width: 1400px;">
+    
+    <!-- Header with Green Gradient - Modern Design -->
+    <div class="mb-8" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1.5rem; padding: 3rem 2.5rem; box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h1 style="color: white; font-size: 2.5rem; font-weight: 700; margin: 0; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+            Fiche de Projet
+          </h1>
+          <p style="color: rgba(255,255,255,0.95); font-size: 1.15rem; margin: 0; font-weight: 400;">
+            Système de Management de la Qualité
+          </p>
+        </div>
+        <a routerLink="/dashboard" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.4); padding: 0.875rem 1.75rem; border-radius: 0.875rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; font-size: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          Retour
+        </a>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    @if (errorMessage()) {
+      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+        <div style="display: flex; align-items: center; color: #991b1b;">
+          <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem;"></i>
+          <span style="font-weight: 600;">{{ errorMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    @if (successMessage()) {
+      <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+        <div style="display: flex; align-items: center; color: #065f46;">
+          <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>
+          <span style="font-weight: 600;">{{ successMessage() }}</span>
+        </div>
+      </div>
+    }
+
+    <!-- Form Card with Luxury Design -->
+    <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden;">
+      
+      <!-- Tabs Navigation with Modern Design -->
+      <div style="background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%); border-bottom: 2px solid #e5e7eb; position: relative;">
+        <!-- Decorative top border -->
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #10b981 0%, #059669 50%, #10b981 100%);"></div>
+        
+        <nav class="flex space-x-2 px-8 py-2" style="overflow-x: auto;">
+          <button 
+            (click)="setTab('identification')"
+            [style.background]="currentTab() === 'identification' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'identification' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'identification' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-id-card mr-2"></i>
+            I. Identification & Organisation
+          </button>
+          
+          <button 
+            (click)="setTab('estimations')"
+            [style.background]="currentTab() === 'estimations' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'estimations' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'estimations' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-calculator mr-2"></i>
+            II. Estimations & Planning
+          </button>
+          
+          <button 
+            (click)="setTab('risques')"
+            [style.background]="currentTab() === 'risques' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
+            [style.color]="currentTab() === 'risques' ? 'white' : '#6b7280'"
+            [style.box-shadow]="currentTab() === 'risques' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
+            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
+            <i class="fas fa-shield-alt mr-2"></i>
+            III. Risques & Validation
+          </button>
+        </nav>
+      </div>
+
+      <!-- Form Content -->
+      <form (ngSubmit)="onSubmit()" style="padding: 2.5rem;">
+        
+        <!-- En-tête Projet/Client -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+              <i class="fas fa-project-diagram mr-2" style="color: #10b981;"></i>Désignation Projet
+            </label>
+            <input type="text" [(ngModel)]="formData.designationProjet" name="designationProjet" 
+                   class="form-control" placeholder="Nom du projet"
+                   style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+              <i class="fas fa-user-tie mr-2" style="color: #10b981;"></i>Désignation Client
+            </label>
+            <input type="text" [(ngModel)]="formData.designationClient" name="designationClient" 
+                   class="form-control" placeholder="Nom du client"
+                   style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+          </div>
+        </div>
+
+        <!-- Section I: Identification & Organisation -->
+        @if (currentTab() === 'identification') {
+          <div class="space-y-6">
+            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                <i class="fas fa-id-card mr-3" style="color: #10b981;"></i>I. Identification & Organisation
+              </h2>
+            </div>
+
+            <!-- Identification -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
+              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-fingerprint mr-2"></i>Identification
+              </h3>
+              
+              <div class="mb-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  Nom du Projet <span style="color: #ef4444;">*</span>
+                </label>
+                <input type="text" [(ngModel)]="formData.nomProjet" name="nomProjet" required
+                       class="form-control" placeholder="Entrez le nom du projet"
+                       style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+              </div>
+
+              <div class="mb-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  Cadre contractuel Projet
+                </label>
+                <input type="text" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet"
+                       class="form-control" placeholder="Ex: convention en cours"
+                       style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+              </div>
+
+              <div class="mb-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
+                  Caractère Projet
+                </label>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="national" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">National</span>
+                  </label>
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="commune_administration" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">Commune à l'Administration</span>
+                  </label>
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="cni" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">CNI</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="mb-0">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
+                  Type Projet
+                </label>
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="nouveau" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">Nouveau</span>
+                  </label>
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="evolution" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">Evolution</span>
+                  </label>
+                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
+                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="refonte" style="margin-right: 0.5rem;">
+                    <span style="font-weight: 500;">Refonte</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Présentation -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Présentation
+              </label>
+              <textarea [(ngModel)]="formData.presentation" name="presentation" rows="5"
+                        class="form-control" placeholder="Décrivez la présentation du projet..."
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <!-- Historique -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-history mr-2" style="color: #10b981;"></i>Historique
+                <small style="color: #6b7280; font-weight: 400;">(En cas de refonte ou amélioration)</small>
+              </label>
+              <textarea [(ngModel)]="formData.historique" name="historique" rows="4"
+                        class="form-control" placeholder="Historique du projet..."
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <!-- Périmètre -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-border-all mr-2" style="color: #10b981;"></i>Périmètre
+              </label>
+              <textarea [(ngModel)]="formData.perimetre" name="perimetre" rows="4"
+                        class="form-control" placeholder="Définissez le périmètre du projet..."
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+            </div>
+
+            <!-- Organisation -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
+              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-sitemap mr-2"></i>Organisation et conduite de projet
+              </h3>
+              
+              <div class="mb-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  Maître d'ouvrage
+                </label>
+                <input type="text" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage"
+                       class="form-control" placeholder="Nom du maître d'ouvrage"
+                       style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+              </div>
+
+              <div class="mb-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  Maître d'œuvre
+                </label>
+                <input type="text" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre"
+                       class="form-control" placeholder="Nom du maître d'œuvre"
+                       style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+              </div>
+
+              <div class="mb-0">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                    <i class="fas fa-users mr-2" style="color: #1e40af;"></i>Équipe du projet
+                  </label>
+                  <button type="button" (click)="addMembreEquipe()" 
+                          style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
+                    <i class="fas fa-user-plus mr-2"></i> Ajouter un membre
+                  </button>
+                </div>
+
+                @if (formData.equipeProjet.length === 0) {
+                  <div style="background: #f8f9fa; border: 2px dashed #bfdbfe; border-radius: 0.75rem; padding: 2rem; text-align: center; color: #6b7280;">
+                    <i class="fas fa-users" style="font-size: 2rem; color: #bfdbfe; margin-bottom: 0.5rem;"></i>
+                    <p style="margin: 0; font-size: 0.95rem;">Aucun membre ajouté. Cliquez sur "Ajouter un membre" pour commencer.</p>
+                  </div>
+                }
+
+                @for (membre of formData.equipeProjet; track $index) {
+                  <div style="background: white; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
+                          <i class="fas fa-user mr-1" style="color: #3b82f6;"></i>Nom complet
+                        </label>
+                        <input type="text" [(ngModel)]="membre.nom" [name]="'membreNom' + $index" 
+                               placeholder="Ex: Ahmed Ben Ali"
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
+                      </div>
+                      <div>
+                        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
+                          <i class="fas fa-briefcase mr-1" style="color: #3b82f6;"></i>Rôle / Fonction
+                        </label>
+                        <input type="text" [(ngModel)]="membre.role" [name]="'membreRole' + $index" 
+                               placeholder="Ex: Développeur Backend"
+                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
+                      </div>
+                      <div style="display: flex; gap: 0.5rem; align-items: end;">
+                        <div style="flex: 1;">
+                          <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
+                            <i class="fas fa-envelope mr-1" style="color: #3b82f6;"></i>Email (optionnel)
+                          </label>
+                          <input type="email" [(ngModel)]="membre.email" [name]="'membreEmail' + $index" 
+                                 placeholder="email@exemple.com"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
+                        </div>
+                        <button type="button" (click)="removeMembreEquipe($index)" 
+                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); height: 38px;">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Section II: Estimations & Planning -->
+        @if (currentTab() === 'estimations') {
+          <div class="space-y-6">
+            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                <i class="fas fa-calculator mr-3" style="color: #10b981;"></i>II. Estimations & Planning
+              </h2>
+            </div>
+
+            <!-- Estimation des charges -->
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-tasks mr-2" style="color: #10b981;"></i>Estimation des charges
+                </label>
+                <button type="button" (click)="addCharge()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter une ligne
+                </button>
+              </div>
+
+              <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
+                  <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <tr>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Prestations</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Profil</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Période</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Charge/HM</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Livrables</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (charge of formData.estimationsCharges; track $index) {
+                      <tr style="transition: all 0.2s ease;">
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="charge.prestations" [name]="'prestations_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="charge.profil" [name]="'profil_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="charge.periode" [name]="'periode_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="charge.chargeHM" [name]="'chargeHM_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="charge.livrables" [name]="'livrables_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <button type="button" (click)="removeCharge($index)" 
+                                  style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                    @if (formData.estimationsCharges.length === 0) {
+                      <tr>
+                        <td colspan="6" style="padding: 2rem; text-align: center; color: #6b7280;">
+                          Aucune charge ajoutée. Cliquez sur "Ajouter une ligne" pour commencer.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mt-4">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Modalité de développement
+                  <span style="color: #6b7280; font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem;">(Sélectionnez le mode)</span>
+                </label>
+                <select [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement"
+                        style="width: 100%; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
+                  <option value="" disabled selected style="color: #9ca3af;">-- Sélectionnez une modalité --</option>
+                  <option value="I" style="color: #374151; font-weight: 500;">
+                    I - Interne (Développement en interne)
+                  </option>
+                  <option value="ST" style="color: #374151; font-weight: 500;">
+                    ST - Sous-traitance (Développement externalisé)
+                  </option>
+                  <option value="CO" style="color: #374151; font-weight: 500;">
+                    CO - Co-traitance (Développement mixte)
+                  </option>
+                </select>
+                <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
+                  <i class="fas fa-info-circle mr-1"></i>
+                  I: Interne | ST: Sous-traitance | CO: Co-traitance
+                </small>
+              </div>
+            </div>
+
+            <!-- Estimation du budget -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
+              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-dollar-sign mr-2"></i>Estimation du budget
+              </h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-user-tie mr-1" style="color: #10b981;"></i>CP (Chef de Projet)
+                  </label>
+                  <input type="number" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp" 
+                         (change)="calculateBudget()" placeholder="Ex: 50000"
+                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-code mr-1" style="color: #10b981;"></i>ID (Ingénieur Développeur)
+                  </label>
+                  <input type="number" [(ngModel)]="formData.estimationBudget.id" name="budget_id" 
+                         (change)="calculateBudget()" placeholder="Ex: 120000"
+                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-calculator mr-1" style="color: #10b981;"></i>Total (Calculé)
+                  </label>
+                  <input type="number" [(ngModel)]="formData.estimationBudget.total" name="budget_total" readonly
+                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f0fdf4; cursor: not-allowed; font-weight: 600; color: #065f46;">
+                </div>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                  <i class="fas fa-coins mr-1" style="color: #10b981;"></i>Budget (en MD/HT) - Calculé automatiquement
+                </label>
+                <input type="text" [(ngModel)]="formData.estimationBudget.budgetMDHT" name="budgetMDHT" readonly
+                       style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f0fdf4; cursor: not-allowed; font-weight: 600; color: #065f46; font-size: 1.1rem;">
+              </div>
+            </div>
+
+            <!-- Délais prévisionnels -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-clock mr-2" style="color: #10b981;"></i>Délais prévisionnels
+              </label>
+              <textarea [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels" rows="3"
+                        class="form-control" placeholder="Ex: Le délai prévisionnel du projet est de 6 mois (hors délais de validation)"
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+            </div>
+          </div>
+        }
+
+        <!-- Section III: Risques & Validation -->
+        @if (currentTab() === 'risques') {
+          <div class="space-y-6">
+            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
+              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
+              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
+                <i class="fas fa-shield-alt mr-3" style="color: #10b981;"></i>III. Risques & Validation
+              </h2>
+            </div>
+
+            <!-- Risques potentiels -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Risques potentiels
+              </label>
+              <textarea [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels" rows="4"
+                        class="form-control" placeholder="Ex: Convention en cours de discussion avec MTIC"
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+            </div>
+
+            <!-- Pré-requis -->
+            <div>
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                <i class="fas fa-list-check mr-2" style="color: #10b981;"></i>Pré-requis
+              </label>
+              <textarea [(ngModel)]="formData.preRequis" name="preRequis" rows="4"
+                        class="form-control" placeholder="Listez les pré-requis du projet..."
+                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+            </div>
+
+            <!-- Planning du projet -->
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
+                  <i class="fas fa-calendar-alt mr-2" style="color: #10b981;"></i>Planning du projet
+                </label>
+                <button type="button" (click)="addPlanning()" 
+                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                  <i class="fas fa-plus mr-2"></i> Ajouter une action
+                </button>
+              </div>
+
+              <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+                <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
+                  <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <tr>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 200px;">Actions</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 150px;">Profil des Intervenants</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 100px;">Charge H/M</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">1</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">2</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">3</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">4</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">5</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">6</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">7</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">8</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">9</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">10</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">11</th>
+                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">12</th>
+                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 80px;">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (planning of formData.planning; track $index) {
+                      <tr style="transition: all 0.2s ease;">
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="planning.action" [name]="'planning_action_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="planning.profilIntervenants" [name]="'planning_profil_' + $index" placeholder="CP, ID, CMIP, CMU"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
+                          <input type="text" [(ngModel)]="planning.chargeHM" [name]="'planning_charge_' + $index"
+                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['1']" [name]="'planning_mois1_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['2']" [name]="'planning_mois2_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['3']" [name]="'planning_mois3_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['4']" [name]="'planning_mois4_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['5']" [name]="'planning_mois5_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['6']" [name]="'planning_mois6_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['7']" [name]="'planning_mois7_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['8']" [name]="'planning_mois8_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['9']" [name]="'planning_mois9_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['10']" [name]="'planning_mois10_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['11']" [name]="'planning_mois11_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <input type="checkbox" [(ngModel)]="planning.mois['12']" [name]="'planning_mois12_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
+                        </td>
+                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
+                          <button type="button" (click)="removePlanning($index)" 
+                                  style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                    @if (formData.planning.length === 0) {
+                      <tr>
+                        <td colspan="16" style="padding: 2rem; text-align: center; color: #6b7280;">
+                          Aucune action planifiée. Cliquez sur "Ajouter une action" pour commencer.
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <p style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
+                <strong>(*)</strong> CP : Chef de Projet / ID : Ingénieur Développeur / CMIP : Comité de Pilotage / CMU : Comité utilisateurs
+              </p>
+            </div>
+          </div>
+        }
+
+        <!-- Form Actions with Modern Design -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb;">
+          <div style="display: flex; gap: 1rem;">
+            <a routerLink="/dashboard" 
+               style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border: 2px solid #d1d5db; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+              <i class="fas fa-times mr-2"></i>
+              Annuler
+            </a>
+            @if (!isFirstTab()) {
+              <button type="button" (click)="previousTab()" 
+                      style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Précédent
+              </button>
+            }
+          </div>
+          
+          <div style="display: flex; gap: 1rem;">
+            @if (!isLastTab()) {
+              <button type="button" (click)="nextTab()" 
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
+                Suivant
+                <i class="fas fa-arrow-right ml-2"></i>
+              </button>
+            } @else {
+              <button type="submit" [disabled]="isLoading()"
+                      [style.opacity]="isLoading() ? '0.6' : '1'"
+                      [style.cursor]="isLoading() ? 'not-allowed' : 'pointer'"
+                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
+                @if (isLoading()) {
+                  <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.5rem;"></span>
+                  Enregistrement...
+                } @else {
+                  <i class="fas fa-save mr-2"></i>
+                  Enregistrer la Fiche de Projet
+                }
+              </button>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

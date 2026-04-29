@@ -28,551 +28,42 @@ interface PlanningAction {
   mois: { [key: string]: boolean };
 }
 
+interface MembreEquipe {
+  nom: string;
+  role: string;
+  email?: string;
+}
+
 @Component({
   selector: 'app-fiche-projet-form',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="container-fluid py-4 bg-light min-vh-100">
-      <div class="row justify-content-center">
-        <div class="col-12 col-xl-10">
-          <div class="card shadow-lg border-0 rounded-4">
-            <!-- Header -->
-            <div class="card-header bg-gradient-primary text-white py-4 rounded-top-4">
-              <div class="d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div class="icon-circle bg-white bg-opacity-20 me-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 class="mb-0 fw-bold">Fiche de Projet</h4>
-                    <small class="opacity-75">Système de Management de la Qualité</small>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-light btn-sm rounded-pill" routerLink="/dashboard">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div class="card-body p-4 p-md-5">
-              <!-- Alerts -->
-              @if (errorMessage()) {
-                <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                  <div class="d-flex align-items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/>
-                      <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                    <span>{{ errorMessage() }}</span>
-                  </div>
-                </div>
-              }
-
-              @if (successMessage()) {
-                <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                  <div class="d-flex align-items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                      <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                    <span>{{ successMessage() }}</span>
-                  </div>
-                </div>
-              }
-
-              <!-- Stepper -->
-              <div class="stepper-wrapper mb-5">
-                <div class="stepper-container">
-                  <div class="stepper-item" [class.active]="currentStep() >= 1" [class.completed]="currentStep() > 1">
-                    <div class="stepper-circle">
-                      @if (currentStep() > 1) {
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      } @else {
-                        <span>1</span>
-                      }
-                    </div>
-                    <div class="stepper-label">Informations Générales</div>
-                    <div class="stepper-sublabel">Identification & Organisation</div>
-                  </div>
-                  
-                  <div class="stepper-line" [class.active]="currentStep() > 1"></div>
-                  
-                  <div class="stepper-item" [class.active]="currentStep() >= 2" [class.completed]="currentStep() > 2">
-                    <div class="stepper-circle">
-                      @if (currentStep() > 2) {
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      } @else {
-                        <span>2</span>
-                      }
-                    </div>
-                    <div class="stepper-label">Estimations & Planning</div>
-                    <div class="stepper-sublabel">Charges, Budget & Délais</div>
-                  </div>
-                  
-                  <div class="stepper-line" [class.active]="currentStep() > 2"></div>
-                  
-                  <div class="stepper-item" [class.active]="currentStep() >= 3">
-                    <div class="stepper-circle">
-                      <span>3</span>
-                    </div>
-                    <div class="stepper-label">Risques & Validation</div>
-                    <div class="stepper-sublabel">Pré-requis & Planning</div>
-                  </div>
-                </div>
-              </div>
-
-              <form (ngSubmit)="onSubmit()">
-                <!-- En-tête Projet/Client -->
-                <div class="row g-3 mb-4">
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                      </svg>
-                      Désignation Projet
-                    </label>
-                    <input type="text" class="form-control form-control-lg" [(ngModel)]="formData.designationProjet" name="designationProjet" placeholder="Nom du projet">
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                      </svg>
-                      Désignation Client
-                    </label>
-                    <input type="text" class="form-control form-control-lg" [(ngModel)]="formData.designationClient" name="designationClient" placeholder="Nom du client">
-                  </div>
-                </div>
-
-                <!-- STEP 1: Informations Générales -->
-                @if (currentStep() === 1) {
-                  <div class="step-content animate-fade-in">
-                    <!-- Section 1: Identification -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">1</span>
-                          Identification
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold">Nom du Projet <span class="text-danger">*</span></label>
-                          <input type="text" class="form-control" [(ngModel)]="formData.nomProjet" name="nomProjet" required placeholder="Entrez le nom du projet">
-                        </div>
-
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold">Cadre contractuel Projet</label>
-                          <input type="text" class="form-control" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet" placeholder="Ex: convention en cours">
-                        </div>
-
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold d-block mb-2">Caractère Projet</label>
-                          <div class="btn-group-custom">
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="national" id="national">
-                            <label class="btn btn-outline-primary" for="national">National</label>
-                            
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="commune_administration" id="commune">
-                            <label class="btn btn-outline-primary" for="commune">Commune à l'Administration</label>
-                            
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="cni" id="cni">
-                            <label class="btn btn-outline-primary" for="cni">CNI</label>
-                          </div>
-                        </div>
-
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold d-block mb-2">Type Projet</label>
-                          <div class="btn-group-custom">
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="nouveau" id="nouveau">
-                            <label class="btn btn-outline-success" for="nouveau">Nouveau</label>
-                            
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="evolution" id="evolution">
-                            <label class="btn btn-outline-success" for="evolution">Evolution</label>
-                            
-                            <input class="btn-check" type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="refonte" id="refonte">
-                            <label class="btn btn-outline-success" for="refonte">Refonte</label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Section 2: Présentation -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">2</span>
-                          Présentation
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="5" [(ngModel)]="formData.presentation" name="presentation" placeholder="Décrivez la présentation du projet..."></textarea>
-                      </div>
-                    </div>
-
-                    <!-- Section 3: Historique -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">3</span>
-                          Historique
-                        </h5>
-                        <small class="text-muted">(En cas de refonte ou amélioration)</small>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="4" [(ngModel)]="formData.historique" name="historique" placeholder="Historique du projet..."></textarea>
-                      </div>
-                    </div>
-
-                    <!-- Section 4: Périmètre -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">4</span>
-                          Périmètre
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="4" [(ngModel)]="formData.perimetre" name="perimetre" placeholder="Définissez le périmètre du projet..."></textarea>
-                      </div>
-                    </div>
-
-                    <!-- Section 5: Organisation -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">5</span>
-                          Organisation et conduite de projet
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold">Maître d'ouvrage</label>
-                          <input type="text" class="form-control" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage" placeholder="Nom du maître d'ouvrage">
-                        </div>
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold">Maître d'œuvre</label>
-                          <input type="text" class="form-control" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre" placeholder="Nom du maître d'œuvre">
-                        </div>
-                        <div class="mb-3">
-                          <label class="form-label fw-semibold">Equipe du projet</label>
-                          <textarea class="form-control" rows="3" [(ngModel)]="formData.equipeProjet" name="equipeProjet" placeholder="Décrivez l'équipe du projet..."></textarea>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                }
-
-                <!-- STEP 2: Estimations & Planning -->
-                @if (currentStep() === 2) {
-                  <div class="step-content animate-fade-in">
-                    <!-- Section 6: Estimation des charges -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">6</span>
-                          Estimation des charges
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <div class="table-responsive">
-                          <table class="table table-hover">
-                            <thead class="table-light">
-                              <tr>
-                                <th>Prestations</th>
-                                <th>Profil</th>
-                                <th>Période</th>
-                                <th>Charge/HM</th>
-                                <th>Livrables</th>
-                                <th style="width: 80px;">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              @for (charge of formData.estimationsCharges; track $index) {
-                                <tr>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="charge.prestations" [name]="'prestations_' + $index"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="charge.profil" [name]="'profil_' + $index"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="charge.periode" [name]="'periode_' + $index"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="charge.chargeHM" [name]="'chargeHM_' + $index"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="charge.livrables" [name]="'livrables_' + $index"></td>
-                                  <td>
-                                    <button type="button" class="btn btn-sm btn-danger" (click)="removeCharge($index)">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                      </svg>
-                                    </button>
-                                  </td>
-                                </tr>
-                              }
-                              @if (formData.estimationsCharges.length === 0) {
-                                <tr>
-                                  <td colspan="6" class="text-center text-muted py-4">
-                                    Aucune charge ajoutée. Cliquez sur "Ajouter une ligne" pour commencer.
-                                  </td>
-                                </tr>
-                              }
-                            </tbody>
-                          </table>
-                        </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addCharge()">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                          </svg>
-                          Ajouter une ligne
-                        </button>
-
-                        <div class="mt-4">
-                          <label class="form-label fw-semibold">Modalité de développement</label>
-                          <input type="text" class="form-control" [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement" placeholder="I: interne ; ST: Sous-traitance ; CO: Co-traitance">
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Section 7: Estimation du budget -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">7</span>
-                          Estimation du budget
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <div class="table-responsive">
-                          <table class="table table-bordered">
-                            <thead class="table-light">
-                              <tr>
-                                <th>Profils</th>
-                                <th>CP</th>
-                                <th>ID</th>
-                                <th>Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td class="fw-semibold">Charge par Profil (en H/M)</td>
-                                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp"></td>
-                                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="formData.estimationBudget.id" name="budget_id"></td>
-                                <td><input type="text" class="form-control form-control-sm" [(ngModel)]="formData.estimationBudget.total" name="budget_total"></td>
-                              </tr>
-                              <tr>
-                                <td class="fw-semibold">Budget (en MD/HT)</td>
-                                <td colspan="3"><input type="text" class="form-control form-control-sm" [(ngModel)]="formData.estimationBudget.budgetMDHT" name="budgetMDHT"></td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Section 8: Délais prévisionnels -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">8</span>
-                          Délais prévisionnels
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="3" [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels" placeholder="Ex: Le délai prévisionnel du projet est de 6 mois (hors délais de validation)"></textarea>
-                      </div>
-                    </div>
-                  </div>
-                }
-
-                <!-- STEP 3: Risques & Validation -->
-                @if (currentStep() === 3) {
-                  <div class="step-content animate-fade-in">
-                    <!-- Section 9: Risques potentiels -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">9</span>
-                          Risques potentiels
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="4" [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels" placeholder="Ex: Convention en cours de discussion avec MTIC"></textarea>
-                      </div>
-                    </div>
-
-                    <!-- Section 10: Pré-requis -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">10</span>
-                          Pré-requis
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <textarea class="form-control" rows="4" [(ngModel)]="formData.preRequis" name="preRequis" placeholder="Listez les pré-requis du projet..."></textarea>
-                      </div>
-                    </div>
-
-                    <!-- Section 11: Planning -->
-                    <div class="section-card mb-4">
-                      <div class="section-header">
-                        <h5 class="section-title">
-                          <span class="section-number">11</span>
-                          Planning du projet
-                        </h5>
-                      </div>
-                      <div class="section-body">
-                        <div class="table-responsive">
-                          <table class="table table-bordered table-hover">
-                            <thead class="table-light">
-                              <tr>
-                                <th style="min-width: 200px;">Actions</th>
-                                <th style="min-width: 150px;">Profil des Intervenants</th>
-                                <th style="min-width: 100px;">Charge H/M</th>
-                                <th style="width: 50px;" class="text-center">1</th>
-                                <th style="width: 50px;" class="text-center">2</th>
-                                <th style="width: 50px;" class="text-center">3</th>
-                                <th style="width: 50px;" class="text-center">4</th>
-                                <th style="width: 50px;" class="text-center">5</th>
-                                <th style="width: 50px;" class="text-center">6</th>
-                                <th style="width: 50px;" class="text-center">7</th>
-                                <th style="width: 50px;" class="text-center">8</th>
-                                <th style="width: 50px;" class="text-center">9</th>
-                                <th style="width: 50px;" class="text-center">10</th>
-                                <th style="width: 50px;" class="text-center">11</th>
-                                <th style="width: 50px;" class="text-center">12</th>
-                                <th style="width: 80px;">Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              @for (planning of formData.planning; track $index) {
-                                <tr>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="planning.action" [name]="'planning_action_' + $index"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="planning.profilIntervenants" [name]="'planning_profil_' + $index" placeholder="CP, ID, CMIP, CMU"></td>
-                                  <td><input type="text" class="form-control form-control-sm" [(ngModel)]="planning.chargeHM" [name]="'planning_charge_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['1']" [name]="'planning_mois1_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['2']" [name]="'planning_mois2_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['3']" [name]="'planning_mois3_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['4']" [name]="'planning_mois4_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['5']" [name]="'planning_mois5_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['6']" [name]="'planning_mois6_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['7']" [name]="'planning_mois7_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['8']" [name]="'planning_mois8_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['9']" [name]="'planning_mois9_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['10']" [name]="'planning_mois10_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['11']" [name]="'planning_mois11_' + $index"></td>
-                                  <td class="text-center"><input type="checkbox" class="form-check-input" [(ngModel)]="planning.mois['12']" [name]="'planning_mois12_' + $index"></td>
-                                  <td>
-                                    <button type="button" class="btn btn-sm btn-danger" (click)="removePlanning($index)">
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                      </svg>
-                                    </button>
-                                  </td>
-                                </tr>
-                              }
-                              @if (formData.planning.length === 0) {
-                                <tr>
-                                  <td colspan="16" class="text-center text-muted py-4">
-                                    Aucune action planifiée. Cliquez sur "Ajouter une action" pour commencer.
-                                  </td>
-                                </tr>
-                              }
-                            </tbody>
-                          </table>
-                        </div>
-                        <button type="button" class="btn btn-outline-primary btn-sm" (click)="addPlanning()">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                          </svg>
-                          Ajouter une action
-                        </button>
-                        <p class="text-muted small mt-3 mb-0">
-                          <strong>(*)</strong> CP : Chef de Projet / ID : Ingénieur Développeur / CMIP : Comité de Pilotage / CMU : Comité utilisateurs
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                }
-
-                <!-- Navigation Buttons -->
-                <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                  @if (currentStep() === 1) {
-                    <button type="button" class="btn btn-secondary px-4" routerLink="/dashboard">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
-                      Annuler
-                    </button>
-                    <button type="button" class="btn btn-primary px-5" (click)="nextStep()">
-                      Suivant
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ms-2">
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                        <polyline points="12 5 19 12 12 19"/>
-                      </svg>
-                    </button>
-                  }
-                  
-                  @if (currentStep() === 2) {
-                    <button type="button" class="btn btn-secondary px-4" (click)="previousStep()">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                        <line x1="19" y1="12" x2="5" y2="12"/>
-                        <polyline points="12 19 5 12 12 5"/>
-                      </svg>
-                      Précédent
-                    </button>
-                    <button type="button" class="btn btn-primary px-5" (click)="nextStep()">
-                      Suivant
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="ms-2">
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                        <polyline points="12 5 19 12 12 19"/>
-                      </svg>
-                    </button>
-                  }
-                  
-                  @if (currentStep() === 3) {
-                    <button type="button" class="btn btn-secondary px-4" (click)="previousStep()">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                        <line x1="19" y1="12" x2="5" y2="12"/>
-                        <polyline points="12 19 5 12 12 5"/>
-                      </svg>
-                      Précédent
-                    </button>
-                    <button type="submit" class="btn btn-success px-5" [disabled]="isLoading()">
-                      @if (isLoading()) {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        Enregistrement...
-                      } @else {
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                        Enregistrer
-                      }
-                    </button>
-                  }
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
+  templateUrl: './fiche-projet-form.component.html',
   styles: [`
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+    }
+
+    a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
+    }
+
+    table tbody tr:hover {
+      background-color: #f9fafb;
+    }
+
     /* General Styles */
     .bg-gradient-primary {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -910,6 +401,7 @@ export class FicheProjetFormComponent {
   successMessage = signal('');
   isLoading = signal(false);
   currentStep = signal(1);
+  currentTab = signal('identification');
 
   formData = {
     nomProjet: '',
@@ -923,7 +415,7 @@ export class FicheProjetFormComponent {
     perimetre: '',
     maitreOuvrage: '',
     maitreOeuvre: '',
-    equipeProjet: '',
+    equipeProjet: [] as MembreEquipe[],
     estimationsCharges: [] as EstimationCharge[],
     modaliteDeveloppement: '',
     estimationBudget: {
@@ -948,6 +440,37 @@ export class FicheProjetFormComponent {
     reference: '',
     dateDocument: null
   };
+
+  setTab(tab: string) {
+    this.currentTab.set(tab);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  nextTab() {
+    const tabs = ['identification', 'estimations', 'risques'];
+    const currentIndex = tabs.indexOf(this.currentTab());
+    if (currentIndex < tabs.length - 1) {
+      this.currentTab.set(tabs[currentIndex + 1]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  previousTab() {
+    const tabs = ['identification', 'estimations', 'risques'];
+    const currentIndex = tabs.indexOf(this.currentTab());
+    if (currentIndex > 0) {
+      this.currentTab.set(tabs[currentIndex - 1]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  isFirstTab(): boolean {
+    return this.currentTab() === 'identification';
+  }
+
+  isLastTab(): boolean {
+    return this.currentTab() === 'risques';
+  }
 
   nextStep() {
     if (this.currentStep() < 3) {
@@ -977,6 +500,18 @@ export class FicheProjetFormComponent {
     this.formData.estimationsCharges.splice(index, 1);
   }
 
+  addMembreEquipe() {
+    this.formData.equipeProjet.push({
+      nom: '',
+      role: '',
+      email: ''
+    });
+  }
+
+  removeMembreEquipe(index: number) {
+    this.formData.equipeProjet.splice(index, 1);
+  }
+
   addPlanning() {
     this.formData.planning.push({
       action: '',
@@ -992,6 +527,24 @@ export class FicheProjetFormComponent {
 
   removePlanning(index: number) {
     this.formData.planning.splice(index, 1);
+  }
+
+  /**
+   * Calcule automatiquement le Total et le Budget
+   * Total = CP + ID
+   * Budget (MD/HT) = Total / 1 000 000
+   */
+  calculateBudget() {
+    const cp = parseFloat(this.formData.estimationBudget.cp) || 0;
+    const id = parseFloat(this.formData.estimationBudget.id) || 0;
+    
+    // Calcul du total
+    const total = cp + id;
+    this.formData.estimationBudget.total = total.toString();
+    
+    // Calcul du budget en MD/HT (diviser par 1 000 000)
+    const budgetMDHT = total / 1000000;
+    this.formData.estimationBudget.budgetMDHT = budgetMDHT.toFixed(2);
   }
 
   onSubmit() {

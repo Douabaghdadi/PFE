@@ -55,7 +55,26 @@ export class FicheSuiviFormComponent implements OnInit {
       this.isEditMode.set(true);
       this.ficheSuiviId.set(id);
       this.loadFicheSuivi(id);
+    } else {
+      // Générer automatiquement le numéro de rapport pour une nouvelle fiche
+      this.generateNumeroRapport();
     }
+  }
+
+  /**
+   * Génère automatiquement un numéro de rapport au format: Rapport_YYYYMMDD_HHMMSS
+   * Exemple: Rapport_20240429_153045
+   */
+  generateNumeroRapport() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    this.ficheSuivi.numeroRapport = `Rapport_${year}${month}${day}_${hours}${minutes}${seconds}`;
   }
 
   loadFicheSuivi(id: string) {

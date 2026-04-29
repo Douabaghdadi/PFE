@@ -9,6 +9,10 @@ export interface User {
   email: string;
   roles: string[];
   token: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+  createdAt?: Date;
 }
 
 @Injectable({
@@ -73,5 +77,10 @@ export class AuthService {
       email,
       password
     });
+  }
+
+  setCurrentUser(user: User) {
+    this.currentUserSignal.set(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
   }
 }

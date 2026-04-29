@@ -21,233 +21,208 @@ interface FicheProjet {
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   template: `
-    <div class="container-fluid py-4 bg-light min-vh-100">
-      <div class="row">
-        <div class="col-12">
-          <!-- Header -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+      <div class="container mx-auto px-4" style="max-width: 1400px;">
+        
+        <!-- Header with Green Gradient -->
+        <div class="mb-8" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
+          <div class="flex items-center justify-between">
             <div>
-              <h2 class="fw-bold mb-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-primary">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                </svg>
-                Mes Projets
-              </h2>
-              <p class="text-muted mb-0">Gérez et consultez vos fiches de projet</p>
+              <h1 class="text-4xl font-bold" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <i class="fas fa-folder-open mr-3"></i>Mes Projets
+              </h1>
+              <p class="mt-2" style="color: rgba(255,255,255,0.9); font-size: 1.1rem;">
+                <i class="fas fa-tasks mr-2"></i>Gérez et consultez vos fiches de projet
+              </p>
             </div>
-            <a routerLink="/fiche-projet/new" class="btn btn-primary btn-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
+            <a routerLink="/fiche-projet/new" 
+               style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+              <i class="fas fa-plus mr-2"></i>
               Créer un projet
             </a>
           </div>
+        </div>
 
-          <!-- Filters -->
-          <div class="card shadow-sm border-0 rounded-4 mb-4">
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-md-4">
-                  <input type="text" class="form-control" placeholder="🔍 Rechercher un projet..." [(ngModel)]="searchTerm" (input)="filterProjets()">
+        <!-- Filters -->
+        <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div class="md:col-span-4">
+              <input type="text" 
+                     [(ngModel)]="searchTerm" 
+                     (input)="filterProjets()"
+                     placeholder="🔍 Rechercher un projet..." 
+                     style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease;"
+                     onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                     onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+            </div>
+            <div class="md:col-span-3">
+              <select [(ngModel)]="filterStatut" 
+                      (change)="filterProjets()"
+                      style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; background: white;"
+                      onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                      onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                <option value="">Tous les statuts</option>
+                <option value="EN_COURS">En cours</option>
+                <option value="TERMINE">Terminé</option>
+                <option value="EN_ATTENTE">En attente</option>
+                <option value="ANNULE">Annulé</option>
+              </select>
+            </div>
+            <div class="md:col-span-3">
+              <select [(ngModel)]="filterType" 
+                      (change)="filterProjets()"
+                      style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; background: white;"
+                      onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                      onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                <option value="">Tous les types</option>
+                <option value="nouveau">Nouveau</option>
+                <option value="evolution">Evolution</option>
+                <option value="refonte">Refonte</option>
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <button (click)="resetFilters()"
+                      style="width: 100%; padding: 0.75rem 1rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      onmouseover="this.style.background='#e5e7eb';"
+                      onmouseout="this.style.background='#f3f4f6';">
+                <i class="fas fa-redo mr-2"></i>Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        @if (isLoading()) {
+          <div class="text-center py-12">
+            <div style="display: inline-block; width: 3rem; height: 3rem; border: 4px solid #d1fae5; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <p class="mt-4" style="color: #065f46; font-weight: 600;">Chargement des projets...</p>
+          </div>
+        }
+
+        <!-- Error State -->
+        @if (errorMessage()) {
+          <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+            <div style="display: flex; align-items: center; color: #991b1b;">
+              <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem;"></i>
+              <span style="font-weight: 600;">{{ errorMessage() }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Empty State -->
+        @if (!isLoading() && filteredProjets().length === 0 && !errorMessage()) {
+          <div style="background: white; border-radius: 1.5rem; padding: 4rem 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
+            <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
+              <i class="fas fa-folder-open" style="font-size: 3rem; color: #10b981;"></i>
+            </div>
+            <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1rem;">
+              Aucun projet trouvé
+            </h3>
+            <p style="color: #6b7280; margin-bottom: 2rem; font-size: 1.1rem;">
+              Vous n'avez pas encore créé de projet. Commencez par créer votre première fiche de projet!
+            </p>
+            <a routerLink="/fiche-projet/new" 
+               style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+              <i class="fas fa-plus mr-2"></i>
+              Créer mon premier projet
+            </a>
+          </div>
+        }
+
+        <!-- Projects Grid -->
+        @if (!isLoading() && filteredProjets().length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @for (projet of filteredProjets(); track projet.id) {
+              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer;"
+                   onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
+                
+                <!-- Header -->
+                <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 1rem;">
+                  <div style="flex: 1;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">
+                      <i class="fas fa-project-diagram mr-2" style="color: #10b981;"></i>
+                      {{ projet.nomProjet || projet.designationProjet }}
+                    </h3>
+                    @if (projet.designationClient) {
+                      <p style="color: #6b7280; font-size: 0.875rem;">
+                        <i class="fas fa-user mr-1"></i>
+                        {{ projet.designationClient }}
+                      </p>
+                    }
+                  </div>
+                  <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 0.5rem; border-radius: 0.5rem;">
+                    <i class="fas fa-folder" style="color: #10b981; font-size: 1.25rem;"></i>
+                  </div>
                 </div>
-                <div class="col-md-3">
-                  <select class="form-select" [(ngModel)]="filterStatut" (change)="filterProjets()">
-                    <option value="">Tous les statuts</option>
-                    <option value="EN_COURS">En cours</option>
-                    <option value="TERMINE">Terminé</option>
-                    <option value="EN_ATTENTE">En attente</option>
-                    <option value="ANNULE">Annulé</option>
-                  </select>
+
+                <!-- Status Badge -->
+                <div style="margin-bottom: 1rem;">
+                  <span [style]="getStatutBadgeStyle(projet.statut)">
+                    {{ getStatutLabel(projet.statut) }}
+                  </span>
                 </div>
-                <div class="col-md-3">
-                  <select class="form-select" [(ngModel)]="filterType" (change)="filterProjets()">
-                    <option value="">Tous les types</option>
-                    <option value="nouveau">Nouveau</option>
-                    <option value="evolution">Evolution</option>
-                    <option value="refonte">Refonte</option>
-                  </select>
+
+                <!-- Info -->
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem;">
+                  @if (projet.typeProjet) {
+                    <div style="margin-bottom: 0.5rem;">
+                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Type:</span>
+                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getTypeLabel(projet.typeProjet) }}</span>
+                    </div>
+                  }
+                  @if (projet.caractereProjet) {
+                    <div style="margin-bottom: 0.5rem;">
+                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Caractère:</span>
+                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getCaractereLabel(projet.caractereProjet) }}</span>
+                    </div>
+                  }
+                  @if (projet.dateCreation) {
+                    <div>
+                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">
+                        <i class="fas fa-calendar mr-1"></i>Créé le:
+                      </span>
+                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ formatDate(projet.dateCreation) }}</span>
+                    </div>
+                  }
                 </div>
-                <div class="col-md-2">
-                  <button class="btn btn-outline-secondary w-100" (click)="resetFilters()">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
-                      <path d="M21 3v5h-5"/>
-                      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
-                      <path d="M3 21v-5h5"/>
-                    </svg>
-                    Réinitialiser
+
+                <!-- Actions -->
+                <div style="display: flex; gap: 0.5rem;">
+                  <button (click)="viewProjet(projet.id)" 
+                          style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+                    <i class="fas fa-eye mr-2"></i>Voir
+                  </button>
+                  <button (click)="editProjet(projet.id)" 
+                          style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
+                    <i class="fas fa-edit mr-2"></i>Modifier
+                  </button>
+                  <button (click)="deleteProjet(projet.id)" 
+                          title="Supprimer"
+                          style="min-width: 50px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-trash" style="font-size: 1.1rem;"></i>
                   </button>
                 </div>
               </div>
-            </div>
+            }
           </div>
-
-          <!-- Loading State -->
-          @if (isLoading()) {
-            <div class="text-center py-5">
-              <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Chargement...</span>
-              </div>
-              <p class="mt-3 text-muted">Chargement des projets...</p>
-            </div>
-          }
-
-          <!-- Error State -->
-          @if (errorMessage()) {
-            <div class="alert alert-danger rounded-4" role="alert">
-              <div class="d-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {{ errorMessage() }}
-              </div>
-            </div>
-          }
-
-          <!-- Empty State -->
-          @if (!isLoading() && filteredProjets().length === 0 && !errorMessage()) {
-            <div class="card shadow-sm border-0 rounded-4">
-              <div class="card-body text-center py-5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-muted mb-3">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <line x1="9" y1="15" x2="15" y2="15"/>
-                </svg>
-                <h5 class="fw-bold mb-2">Aucun projet trouvé</h5>
-                <p class="text-muted mb-4">Commencez par créer votre première fiche de projet</p>
-                <a routerLink="/fiche-projet/new" class="btn btn-primary">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2">
-                    <line x1="12" y1="5" x2="12" y2="19"/>
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  Créer un projet
-                </a>
-              </div>
-            </div>
-          }
-
-          <!-- Projects Grid -->
-          @if (!isLoading() && filteredProjets().length > 0) {
-            <div class="row g-4">
-              @for (projet of filteredProjets(); track projet.id) {
-                <div class="col-md-6 col-lg-4">
-                  <div class="card project-card h-100 shadow-sm border-0 rounded-4">
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div class="project-icon">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                          </svg>
-                        </div>
-                        <span class="badge" [class]="getStatutBadgeClass(projet.statut)">
-                          {{ getStatutLabel(projet.statut) }}
-                        </span>
-                      </div>
-
-                      <h5 class="card-title fw-bold mb-2">{{ projet.nomProjet || projet.designationProjet }}</h5>
-                      
-                      @if (projet.designationClient) {
-                        <p class="text-muted small mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                          </svg>
-                          {{ projet.designationClient }}
-                        </p>
-                      }
-
-                      <div class="d-flex gap-2 mb-3">
-                        @if (projet.typeProjet) {
-                          <span class="badge bg-light text-dark">
-                            {{ getTypeLabel(projet.typeProjet) }}
-                          </span>
-                        }
-                        @if (projet.caractereProjet) {
-                          <span class="badge bg-light text-dark">
-                            {{ getCaractereLabel(projet.caractereProjet) }}
-                          </span>
-                        }
-                      </div>
-
-                      @if (projet.dateCreation) {
-                        <p class="text-muted small mb-3">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
-                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="16" y1="2" x2="16" y2="6"/>
-                            <line x1="8" y1="2" x2="8" y2="6"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                          </svg>
-                          Créé le {{ formatDate(projet.dateCreation) }}
-                        </p>
-                      }
-
-                      <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary flex-fill" (click)="viewProjet(projet.id)">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                          </svg>
-                          Voir
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary" (click)="editProjet(projet.id)">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                          </svg>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" (click)="deleteProjet(projet.id)">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          }
-        </div>
+        }
       </div>
     </div>
+
+    <style>
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      button:hover, a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+      }
+    </style>
   `,
   styles: [`
-    .project-card {
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .project-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-    }
-
-    .project-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-    }
-
-    .badge {
-      font-weight: 500;
-      padding: 0.5rem 0.75rem;
-      border-radius: 0.5rem;
-    }
-
-    .rounded-4 {
-      border-radius: 1rem !important;
-    }
+    /* Styles are now inline in the template */
   `]
 })
 export class ProjetsListComponent implements OnInit {
@@ -335,6 +310,27 @@ export class ProjetsListComponent implements OnInit {
       case 'ANNULE': return 'bg-danger';
       default: return 'bg-secondary';
     }
+  }
+
+  getStatutBadgeStyle(statut: string): string {
+    let bgGradient = '';
+    switch (statut) {
+      case 'EN_COURS':
+        bgGradient = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+        break;
+      case 'TERMINE':
+        bgGradient = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+        break;
+      case 'EN_ATTENTE':
+        bgGradient = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        break;
+      case 'ANNULE':
+        bgGradient = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        break;
+      default:
+        bgGradient = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+    }
+    return `background: ${bgGradient}; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.15);`;
   }
 
   getStatutLabel(statut: string): string {
