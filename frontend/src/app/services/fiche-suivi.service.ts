@@ -22,7 +22,7 @@ export interface FicheSignaletique {
   chefProjet: ChefProjetInfo;
   suppleant?: string;
   equipe?: string;
-  experts?: string;
+  experts?: string[];
   delais: DelaisInfo;
   financier: FinancierInfo;
   descriptionProjet?: string;
@@ -94,8 +94,10 @@ export interface TacheGantt {
 })
 export class FicheSuiviService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8080/api/chef-projet/fiches-suivi';
+  private apiUrl = 'http://localhost:8081/api/chef-projet/fiches-suivi';
 
+  // L'intercepteur auth.interceptor ajoute automatiquement le token
+  // Pas besoin de le faire manuellement ici
   getAllFichesSuivi(): Observable<FicheSuivi[]> {
     return this.http.get<FicheSuivi[]>(this.apiUrl);
   }

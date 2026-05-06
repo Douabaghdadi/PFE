@@ -1,0 +1,81 @@
+<div class="container mx-auto px-4 py-8">
+  <!-- En-tête -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">🎯 Tableau de Bord - Pilote Qualité</h1>
+    <p class="text-gray-600">Vue d'ensemble de tous les projets et fiches de suivi</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <p class="mt-4 text-gray-600">Chargement des données...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+    <p class="text-red-800">{{ error }}</p>
+  </div>
+
+  <!-- Contenu -->
+  <div *ngIf="!loading && !error">
+    <!-- Statistiques -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div
+        *ngFor="let stat of stats"
+        class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+        (click)="navigateTo(stat.link)"
+      >
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-4xl">{{ stat.icon }}</div>
+            <div
+              class="w-12 h-12 rounded-full flex items-center justify-center"
+              [ngClass]="stat.color"
+            >
+              <span class="text-white text-xl font-bold">{{ stat.value }}</span>
+            </div>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900">{{ stat.title }}</h3>
+          <p class="text-sm text-gray-600 mt-1">Cliquez pour voir les détails</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-4">🚀 Actions Rapides</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button
+          (click)="navigateTo('/pilote-qualite/fiches-projet')"
+          class="flex items-center p-4 border-2 border-blue-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
+        >
+          <span class="text-3xl mr-4">📋</span>
+          <div class="text-left">
+            <p class="font-semibold text-gray-900">Consulter les Fiches Projet</p>
+            <p class="text-sm text-gray-600">Voir toutes les fiches projet</p>
+          </div>
+        </button>
+
+        <button
+          (click)="navigateTo('/pilote-qualite/fiches-suivi')"
+          class="flex items-center p-4 border-2 border-purple-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
+        >
+          <span class="text-3xl mr-4">📊</span>
+          <div class="text-left">
+            <p class="font-semibold text-gray-900">Consulter les Fiches de Suivi</p>
+            <p class="text-sm text-gray-600">Voir toutes les fiches de suivi</p>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Informations -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-blue-900 mb-2">ℹ️ Mode Consultation</h3>
+      <p class="text-blue-800">
+        En tant que Pilote Qualité, vous avez accès en <strong>lecture seule</strong> à toutes les fiches projet et de suivi.
+        Vous pouvez consulter, filtrer et analyser les données, mais vous ne pouvez pas les modifier.
+      </p>
+    </div>
+  </div>
+</div>

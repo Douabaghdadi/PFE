@@ -45,16 +45,20 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
+            logger.info("🔍 Validation du token JWT...");
             Jwts.parser().verifyWith(key()).build().parse(authToken);
+            logger.info("✅ Token JWT valide!");
             return true;
         } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
+            logger.error("❌ Token JWT malformé: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            logger.error("JWT token is expired: {}", e.getMessage());
+            logger.error("❌ Token JWT expiré: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            logger.error("JWT token is unsupported: {}", e.getMessage());
+            logger.error("❌ Token JWT non supporté: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            logger.error("JWT claims string is empty: {}", e.getMessage());
+            logger.error("❌ Claims JWT vide: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("❌ Erreur inattendue lors de la validation JWT: {}", e.getMessage(), e);
         }
 
         return false;

@@ -127,24 +127,44 @@
               </div>
             </div>
 
-            <!-- Maître d'ouvrage / Maître d'œuvre -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  <i class="fas fa-building mr-2" style="color: #10b981;"></i>Maître d'ouvrage
-                </label>
-                <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.maitreOuvrage" name="maitreOuvrage"
-                       class="form-control"
-                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
-              </div>
-              <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  <i class="fas fa-hard-hat mr-2" style="color: #10b981;"></i>Maître d'œuvre
-                </label>
-                <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.maitreOeuvre" name="maitreOeuvre"
-                       class="form-control"
-                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
-              </div>
+            <!-- Projet associé -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
+              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #1e40af; margin-bottom: 0.75rem;">
+                <i class="fas fa-project-diagram mr-2" style="color: #3b82f6;"></i>Projet associé
+                <span style="color: #ef4444; margin-left: 0.25rem;">*</span>
+              </label>
+              
+              @if (isLoadingProjets()) {
+                <div style="padding: 1rem; text-align: center; color: #3b82f6;">
+                  <i class="fas fa-spinner fa-spin mr-2"></i>Chargement des projets...
+                </div>
+              } @else {
+                <select [(ngModel)]="ficheSuivi.ficheProjetId" name="ficheProjetId" required
+                        (change)="onProjetChange()"
+                        [disabled]="isEditMode()"
+                        style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;"
+                        [style.background-color]="isEditMode() ? '#f9fafb' : 'white'"
+                        [style.cursor]="isEditMode() ? 'not-allowed' : 'pointer'">
+                  <option value="" disabled selected style="color: #9ca3af;">-- Sélectionnez un projet --</option>
+                  @for (projet of projets(); track projet.id) {
+                    <option [value]="projet.id" style="color: #374151; font-weight: 500;">
+                      {{ projet.nomProjet || projet.designationProjet }}
+                    </option>
+                  }
+                </select>
+                
+                @if (isEditMode()) {
+                  <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Le projet ne peut pas être modifié en mode édition
+                  </small>
+                } @else {
+                  <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Sélectionnez le projet pour lequel vous créez cette fiche de suivi
+                  </small>
+                }
+              }
             </div>
 
             <!-- Chef de projet -->
@@ -175,13 +195,54 @@
             </div>
 
             <!-- Experts -->
-            <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-users mr-2" style="color: #10b981;"></i>Experts
-              </label>
-              <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.experts" name="experts"
-                     class="form-control" placeholder="Liste des experts"
-                     style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #fcd34d;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-weight: 700; color: #78350f; margin: 0; font-size: 1.1rem;">
+                  <i class="fas fa-user-graduate mr-2"></i>Experts
+                </h3>
+                <button type="button" (click)="addExpert()"
+                        style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); display: inline-flex; align-items: center; font-size: 0.875rem;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.4)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.3)';">
+                  <i class="fas fa-plus mr-2"></i>Ajouter un expert
+                </button>
+              </div>
+
+              @if (!ficheSuivi.ficheSignaletique.experts || ficheSuivi.ficheSignaletique.experts.length === 0) {
+                <div style="background: white; padding: 2rem; border-radius: 0.75rem; text-align: center; border: 2px dashed #fcd34d;">
+                  <i class="fas fa-user-graduate" style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                  <p style="color: #78350f; margin: 0; font-weight: 500;">Aucun expert ajouté. Cliquez sur "Ajouter un expert" pour commencer.</p>
+                </div>
+              } @else {
+                <div class="space-y-3">
+                  @for (expert of ficheSuivi.ficheSignaletique.experts; track $index) {
+                    <div style="background: white; padding: 1rem; border-radius: 0.75rem; border: 2px solid #fcd34d; display: flex; gap: 0.75rem; align-items: center; transition: all 0.3s ease;"
+                         onmouseover="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.2)';"
+                         onmouseout="this.style.borderColor='#fcd34d'; this.style.boxShadow='none';">
+                      <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-user-graduate" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                      </div>
+                      <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.experts[$index]" 
+                             [name]="'expert_' + $index"
+                             placeholder="Nom de l'expert (ex: Dr. Jean Dupont - Spécialiste en...)"
+                             style="flex: 1; border: 2px solid #fcd34d; border-radius: 0.5rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;"
+                             onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 3px rgba(245, 158, 11, 0.1)';"
+                             onblur="this.style.borderColor='#fcd34d'; this.style.boxShadow='none';">
+                      <button type="button" (click)="removeExpert($index)"
+                              style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); flex-shrink: 0;"
+                              onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.4)';"
+                              onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(239, 68, 68, 0.3)';">
+                        <i class="fas fa-trash" style="font-size: 1rem;"></i>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+              
+              <small style="display: block; margin-top: 1rem; color: #78350f; font-size: 0.8rem;">
+                <i class="fas fa-info-circle mr-1"></i>
+                Ajoutez les experts impliqués dans le projet (nom, spécialité, etc.)
+              </small>
             </div>
 
             <!-- Délais -->

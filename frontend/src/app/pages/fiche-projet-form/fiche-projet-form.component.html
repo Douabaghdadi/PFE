@@ -7,11 +7,19 @@
       <div style="display: flex; align-items: center; justify-content: space-between;">
         <div>
           <h1 style="color: white; font-size: 2.5rem; font-weight: 700; margin: 0; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.15);">
-            Fiche de Projet
+            {{ isEditMode() ? 'Modifier la Fiche de Projet' : 'Créer une Fiche de Projet' }}
           </h1>
           <p style="color: rgba(255,255,255,0.95); font-size: 1.15rem; margin: 0; font-weight: 400;">
             Système de Management de la Qualité
           </p>
+          @if (chefProjetName()) {
+            <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 0.75rem 1.25rem; border-radius: 0.75rem; margin-top: 1rem; display: inline-flex; align-items: center; border: 1px solid rgba(255,255,255,0.2);">
+              <i class="fas fa-user-tie mr-2" style="color: rgba(255,255,255,0.9);"></i>
+              <span style="color: rgba(255,255,255,0.9); font-size: 0.95rem; font-weight: 600;">
+                Chef de projet: <span style="color: white; font-weight: 700;">{{ chefProjetName() }}</span>
+              </span>
+            </div>
+          }
         </div>
         <a routerLink="/dashboard" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.4); padding: 0.875rem 1.75rem; border-radius: 0.875rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; font-size: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
           Retour
@@ -173,6 +181,44 @@
                     <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="refonte" style="margin-right: 0.5rem;">
                     <span style="font-weight: 500;">Refonte</span>
                   </label>
+                </div>
+              </div>
+
+              <!-- Dates du projet et Statut -->
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-calendar-alt mr-2" style="color: #10b981;"></i>Date de début
+                  </label>
+                  <input type="date" [(ngModel)]="formData.dateDebut" name="dateDebut"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-calendar-check mr-2" style="color: #10b981;"></i>Date de fin prévue
+                  </label>
+                  <input type="date" [(ngModel)]="formData.dateFinPrevue" name="dateFinPrevue"
+                         class="form-control"
+                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
+                    <i class="fas fa-flag mr-2" style="color: #10b981;"></i>Statut du projet
+                  </label>
+                  <select [(ngModel)]="formData.statut" name="statut"
+                          style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
+                    <option value="" disabled>-- Sélectionnez un statut --</option>
+                    @if (statuts.length === 0) {
+                      <option value="EN_COURS">En cours</option>
+                      <option value="TERMINE">Terminé</option>
+                      <option value="EN_ATTENTE">En attente</option>
+                    } @else {
+                      @for (statut of statuts; track statut.code) {
+                        <option [value]="statut.code">{{ statut.libelle }}</option>
+                      }
+                    }
+                  </select>
                 </div>
               </div>
             </div>
@@ -619,7 +665,7 @@
                   Enregistrement...
                 } @else {
                   <i class="fas fa-save mr-2"></i>
-                  Enregistrer la Fiche de Projet
+                  {{ isEditMode() ? 'Modifier la Fiche de Projet' : 'Enregistrer la Fiche de Projet' }}
                 }
               </button>
             }

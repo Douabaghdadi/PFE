@@ -85,7 +85,7 @@ public class FicheSuivi {
         private ChefProjetInfo chefProjet;
         private String suppleant;
         private String equipe;
-        private String experts;
+        private List<String> experts = new ArrayList<>();
         
         private DelaisInfo delais;
         private FinancierInfo financier;
@@ -115,8 +115,8 @@ public class FicheSuivi {
         public String getEquipe() { return equipe; }
         public void setEquipe(String equipe) { this.equipe = equipe; }
 
-        public String getExperts() { return experts; }
-        public void setExperts(String experts) { this.experts = experts; }
+        public List<String> getExperts() { return experts; }
+        public void setExperts(List<String> experts) { this.experts = experts; }
 
         public DelaisInfo getDelais() { return delais; }
         public void setDelais(DelaisInfo delais) { this.delais = delais; }

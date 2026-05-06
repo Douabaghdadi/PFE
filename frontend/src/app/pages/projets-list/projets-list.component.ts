@@ -133,7 +133,7 @@ interface FicheProjet {
         @if (!isLoading() && filteredProjets().length > 0) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @for (projet of filteredProjets(); track projet.id) {
-              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer;"
+              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column; height: 100%;"
                    onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
                 
@@ -144,12 +144,10 @@ interface FicheProjet {
                       <i class="fas fa-project-diagram mr-2" style="color: #10b981;"></i>
                       {{ projet.nomProjet || projet.designationProjet }}
                     </h3>
-                    @if (projet.designationClient) {
-                      <p style="color: #6b7280; font-size: 0.875rem;">
-                        <i class="fas fa-user mr-1"></i>
-                        {{ projet.designationClient }}
-                      </p>
-                    }
+                    <p style="color: #6b7280; font-size: 0.875rem; min-height: 20px;">
+                      <i class="fas fa-user mr-1"></i>
+                      {{ projet.designationClient || '-' }}
+                    </p>
                   </div>
                   <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 0.5rem; border-radius: 0.5rem;">
                     <i class="fas fa-folder" style="color: #10b981; font-size: 1.25rem;"></i>
@@ -164,31 +162,25 @@ interface FicheProjet {
                 </div>
 
                 <!-- Info -->
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem;">
-                  @if (projet.typeProjet) {
-                    <div style="margin-bottom: 0.5rem;">
-                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Type:</span>
-                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getTypeLabel(projet.typeProjet) }}</span>
-                    </div>
-                  }
-                  @if (projet.caractereProjet) {
-                    <div style="margin-bottom: 0.5rem;">
-                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Caractère:</span>
-                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getCaractereLabel(projet.caractereProjet) }}</span>
-                    </div>
-                  }
-                  @if (projet.dateCreation) {
-                    <div>
-                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">
-                        <i class="fas fa-calendar mr-1"></i>Créé le:
-                      </span>
-                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ formatDate(projet.dateCreation) }}</span>
-                    </div>
-                  }
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; flex: 1;">
+                  <div style="margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Type:</span>
+                    <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getTypeLabel(projet.typeProjet) || '-' }}</span>
+                  </div>
+                  <div style="margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Caractère:</span>
+                    <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ getCaractereLabel(projet.caractereProjet) || '-' }}</span>
+                  </div>
+                  <div>
+                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">
+                      <i class="fas fa-calendar mr-1"></i>Créé le:
+                    </span>
+                    <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ projet.dateCreation ? formatDate(projet.dateCreation) : '-' }}</span>
+                  </div>
                 </div>
 
                 <!-- Actions -->
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.5rem; margin-top: auto;">
                   <button (click)="viewProjet(projet.id)" 
                           style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
                     <i class="fas fa-eye mr-2"></i>Voir
@@ -370,8 +362,7 @@ export class ProjetsListComponent implements OnInit {
   }
 
   editProjet(id: string) {
-    console.log('Edit projet:', id);
-    // TODO: Navigate to edit page
+    this.router.navigate(['/fiche-projet/edit', id]);
   }
 
   deleteProjet(id: string) {

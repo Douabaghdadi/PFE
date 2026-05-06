@@ -1,0 +1,243 @@
+<div class="detail-page" *ngIf="!loading && !error && ficheSuivi">
+  <!-- Back Button -->
+  <div class="back-btn-wrap">
+    <button (click)="goBack()" class="back-btn">← Retour aux fiches de suivi</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header-card">
+    <div class="header-badge">📋 FICHE DE SUIVI</div>
+    <h1 class="header-title">{{ ficheSuivi.numeroRapport || 'Sans numéro' }}</h1>
+    <p class="header-date">📅 {{ formatDate(ficheSuivi.dateRapport) }}</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button [class.active]="currentTab==='signaletique'" (click)="setTab('signaletique')">📋 Signalétique</button>
+    <button [class.active]="currentTab==='constat'" (click)="setTab('constat')">📊 Constat Global</button>
+    <button [class.active]="currentTab==='taches'" (click)="setTab('taches')">✅ Tâches</button>
+    <button [class.active]="currentTab==='planning'" (click)="setTab('planning')">📅 Planning</button>
+  </div>
+
+  <!-- Tab: Signalétique -->
+  <div class="tab-content" *ngIf="currentTab==='signaletique'">
+    <div class="section green-section">
+      <h2 class="section-title"><span class="num green">1</span> Identification du projet</h2>
+      <div class="grid-2">
+        <div class="field-card green-border">
+          <label>Chef de projet</label>
+          <p>{{ ficheSuivi.ficheSignaletique?.chefProjet?.nom || '-' }}</p>
+        </div>
+        <div class="field-card green-border">
+          <label>Suppléant</label>
+          <p>{{ ficheSuivi.ficheSignaletique?.chefProjet?.suppleant || '-' }}</p>
+        </div>
+        <div class="field-card green-border">
+          <label>Équipe</label>
+          <p>{{ ficheSuivi.ficheSignaletique?.chefProjet?.equipe || ficheSuivi.ficheSignaletique?.equipe || '-' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="section" *ngIf="ficheSuivi.ficheSignaletique?.descriptionProjet">
+      <h2 class="section-title"><span class="num green">2</span> Description du projet</h2>
+      <p class="description-text">{{ ficheSuivi.ficheSignaletique.descriptionProjet }}</p>
+    </div>
+
+    <!-- Experts -->
+    <div class="section" *ngIf="ficheSuivi.ficheSignaletique?.experts && ficheSuivi.ficheSignaletique?.experts?.length! > 0">
+      <h2 class="section-title"><span class="num blue">3</span> Experts</h2>
+      <div class="tags-container">
+        <span class="tag blue" *ngFor="let expert of ficheSuivi.ficheSignaletique.experts">{{ expert }}</span>
+      </div>
+    </div>
+
+    <!-- Délais -->
+    <div class="section blue-section">
+      <h2 class="section-title blue-title"><span class="num blue">4</span> Délais</h2>
+      <div class="grid-3">
+        <div class="field-card blue-border">
+          <label>Date début (Prévision)</label>
+          <p>{{ formatShortDate(ficheSuivi.ficheSignaletique?.delais?.dateDebutPrevision) }}</p>
+        </div>
+        <div class="field-card blue-border">
+          <label>Date fin (Prévision)</label>
+          <p>{{ formatShortDate(ficheSuivi.ficheSignaletique?.delais?.dateFinPrevision) }}</p>
+        </div>
+        <div class="field-card blue-border">
+          <label>Durée (mois)</label>
+          <p>{{ ficheSuivi.ficheSignaletique?.delais?.dureeEnMois || '-' }}</p>
+        </div>
+        <div class="field-card blue-border">
+          <label>Date début (Réalisation)</label>
+          <p>{{ formatShortDate(ficheSuivi.ficheSignaletique?.delais?.dateDebutRealisation) }}</p>
+        </div>
+        <div class="field-card blue-border">
+          <label>Date fin (Réalisation)</label>
+          <p>{{ formatShortDate(ficheSuivi.ficheSignaletique?.delais?.dateFinRealisation) }}</p>
+        </div>
+        <div class="field-card blue-border">
+          <label>Écart conventionnel</label>
+          <p>{{ ficheSuivi.ficheSignaletique?.delais?.ecartConventionnel ?? '-' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financier -->
+    <div class="section yellow-section">
+      <h2 class="section-title yellow-title"><span class="num yellow">5</span> Financier</h2>
+      <div class="grid-3">
+        <div class="field-card yellow-border">
+          <label>Budget prévision</label>
+          <p class="big-value">{{ ficheSuivi.ficheSignaletique?.financier?.budgetPrevision ?? '-' }}</p>
+        </div>
+        <div class="field-card yellow-border">
+          <label>Budget réalisation</label>
+          <p class="big-value">{{ ficheSuivi.ficheSignaletique?.financier?.budgetRealisation ?? '-' }}</p>
+        </div>
+        <div class="field-card yellow-border">
+          <label>Écart</label>
+          <p class="big-value">{{ ficheSuivi.ficheSignaletique?.financier?.ecart ?? '-' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Caractéristiques techniques -->
+    <div class="section" *ngIf="ficheSuivi.ficheSignaletique?.caracteristiquesTechniques && ficheSuivi.ficheSignaletique?.caracteristiquesTechniques?.length! > 0">
+      <h2 class="section-title"><span class="num green">6</span> Caractéristiques techniques</h2>
+      <div class="tags-container">
+        <span class="tag green" *ngFor="let c of ficheSuivi.ficheSignaletique.caracteristiquesTechniques">{{ c }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Constat Global -->
+  <div class="tab-content" *ngIf="currentTab==='constat'">
+    <div class="section">
+      <h2 class="section-title"><span class="num green">1</span> État d'avancement</h2>
+      <div class="field-card green-border" *ngIf="ficheSuivi.constatGlobal?.etatAvancement">
+        <span [style]="getStatutStyle(ficheSuivi.constatGlobal.etatAvancement)">{{ ficheSuivi.constatGlobal.etatAvancement }}</span>
+      </div>
+      <p *ngIf="!ficheSuivi.constatGlobal?.etatAvancement" class="empty-text">Non renseigné</p>
+    </div>
+
+    <div class="section" *ngIf="ficheSuivi.constatGlobal?.objectifPrincipal">
+      <h2 class="section-title"><span class="num blue">2</span> Objectif principal</h2>
+      <p class="description-text">{{ ficheSuivi.constatGlobal.objectifPrincipal }}</p>
+    </div>
+
+    <div class="section" *ngIf="ficheSuivi.constatGlobal?.problemesRencontres && ficheSuivi.constatGlobal?.problemesRencontres?.length! > 0">
+      <h2 class="section-title"><span class="num red">3</span> Problèmes rencontrés</h2>
+      <ul class="list red-list">
+        <li *ngFor="let p of ficheSuivi.constatGlobal.problemesRencontres">{{ p }}</li>
+      </ul>
+    </div>
+
+    <div class="section" *ngIf="ficheSuivi.constatGlobal?.principauxRisques && ficheSuivi.constatGlobal?.principauxRisques?.length! > 0">
+      <h2 class="section-title"><span class="num yellow">4</span> Principaux risques</h2>
+      <ul class="list yellow-list">
+        <li *ngFor="let r of ficheSuivi.constatGlobal.principauxRisques">{{ r }}</li>
+      </ul>
+    </div>
+
+    <div class="section" *ngIf="ficheSuivi.constatGlobal?.recommandations && ficheSuivi.constatGlobal?.recommandations?.length! > 0">
+      <h2 class="section-title"><span class="num green">5</span> Recommandations</h2>
+      <ul class="list green-list">
+        <li *ngFor="let rec of ficheSuivi.constatGlobal.recommandations">{{ rec }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Tab: Tâches -->
+  <div class="tab-content" *ngIf="currentTab==='taches'">
+    <div class="section" *ngIf="ficheSuivi.tachesSuivi && ficheSuivi.tachesSuivi.length > 0">
+      <h2 class="section-title"><span class="num blue">📋</span> Suivi des tâches ({{ ficheSuivi.tachesSuivi.length }})</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Sujet</th>
+              <th>Livrable</th>
+              <th>Assigné à</th>
+              <th>Début</th>
+              <th>Échéance</th>
+              <th>% Réalisé</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of ficheSuivi.tachesSuivi">
+              <td><strong>{{ t.code || '-' }}</strong></td>
+              <td>{{ t.sujet || '-' }}</td>
+              <td>{{ t.livrable || '-' }}</td>
+              <td>{{ t.assigneA || '-' }}</td>
+              <td>{{ formatShortDate(t.debut) }}</td>
+              <td>{{ formatShortDate(t.echeance) }}</td>
+              <td>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" [style.width.%]="t.pourcentageRealise || 0"></div>
+                </div>
+                <span class="progress-text">{{ t.pourcentageRealise || 0 }}%</span>
+              </td>
+              <td><span [style]="getStatutStyle(t.statut)">{{ t.statut || '-' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="!ficheSuivi.tachesSuivi || ficheSuivi.tachesSuivi.length === 0">
+      <p>Aucune tâche enregistrée.</p>
+    </div>
+  </div>
+
+  <!-- Tab: Planning -->
+  <div class="tab-content" *ngIf="currentTab==='planning'">
+    <div class="section" *ngIf="ficheSuivi.planningActuel?.taches && ficheSuivi.planningActuel?.taches?.length! > 0">
+      <h2 class="section-title"><span class="num green">📅</span> Planning actuel</h2>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Tâche</th>
+              <th>Date début</th>
+              <th>Date fin</th>
+              <th>Avancement</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tg of ficheSuivi.planningActuel.taches">
+              <td><strong>{{ tg.nom || '-' }}</strong></td>
+              <td>{{ formatShortDate(tg.dateDebut) }}</td>
+              <td>{{ formatShortDate(tg.dateFin) }}</td>
+              <td>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" [style.width.%]="tg.tauxAvancement || 0"></div>
+                </div>
+                <span class="progress-text">{{ tg.tauxAvancement || 0 }}%</span>
+              </td>
+              <td><span [style]="getStatutStyle(tg.statut)">{{ tg.statut || '-' }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="empty-state" *ngIf="!ficheSuivi.planningActuel?.taches || ficheSuivi.planningActuel?.taches?.length === 0">
+      <p>Aucune donnée de planning.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Chargement de la fiche de suivi...</p>
+</div>
+
+<!-- Error -->
+<div class="error-state" *ngIf="error">
+  <p>⚠️ {{ error }}</p>
+  <button (click)="goBack()">Retour</button>
+</div>

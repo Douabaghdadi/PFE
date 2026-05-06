@@ -3,6 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FicheSuiviService, FicheSuivi, TacheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
+import { HttpClient } from '@angular/common/http';
+
+interface FicheProjet {
+  id: string;
+  nomProjet: string;
+  designationProjet: string;
+  maitreOuvrage?: string;
+  maitreOeuvre?: string;
+}
 
 @Component({
   selector: 'app-fiche-suivi-form',
@@ -14,6 +23,7 @@ export class FicheSuiviFormComponent implements OnInit {
   ficheSuiviService = inject(FicheSuiviService);
   router = inject(Router);
   route = inject(ActivatedRoute);
+  http = inject(HttpClient);
 
   isEditMode = signal(false);
   ficheSuiviId = signal<string | null>(null);
@@ -21,6 +31,9 @@ export class FicheSuiviFormComponent implements OnInit {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  
+  projets = signal<FicheProjet[]>([]);
+  isLoadingProjets = signal(false);
 
   ficheSuivi: FicheSuivi = {
     ficheProjetId: '',
@@ -30,7 +43,8 @@ export class FicheSuiviFormComponent implements OnInit {
       chefProjet: {},
       delais: {},
       financier: {},
-      caracteristiquesTechniques: []
+      caracteristiquesTechniques: [],
+      experts: []
     },
     constatGlobal: {
       problemesRencontres: [],
@@ -44,6 +58,9 @@ export class FicheSuiviFormComponent implements OnInit {
   };
 
   ngOnInit() {
+    // Charger la liste des projets
+    this.loadProjets();
+    
     const id = this.route.snapshot.paramMap.get('id');
     const projetId = this.route.snapshot.queryParamMap.get('projetId');
     
@@ -77,11 +94,53 @@ export class FicheSuiviFormComponent implements OnInit {
     this.ficheSuivi.numeroRapport = `Rapport_${year}${month}${day}_${hours}${minutes}${seconds}`;
   }
 
+  loadProjets() {
+    this.isLoadingProjets.set(true);
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      this.isLoadingProjets.set(false);
+      return;
+    }
+
+    this.http.get<FicheProjet[]>('http://localhost:8081/api/chef-projet/fiches-projet', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).subscribe({
+      next: (data) => {
+        this.projets.set(data);
+        this.isLoadingProjets.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading projets:', error);
+        this.projets.set([]);
+        this.isLoadingProjets.set(false);
+      }
+    });
+  }
+
+  onProjetChange() {
+    // Le projet a été sélectionné
+    // Plus besoin de remplir automatiquement les champs MO et MOE
+  }
+
   loadFicheSuivi(id: string) {
     this.isLoading.set(true);
     this.ficheSuiviService.getFicheSuiviById(id).subscribe({
       next: (data) => {
         this.ficheSuivi = data;
+        
+        // S'assurer que experts est un tableau
+        if (!this.ficheSuivi.ficheSignaletique.experts) {
+          this.ficheSuivi.ficheSignaletique.experts = [];
+        } else if (typeof this.ficheSuivi.ficheSignaletique.experts === 'string') {
+          // Si c'est une chaîne, la convertir en tableau
+          const expertsStr = this.ficheSuivi.ficheSignaletique.experts as any;
+          this.ficheSuivi.ficheSignaletique.experts = 
+            expertsStr.split(',').map((e: string) => e.trim()).filter((e: string) => e);
+        }
+        
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -125,6 +184,20 @@ export class FicheSuiviFormComponent implements OnInit {
 
   removeCaracteristique(index: number) {
     this.ficheSuivi.ficheSignaletique.caracteristiquesTechniques.splice(index, 1);
+  }
+
+  // Gestion des experts
+  addExpert() {
+    if (!this.ficheSuivi.ficheSignaletique.experts) {
+      this.ficheSuivi.ficheSignaletique.experts = [];
+    }
+    this.ficheSuivi.ficheSignaletique.experts.push('');
+  }
+
+  removeExpert(index: number) {
+    if (this.ficheSuivi.ficheSignaletique.experts) {
+      this.ficheSuivi.ficheSignaletique.experts.splice(index, 1);
+    }
   }
 
   addProbleme() {
@@ -184,7 +257,22 @@ export class FicheSuiviFormComponent implements OnInit {
   onSubmit() {
     this.errorMessage.set('');
     this.successMessage.set('');
+    
+    // Validation côté client
+    if (!this.ficheSuivi.ficheProjetId) {
+      this.errorMessage.set('Veuillez sélectionner un projet');
+      return;
+    }
+    
+    if (!this.ficheSuivi.dateRapport) {
+      this.errorMessage.set('Veuillez saisir la date du rapport');
+      return;
+    }
+    
     this.isLoading.set(true);
+    
+    // Log pour déboguer
+    console.log('Submitting fiche suivi:', JSON.stringify(this.ficheSuivi, null, 2));
 
     const operation = this.isEditMode() 
       ? this.ficheSuiviService.updateFicheSuivi(this.ficheSuiviId()!, this.ficheSuivi)
@@ -200,7 +288,30 @@ export class FicheSuiviFormComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading.set(false);
-        this.errorMessage.set(error.error?.message || 'Une erreur est survenue');
+        console.error('Error saving fiche suivi:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.error?.message,
+          error: error.error
+        });
+        
+        // Afficher un message d'erreur plus détaillé
+        let errorMsg = 'Une erreur est survenue';
+        
+        if (error.status === 400) {
+          errorMsg = error.error?.message || 'Données invalides. Veuillez vérifier les champs obligatoires.';
+        } else if (error.status === 401) {
+          errorMsg = 'Session expirée. Veuillez vous reconnecter.';
+        } else if (error.status === 403) {
+          errorMsg = 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
+        } else if (error.status === 500) {
+          errorMsg = 'Erreur serveur. Veuillez réessayer plus tard.';
+        } else if (error.error?.message) {
+          errorMsg = error.error.message;
+        }
+        
+        this.errorMessage.set(errorMsg);
       }
     });
   }

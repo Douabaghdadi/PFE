@@ -72,7 +72,7 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
         @if (!isLoading() && fichesSuivi().length > 0) {
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @for (fiche of fichesSuivi(); track fiche.id) {
-              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer;"
+              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column; height: 100%;"
                    onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
                 
@@ -94,19 +94,11 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
                 </div>
 
                 <!-- Info -->
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem;">
-                  @if (fiche.ficheSignaletique?.maitreOuvrage) {
-                    <div style="margin-bottom: 0.5rem;">
-                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Maître d'ouvrage:</span>
-                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ fiche.ficheSignaletique.maitreOuvrage }}</span>
-                    </div>
-                  }
-                  @if (fiche.ficheSignaletique?.chefProjet?.nom) {
-                    <div>
-                      <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Chef de projet:</span>
-                      <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ fiche.ficheSignaletique.chefProjet.nom }}</span>
-                    </div>
-                  }
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; min-height: 80px;">
+                  <div style="margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Chef de projet:</span>
+                    <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ fiche.ficheSignaletique?.chefProjet?.nom || '-' }}</span>
+                  </div>
                 </div>
 
                 <!-- Stats -->
@@ -126,14 +118,19 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
                 </div>
 
                 <!-- Actions -->
-                <div style="display: flex; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem; margin-top: auto;">
+                  <a [routerLink]="['/fiche-suivi', fiche.id]" 
+                     style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-eye mr-2"></i>Voir
+                  </a>
                   <a [routerLink]="['/fiche-suivi/edit', fiche.id]" 
-                     style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
+                     style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-edit mr-2"></i>Modifier
                   </a>
                   <button (click)="deleteFiche(fiche.id!)" 
-                          style="flex: 1; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
-                    <i class="fas fa-trash mr-2"></i>Supprimer
+                          title="Supprimer"
+                          style="min-width: 50px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-trash" style="font-size: 1.1rem;"></i>
                   </button>
                 </div>
               </div>

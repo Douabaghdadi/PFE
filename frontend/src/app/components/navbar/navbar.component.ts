@@ -40,11 +40,29 @@ import { AuthService } from '../../services/auth.service';
                 À propos
               </a>
             } @else {
-              <a routerLink="/dashboard" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
-                 onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
-                 onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
-                Tableau de bord
-              </a>
+              @if (authService.hasRole('ROLE_PILOTE_QUALITE')) {
+                <a routerLink="/pilote-qualite/dashboard" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Dashboard
+                </a>
+                <a routerLink="/pilote-qualite/fiches-projet" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Fiches Projet
+                </a>
+                <a routerLink="/pilote-qualite/fiches-suivi" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Fiches de Suivi
+                </a>
+              } @else {
+                <a routerLink="/dashboard" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Tableau de bord
+                </a>
+              }
               
               @if (authService.hasRole('ROLE_CHEF_PROJET') || authService.hasRole('ROLE_ADMIN')) {
                 <div class="dropdown">
@@ -102,14 +120,8 @@ import { AuthService } from '../../services/auth.service';
                     </li>
                   </ul>
                 </div>
-              } @else {
-                <a routerLink="/suivi" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
-                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
-                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
-                  Suivi
-                </a>
               }
-              
+
               @if (authService.hasRole('ROLE_ADMIN')) {
                 <a routerLink="/admin" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
@@ -176,7 +188,19 @@ import { AuthService } from '../../services/auth.service';
             <a href="#features" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Fonctionnalités</a>
             <a href="#about" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">À propos</a>
           } @else {
-            <a routerLink="/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Tableau de bord</a>
+            @if (authService.hasRole('ROLE_PILOTE_QUALITE')) {
+              <a routerLink="/pilote-qualite/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
+                Dashboard
+              </a>
+              <a routerLink="/pilote-qualite/fiches-projet" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
+                Fiches Projet
+              </a>
+              <a routerLink="/pilote-qualite/fiches-suivi" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
+                Fiches de Suivi
+              </a>
+            } @else {
+              <a routerLink="/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Tableau de bord</a>
+            }
             
             @if (authService.hasRole('ROLE_CHEF_PROJET') || authService.hasRole('ROLE_ADMIN')) {
               <div style="padding-left: 0.75rem; padding-top: 0.5rem; padding-bottom: 0.25rem;">
@@ -212,10 +236,8 @@ import { AuthService } from '../../services/auth.service';
                 </svg>
                 Mes fiches de suivi
               </a>
-            } @else {
-              <a routerLink="/suivi" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Suivi</a>
             }
-            
+
             @if (authService.hasRole('ROLE_ADMIN')) {
               <a routerLink="/admin" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Administration</a>
             }

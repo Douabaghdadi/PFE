@@ -1,8 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { UserService, UserResponse } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 
 interface EstimationCharge {
   prestations: string;
@@ -393,15 +395,29 @@ interface MembreEquipe {
     }
   `]
 })
-export class FicheProjetFormComponent {
+export class FicheProjetFormComponent implements OnInit {
   http = inject(HttpClient);
   router = inject(Router);
+  route = inject(ActivatedRoute);
+  userService = inject(UserService);
+  authService = inject(AuthService);
 
   errorMessage = signal('');
   successMessage = signal('');
   isLoading = signal(false);
   currentStep = signal(1);
   currentTab = signal('identification');
+  
+  isEditMode = signal(false);
+  projetId: string | null = null;
+  
+  // Informations du chef de projet connecté
+  chefProjetName = signal('');
+  chefProjetId = signal('');
+
+  // Nomenclatures
+  statuts: any[] = [];
+  categories: any[] = [];
 
   formData = {
     nomProjet: '',
@@ -440,6 +456,52 @@ export class FicheProjetFormComponent {
     reference: '',
     dateDocument: null
   };
+
+  ngOnInit() {
+    this.projetId = this.route.snapshot.paramMap.get('id');
+    if (this.projetId) {
+      this.isEditMode.set(true);
+      this.loadProjet(this.projetId);
+    }
+    
+    // Charger les informations du chef de projet connecté
+    this.loadChefProjetInfo();
+    
+    // Charger les nomenclatures
+    this.loadNomenclatures();
+  }
+
+  loadProjet(id: string) {
+    this.isLoading.set(true);
+    const token = localStorage.getItem('token');
+    
+    this.http.get<any>(`http://localhost:8081/api/chef-projet/fiches-projet/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).subscribe({
+      next: (data) => {
+        // Charger les données dans le formulaire
+        this.formData = {
+          ...this.formData,
+          ...data,
+          // Convertir equipeProjet de string à tableau si nécessaire
+          equipeProjet: typeof data.equipeProjet === 'string' 
+            ? JSON.parse(data.equipeProjet) 
+            : (data.equipeProjet || []),
+          estimationsCharges: data.estimationsCharges || [],
+          planning: data.planning || [],
+          estimationBudget: data.estimationBudget || this.formData.estimationBudget
+        };
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading projet:', error);
+        this.errorMessage.set('Erreur lors du chargement du projet');
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   setTab(tab: string) {
     this.currentTab.set(tab);
@@ -547,6 +609,65 @@ export class FicheProjetFormComponent {
     this.formData.estimationBudget.budgetMDHT = budgetMDHT.toFixed(2);
   }
 
+  /**
+   * Charge les informations du chef de projet connecté
+   */
+  loadChefProjetInfo() {
+    const currentUser = this.authService.currentUser();
+    if (currentUser) {
+      this.chefProjetId.set(currentUser.id);
+      this.chefProjetName.set(currentUser.username);
+    } else {
+      // Si l'utilisateur n'est pas dans le signal, essayer de le charger depuis le localStorage
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        try {
+          const user = JSON.parse(storedUser);
+          if (user && user.id && user.username) {
+            this.chefProjetId.set(user.id);
+            this.chefProjetName.set(user.username);
+          }
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+        }
+      }
+    }
+  }
+
+  /**
+   * Charge les nomenclatures (statuts et catégories) depuis l'API
+   */
+  loadNomenclatures() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    // Charger les statuts depuis l'endpoint public
+    this.http.get<any[]>('http://localhost:8081/api/nomenclatures', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).subscribe({
+      next: (data) => {
+        this.statuts = data.filter(n => n.type === 'STATUT' && n.actif);
+        this.categories = data.filter(n => n.type === 'CATEGORIE_PROJET' && n.actif);
+        
+        console.log('Statuts chargés:', this.statuts);
+        
+        // Définir un statut par défaut si aucun n'est sélectionné
+        if (!this.formData.statut && this.statuts.length > 0) {
+          this.formData.statut = this.statuts[0].code;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading nomenclatures:', error);
+        // En cas d'erreur, utiliser des valeurs par défaut
+        this.statuts = [
+          { code: 'EN_COURS', libelle: 'En cours' },
+          { code: 'TERMINE', libelle: 'Terminé' },
+          { code: 'EN_ATTENTE', libelle: 'En attente' }
+        ];
+      }
+    });
+  }
+
   onSubmit() {
     if (!this.formData.nomProjet) {
       this.errorMessage.set('Le nom du projet est obligatoire');
@@ -567,31 +688,77 @@ export class FicheProjetFormComponent {
       return;
     }
     
-    this.http.post('http://localhost:8081/api/chef-projet/fiches-projet', this.formData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    }).subscribe({
+    // S'assurer que le chef de projet est l'utilisateur connecté
+    if (!this.chefProjetId()) {
+      this.errorMessage.set('Erreur: Impossible de déterminer le chef de projet');
+      this.isLoading.set(false);
+      return;
+    }
+    
+    // Convertir equipeProjet en string (le backend attend un string, pas un tableau)
+    const dataToSend = {
+      ...this.formData,
+      equipeProjet: JSON.stringify(this.formData.equipeProjet),
+      // Ajouter explicitement l'ID du chef de projet connecté
+      chefProjetId: this.chefProjetId()
+    };
+    
+    // Log pour déboguer
+    console.log('Submitting fiche projet:', JSON.stringify(dataToSend, null, 2));
+    
+    // Choisir entre POST (création) et PUT (mise à jour)
+    const request = this.isEditMode() && this.projetId
+      ? this.http.put(`http://localhost:8081/api/chef-projet/fiches-projet/${this.projetId}`, dataToSend)
+      : this.http.post('http://localhost:8081/api/chef-projet/fiches-projet', dataToSend);
+    
+    request.subscribe({
       next: (response) => {
         this.isLoading.set(false);
-        this.successMessage.set('Fiche de projet créée avec succès !');
+        this.successMessage.set(this.isEditMode() 
+          ? 'Fiche de projet modifiée avec succès !' 
+          : 'Fiche de projet créée avec succès !');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => {
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/projets']);
         }, 2000);
       },
       error: (error) => {
         this.isLoading.set(false);
         
-        let errorMsg = 'Erreur lors de la création de la fiche de projet';
+        // Logs détaillés pour déboguer
+        console.error('Error saving fiche projet:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          message: error.error?.message,
+          error: error.error
+        });
         
-        if (error.status === 401 || error.status === 403) {
-          errorMsg = 'Vous n\'êtes pas autorisé. Veuillez vous reconnecter.';
-          setTimeout(() => this.router.navigate(['/login']), 2000);
+        let errorMsg = this.isEditMode() 
+          ? 'Erreur lors de la modification de la fiche de projet'
+          : 'Erreur lors de la création de la fiche de projet';
+        
+        if (error.status === 401) {
+          errorMsg = 'Session expirée. Veuillez vous reconnecter.';
+          // Ne rediriger que si c'est vraiment une erreur d'authentification
+          const errorMessage = error.error?.message || error.message || '';
+          if (errorMessage.includes('Full authentication') || 
+              errorMessage.includes('Unauthorized') ||
+              errorMessage.includes('JWT') ||
+              errorMessage.includes('Token')) {
+            setTimeout(() => this.router.navigate(['/login']), 2000);
+          }
+        } else if (error.status === 403) {
+          errorMsg = 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
+          // Afficher plus de détails
+          if (error.error?.message) {
+            errorMsg += ' Détails: ' + error.error.message;
+          }
         } else if (error.status === 400) {
           errorMsg = 'Données invalides. Vérifiez le formulaire.';
+          if (error.error?.message) {
+            errorMsg += ' Détails: ' + error.error.message;
+          }
         } else if (error.status === 0) {
           errorMsg = 'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.';
         } else if (error.error?.message) {

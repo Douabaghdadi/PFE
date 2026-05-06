@@ -37,20 +37,42 @@ export class AuthService {
       password
     }).pipe(
       tap((response) => {
+        console.log('📥 Réponse de connexion:', response);
+        
+        // Essayer de trouver le token avec différents noms de clés
+        const token = response.accessToken || response.token || response.jwt;
+        
+        if (!token) {
+          console.error('❌ Aucun token trouvé dans la réponse:', response);
+          throw new Error('Token non trouvé dans la réponse du serveur');
+        }
+        
+        console.log('✅ Token trouvé:', token.substring(0, 20) + '...');
+        
         const user: User = {
           id: response.id,
           username: response.username,
           email: response.email,
-          roles: response.roles,
-          token: response.accessToken || response.token // Essayer les deux noms
+          roles: response.roles || [],
+          token: token
         };
         
         this.currentUserSignal.set(user);
+        
+        // Sauvegarder avec les deux clés pour compatibilité
         localStorage.setItem('currentUser', JSON.stringify(user));
-        localStorage.setItem('token', response.accessToken || response.token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', token);
+        
+        console.log('✅ Connexion réussie et token sauvegardé:', {
+          username: user.username,
+          roles: user.roles,
+          tokenLength: token.length,
+          tokenSaved: localStorage.getItem('token') !== null
+        });
       }),
       catchError((error) => {
-        console.error('Erreur de connexion:', error);
+        console.error('❌ Erreur de connexion:', error);
         return throwError(() => error);
       })
     );
@@ -59,6 +81,8 @@ export class AuthService {
   logout() {
     this.currentUserSignal.set(null);
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('user'); // Supprimer aussi cette clé
+    localStorage.removeItem('token'); // Supprimer le token
     this.router.navigate(['/login']);
   }
 

@@ -29,26 +29,47 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        logger.info("🔍 AuthTokenFilter - Request: {} {}", request.getMethod(), request.getRequestURI());
+        
         // Skip JWT validation for OPTIONS requests (CORS preflight)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            logger.info("⏭️  Skipping OPTIONS request");
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
             String jwt = parseJwt(request);
-            if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
+            logger.info("🎫 JWT Token présent: {}", jwt != null);
+            
+            if (jwt != null) {
+                logger.info("🔐 Token: {}...", jwt.substring(0, Math.min(20, jwt.length())));
+                boolean isValid = jwtUtils.validateJwtToken(jwt);
+                logger.info("✅ Token valide: {}", isValid);
+                
+                if (isValid) {
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    logger.info("👤 Username extrait du token: {}", username);
 
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    logger.info("👥 UserDetails chargé: {}, Authorities: {}", 
+                        userDetails.getUsername(), 
+                        userDetails.getAuthorities());
+                    
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    logger.info("✅ Authentication définie dans SecurityContext");
+                } else {
+                    logger.warn("❌ Token invalide - authentication refusée");
+                }
+            } else {
+                logger.warn("⚠️  Aucun token JWT trouvé dans la requête");
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            logger.error("❌ Erreur lors de l'authentification: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);

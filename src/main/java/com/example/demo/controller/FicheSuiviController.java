@@ -87,4 +87,21 @@ public class FicheSuiviController {
                     .body(new MessageResponse("Error: " + e.getMessage()));
         }
     }
+
+    /**
+     * Endpoint pour synchroniser les dates de toutes les fiches de suivi
+     * avec les dates de leur fiche projet associée
+     */
+    @PostMapping("/sync-dates")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> synchronizeDates() {
+        try {
+            int updatedCount = ficheSuiviService.synchronizeDatesFromFicheProjet();
+            return ResponseEntity.ok(new MessageResponse(
+                "Synchronization completed. " + updatedCount + " fiche(s) suivi updated."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Error during synchronization: " + e.getMessage()));
+        }
+    }
 }
