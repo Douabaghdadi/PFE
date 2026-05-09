@@ -69,6 +69,88 @@
       </div>
     </div>
 
+    <!-- Section Rapports KPI -->
+    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md p-6 mb-8 border-2 border-green-200">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            <span class="text-2xl mr-2">📈</span>
+            Rapports KPI
+          </h2>
+          <p class="text-sm text-gray-600 mt-1">Téléchargez des rapports détaillés sur les indicateurs de performance</p>
+        </div>
+      </div>
+
+      <!-- KPI Summary -->
+      <div *ngIf="kpiData" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <p class="text-sm text-gray-600 mb-1">Taux de Complétion</p>
+          <p class="text-2xl font-bold text-green-600">{{ kpiData.tauxCompletion | number:'1.1-1' }}%</p>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <p class="text-sm text-gray-600 mb-1">Projets en Retard</p>
+          <p class="text-2xl font-bold text-red-600">{{ kpiData.projetsEnRetard }}</p>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <p class="text-sm text-gray-600 mb-1">Total Problèmes</p>
+          <p class="text-2xl font-bold text-orange-600">{{ kpiData.totalProblemes }}</p>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <p class="text-sm text-gray-600 mb-1">Budget Total</p>
+          <p class="text-2xl font-bold text-blue-600">{{ kpiData.budgetTotal | number:'1.2-2' }} MD</p>
+        </div>
+      </div>
+
+      <!-- Boutons de téléchargement -->
+      <div class="flex flex-wrap gap-3">
+        <button
+          (click)="downloadKPIReport('json')"
+          [disabled]="downloadingReport"
+          class="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg *ngIf="!downloadingReport" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <div *ngIf="downloadingReport" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          Télécharger JSON
+        </button>
+
+        <button
+          (click)="downloadKPIReport('csv')"
+          [disabled]="downloadingReport"
+          class="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg *ngIf="!downloadingReport" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <div *ngIf="downloadingReport" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          Télécharger CSV
+        </button>
+
+        <button
+          (click)="refreshKPIData()"
+          [disabled]="loadingKPI"
+          class="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg *ngIf="!loadingKPI" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          <div *ngIf="loadingKPI" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          Actualiser
+        </button>
+      </div>
+
+      <!-- Message de succès -->
+      <div *ngIf="downloadSuccess" class="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+        <span class="block sm:inline">✅ Rapport téléchargé avec succès !</span>
+      </div>
+
+      <!-- Message d'erreur -->
+      <div *ngIf="downloadError" class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+        <span class="block sm:inline">❌ {{ downloadError }}</span>
+      </div>
+    </div>
+
     <!-- Informations -->
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
       <h3 class="text-lg font-semibold text-blue-900 mb-2">ℹ️ Mode Consultation</h3>

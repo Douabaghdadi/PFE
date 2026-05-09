@@ -95,6 +95,12 @@ export class PiloteFichesProjetListComponent implements OnInit {
     }
   }
 
+  viewKPI(projetId: string | undefined) {
+    if (projetId) {
+      this.router.navigate(['/pilote-qualite/projet-kpi', projetId]);
+    }
+  }
+
   getStatutClass(statut: string | undefined): string {
     switch (statut?.toLowerCase()) {
       case 'en cours':

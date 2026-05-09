@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { 
   PiloteQualiteFicheProjetService, 
   FicheProjet,
@@ -26,10 +27,15 @@ export class PiloteFicheProjetDetailComponent implements OnInit {
   private ficheProjetService = inject(PiloteQualiteFicheProjetService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private http = inject(HttpClient);
 
   ficheProjet: FicheProjet | null = null;
   loading = true;
   error: string | null = null;
+  
+  downloadingKPI = false;
+  kpiDownloadSuccess = false;
+  kpiDownloadError: string | null = null;
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -159,5 +165,55 @@ export class PiloteFicheProjetDetailComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/pilote-qualite/fiches-projet']);
+  }
+
+  downloadProjetKPI(format: 'json' | 'csv') {
+    if (!this.ficheProjet || !this.ficheProjet.id) return;
+    
+    this.downloadingKPI = true;
+    this.kpiDownloadSuccess = false;
+    this.kpiDownloadError = null;
+    
+    const token = localStorage.getItem('token');
+    const url = `http://localhost:8081/api/pilote-qualite/rapports/projet/${this.ficheProjet.id}/kpi/download/${format}`;
+    
+    this.http.get(url, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      responseType: 'blob',
+      observe: 'response'
+    }).subscribe({
+      next: (response) => {
+        const contentDisposition = response.headers.get('Content-Disposition');
+        let filename = `rapport_kpi_projet_${new Date().getTime()}.${format}`;
+        
+        if (contentDisposition) {
+          const matches = /filename="?([^"]+)"?/.exec(contentDisposition);
+          if (matches && matches[1]) {
+            filename = matches[1];
+          }
+        }
+        
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+          window.URL.revokeObjectURL(url);
+          
+          this.kpiDownloadSuccess = true;
+          setTimeout(() => this.kpiDownloadSuccess = false, 5000);
+        }
+        
+        this.downloadingKPI = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du téléchargement du rapport KPI:', err);
+        this.kpiDownloadError = 'Erreur lors du téléchargement. Veuillez réessayer.';
+        setTimeout(() => this.kpiDownloadError = null, 5000);
+        this.downloadingKPI = false;
+      }
+    });
   }
 }

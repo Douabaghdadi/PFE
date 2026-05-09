@@ -1,0 +1,9 @@
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

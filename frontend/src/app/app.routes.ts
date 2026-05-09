@@ -17,6 +17,8 @@ import { PiloteFichesProjetListComponent } from './pages/pilote-qualite/fiches-p
 import { PiloteFicheProjetDetailComponent } from './pages/pilote-qualite/fiche-projet-detail/fiche-projet-detail.component';
 import { PiloteFichesSuiviListComponent } from './pages/pilote-qualite/fiches-suivi-list/fiches-suivi-list.component';
 import { PiloteFicheSuiviDetailComponent } from './pages/pilote-qualite/fiche-suivi-detail/fiche-suivi-detail.component';
+import { ProjetKPIComponent } from './pages/pilote-qualite/projet-kpi/projet-kpi.component';
+import { FicheSuiviDetailComponent } from './pages/fiche-suivi-detail/fiche-suivi-detail.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -26,6 +28,7 @@ export const routes: Routes = [
   { path: 'fiche-projet/edit/:id', component: FicheProjetFormComponent },
   { path: 'fiche-suivi/new', component: FicheSuiviFormComponent },
   { path: 'fiche-suivi/edit/:id', component: FicheSuiviFormComponent },
+  { path: 'fiche-suivi/:id', component: FicheSuiviDetailComponent },
   { path: 'fiches-suivi', component: FichesSuiviListComponent },
   { path: 'projets', component: ProjetsListComponent },
   { path: 'projets/:id', component: ProjetDetailComponent },
@@ -50,6 +53,7 @@ export const routes: Routes = [
       { path: 'fiches-projet/:id', component: PiloteFicheProjetDetailComponent },
       { path: 'fiches-suivi', component: PiloteFichesSuiviListComponent },
       { path: 'fiches-suivi/:id', component: PiloteFicheSuiviDetailComponent },
+      { path: 'projet-kpi/:id', component: ProjetKPIComponent },
     ]
   },
   { path: '**', redirectTo: '' }
