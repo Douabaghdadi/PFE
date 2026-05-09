@@ -110,6 +110,10 @@ export class FicheSuiviService {
     return this.http.get<FicheSuivi[]>(`${this.apiUrl}/projet/${ficheProjetId}`);
   }
 
+  getProjetName(ficheProjetId: string): Observable<string> {
+    return this.http.get(`${this.apiUrl}/projet/${ficheProjetId}/name`, { responseType: 'text' });
+  }
+
   createFicheSuivi(ficheSuivi: FicheSuivi): Observable<FicheSuivi> {
     return this.http.post<FicheSuivi>(this.apiUrl, ficheSuivi);
   }

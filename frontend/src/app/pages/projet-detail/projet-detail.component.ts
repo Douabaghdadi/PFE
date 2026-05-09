@@ -526,7 +526,7 @@ interface FicheProjet {
                             </div>
                           </div>
                           
-                          @if (fiche.ficheSignaletique?.maitreOuvrage) {
+                          @if (fiche.ficheSignaletique && fiche.ficheSignaletique.maitreOuvrage) {
                             <p style="color: #374151; margin: 0 0 0.5rem 0; font-size: 0.8rem;">
                               <i class="fas fa-user-tie mr-1" style="color: #3b82f6;"></i>
                               <strong>MO:</strong> {{ fiche.ficheSignaletique.maitreOuvrage }}

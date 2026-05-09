@@ -48,6 +48,12 @@ public class FicheSuiviController {
         return ResponseEntity.ok(ficheSuiviService.getFichesSuiviByProjet(ficheProjetId));
     }
 
+    @GetMapping("/projet/{ficheProjetId}/name")
+    public ResponseEntity<String> getProjetName(@PathVariable String ficheProjetId) {
+        String projetName = ficheSuiviService.getProjetName(ficheProjetId);
+        return ResponseEntity.ok(projetName);
+    }
+
     @PostMapping
     public ResponseEntity<?> createFicheSuivi(@Valid @RequestBody FicheSuiviRequest request,
                                               Authentication authentication) {

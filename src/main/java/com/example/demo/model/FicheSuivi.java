@@ -34,6 +34,7 @@ public class FicheSuivi {
     private String chefProjetId;
     private LocalDateTime dateCreation;
     private LocalDateTime dateModification;
+    private LocalDateTime dateRemplissage;
 
     public FicheSuivi() {
         this.dateCreation = LocalDateTime.now();
@@ -76,6 +77,9 @@ public class FicheSuivi {
 
     public LocalDateTime getDateModification() { return dateModification; }
     public void setDateModification(LocalDateTime dateModification) { this.dateModification = dateModification; }
+
+    public LocalDateTime getDateRemplissage() { return dateRemplissage; }
+    public void setDateRemplissage(LocalDateTime dateRemplissage) { this.dateRemplissage = dateRemplissage; }
 
     // Classes internes pour les sections
 

@@ -8,6 +8,7 @@ import com.example.demo.repository.FicheSuiviRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -29,6 +30,12 @@ public class FicheSuiviService {
 
     public List<FicheSuivi> getFichesSuiviByChefProjet(String chefProjetId) {
         return ficheSuiviRepository.findByChefProjetId(chefProjetId);
+    }
+
+    public String getProjetName(String ficheProjetId) {
+        return ficheProjetRepository.findById(ficheProjetId)
+                .map(FicheProjet::getNomProjet)
+                .orElse("Projet supprimé");
     }
 
     public FicheSuivi getFicheSuiviById(String id) {
@@ -129,8 +136,17 @@ public class FicheSuiviService {
         ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setChefProjetId(chefProjetId);
         ficheSuivi.setDateCreation(LocalDateTime.now());
+        ficheSuivi.setDateRemplissage(LocalDateTime.now());
 
         FicheSuivi saved = ficheSuiviRepository.save(ficheSuivi);
+        
+        // Mettre à jour les dates de suivi dans la fiche projet
+        LocalDate today = LocalDate.now();
+        ficheProjet.setDateDerniereFicheSuivi(today);
+        ficheProjet.setDateProchaineFicheSuivi(today.plusMonths(1));
+        ficheProjet.setDateModification(LocalDateTime.now());
+        ficheProjetRepository.save(ficheProjet);
+        
         System.out.println("Saved FicheSuivi - dateDebut: " + saved.getFicheSignaletique().getDelais().getDateDebut());
         System.out.println("Saved FicheSuivi - dateFin: " + saved.getFicheSignaletique().getDelais().getDateFin());
         System.out.println("=== END DEBUG ===");

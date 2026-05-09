@@ -81,6 +81,17 @@ export interface FicheProjet {
   dateModification?: string;
   reference?: string;
   dateDocument?: string;
+  dateDerniereFicheSuivi?: string;
+  dateProchaineFicheSuivi?: string;
+}
+
+export interface ProjetSuiviStatus {
+  projetId: string;
+  nomProjet: string;
+  dateDerniereFicheSuivi?: string;
+  dateProchaineFicheSuivi?: string;
+  ficheSuiviEnRetard: boolean;
+  joursRetard: number;
 }
 
 @Injectable({
@@ -123,5 +134,12 @@ export class PiloteQualiteFicheProjetService {
    */
   getFichesProjetByChefProjet(chefProjetId: string): Observable<FicheProjet[]> {
     return this.http.get<FicheProjet[]>(`${this.apiUrl}/chef-projet/${chefProjetId}`);
+  }
+
+  /**
+   * Récupère le statut des fiches de suivi pour tous les projets
+   */
+  getProjetsSuiviStatus(): Observable<ProjetSuiviStatus[]> {
+    return this.http.get<ProjetSuiviStatus[]>(`${this.apiUrl}/suivi-status`);
   }
 }

@@ -92,6 +92,12 @@
                 </svg>
                 {{ fiche.numeroRapport || 'Sans numéro' }}
               </h3>
+              <p style="color: #10b981; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem;">
+                <svg style="width: 0.95rem; height: 0.95rem; display: inline-block; margin-right: 0.25rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                </svg>
+                {{ getProjetName(fiche.ficheProjetId) }}
+              </p>
               <p style="color: #6b7280; font-size: 0.875rem;">
                 <svg style="width: 0.875rem; height: 0.875rem; display: inline-block; margin-right: 0.25rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -132,19 +138,19 @@
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
             <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
               <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">
-                {{ fiche.tachesSuivi?.length || 0 }}
+                {{ (fiche.tachesSuivi || []).length }}
               </div>
               <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600;">Tâches</div>
             </div>
             <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
               <div style="font-size: 1.5rem; font-weight: 700; color: #92400e;">
-                {{ fiche.constatGlobal?.problemesRencontres?.length || 0 }}
+                {{ (fiche.constatGlobal?.problemesRencontres || []).length }}
               </div>
               <div style="font-size: 0.75rem; color: #92400e; font-weight: 600;">Problèmes</div>
             </div>
             <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
               <div style="font-size: 1.5rem; font-weight: 700; color: #991b1b;">
-                {{ fiche.constatGlobal?.principauxRisques?.length || 0 }}
+                {{ (fiche.constatGlobal?.principauxRisques || []).length }}
               </div>
               <div style="font-size: 0.75rem; color: #991b1b; font-weight: 600;">Risques</div>
             </div>

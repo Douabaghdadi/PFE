@@ -1,12 +1,16 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.FicheProjetRequest;
+import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.repository.FicheProjetRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -178,5 +182,61 @@ public class FicheProjetService {
 
     public List<FicheProjet> getFichesProjetByCategorie(String categorie) {
         return ficheProjetRepository.findByCategorie(categorie);
+    }
+
+    public List<ProjetSuiviStatusDTO> getProjetsSuiviStatus() {
+        List<FicheProjet> projets = ficheProjetRepository.findAll();
+        List<ProjetSuiviStatusDTO> statusList = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+
+        for (FicheProjet projet : projets) {
+            // Ignorer les projets terminés ou annulés
+            if (projet.getStatut() != null && 
+                (projet.getStatut().equals("TERMINE") || projet.getStatut().equals("ANNULE"))) {
+                continue;
+            }
+
+            ProjetSuiviStatusDTO status = new ProjetSuiviStatusDTO();
+            status.setProjetId(projet.getId());
+            status.setNomProjet(projet.getNomProjet());
+            status.setDateDerniereFicheSuivi(projet.getDateDerniereFicheSuivi());
+            status.setDateProchaineFicheSuivi(projet.getDateProchaineFicheSuivi());
+
+            // Vérifier si la fiche de suivi est en retard
+            if (projet.getDateProchaineFicheSuivi() != null && 
+                today.isAfter(projet.getDateProchaineFicheSuivi())) {
+                status.setFicheSuiviEnRetard(true);
+                status.setJoursRetard((int) ChronoUnit.DAYS.between(projet.getDateProchaineFicheSuivi(), today));
+                statusList.add(status);
+            }
+        }
+
+        return statusList;
+    }
+
+    public int initializeSuiviDates() {
+        List<FicheProjet> projets = ficheProjetRepository.findAll();
+        int count = 0;
+
+        for (FicheProjet projet : projets) {
+            // Ignorer les projets terminés ou annulés
+            if (projet.getStatut() != null && 
+                (projet.getStatut().equals("TERMINE") || projet.getStatut().equals("ANNULE"))) {
+                continue;
+            }
+
+            // Si les dates ne sont pas déjà définies
+            if (projet.getDateDerniereFicheSuivi() == null || projet.getDateProchaineFicheSuivi() == null) {
+                // Utiliser la date de début du projet comme date de dernière fiche
+                LocalDate dateRef = projet.getDateDebut() != null ? projet.getDateDebut() : LocalDate.now();
+                projet.setDateDerniereFicheSuivi(dateRef);
+                projet.setDateProchaineFicheSuivi(dateRef.plusMonths(1));
+                projet.setDateModification(LocalDateTime.now());
+                ficheProjetRepository.save(projet);
+                count++;
+            }
+        }
+
+        return count;
     }
 }

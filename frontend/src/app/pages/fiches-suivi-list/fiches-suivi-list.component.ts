@@ -1,12 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
 
 @Component({
   selector: 'app-fiches-suivi-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
       <div class="container mx-auto px-4" style="max-width: 1400px;">
@@ -30,6 +31,42 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
           </div>
         </div>
 
+        <!-- Filters -->
+        <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div class="md:col-span-6">
+              <input type="text" 
+                     [value]="searchTerm()" 
+                     (input)="searchTerm.set($any($event.target).value); applyFilters()"
+                     placeholder="🔍 Rechercher par numéro de rapport, chef de projet, projet..." 
+                     style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease;"
+                     onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                     onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+            </div>
+            <div class="md:col-span-4">
+              <select [value]="selectedProjetId()" 
+                      (change)="selectedProjetId.set($any($event.target).value); applyFilters()"
+                      style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer;"
+                      onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                      onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                <option value="">📁 Tous les projets</option>
+                @for (projet of getUniqueProjets(); track projet.id) {
+                  <option [value]="projet.id">{{ projet.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="md:col-span-2">
+              <button (click)="resetFilters()"
+                      style="width: 100%; padding: 0.75rem 1rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      onmouseover="this.style.background='#e5e7eb';"
+                      onmouseout="this.style.background='#f3f4f6';">
+                <i class="fas fa-redo mr-2"></i>
+                Réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Loading State -->
         @if (isLoading()) {
           <div class="text-center py-12">
@@ -49,7 +86,7 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
         }
 
         <!-- Empty State -->
-        @if (!isLoading() && fichesSuivi().length === 0) {
+        @if (!isLoading() && filteredFiches().length === 0) {
           <div style="background: white; border-radius: 1.5rem; padding: 4rem 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
             <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
               <i class="fas fa-clipboard-list" style="font-size: 3rem; color: #10b981;"></i>
@@ -69,9 +106,13 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
         }
 
         <!-- Fiches List -->
-        @if (!isLoading() && fichesSuivi().length > 0) {
+        @if (!isLoading() && filteredFiches().length > 0) {
+          <div style="margin-bottom: 1rem; color: #6b7280; font-weight: 600;">
+            {{ filteredFiches().length }} fiche(s) de suivi trouvée(s)
+          </div>
+          
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @for (fiche of fichesSuivi(); track fiche.id) {
+            @for (fiche of filteredFiches(); track fiche.id) {
               <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column; height: 100%;"
                    onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
@@ -95,6 +136,10 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
 
                 <!-- Info -->
                 <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; min-height: 80px;">
+                  <div style="margin-bottom: 0.5rem;">
+                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Projet:</span>
+                    <span style="color: #10b981; font-size: 0.875rem; margin-left: 0.5rem; font-weight: 600;">{{ getProjetName(fiche.ficheProjetId) }}</span>
+                  </div>
                   <div style="margin-bottom: 0.5rem;">
                     <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Chef de projet:</span>
                     <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ fiche.ficheSignaletique?.chefProjet?.nom || '-' }}</span>
@@ -156,8 +201,13 @@ export class FichesSuiviListComponent implements OnInit {
   ficheSuiviService = inject(FicheSuiviService);
   
   fichesSuivi = signal<FicheSuivi[]>([]);
+  filteredFiches = signal<FicheSuivi[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
+  projetNames = signal<{ [key: string]: string }>({});
+  
+  searchTerm = signal('');
+  selectedProjetId = signal('');
 
   ngOnInit() {
     this.loadFichesSuivi();
@@ -165,28 +215,94 @@ export class FichesSuiviListComponent implements OnInit {
 
   loadFichesSuivi() {
     this.isLoading.set(true);
-    this.errorMessage.set(''); // Clear any previous errors
+    this.errorMessage.set('');
     this.ficheSuiviService.getAllFichesSuivi().subscribe({
       next: (data) => {
         this.fichesSuivi.set(data);
+        this.filteredFiches.set(data);
+        this.loadProjetNames();
         this.isLoading.set(false);
       },
       error: (error) => {
-        // Only show error if it's not a 404 (empty list) or authentication issue
         if (error.status === 404 || error.status === 0) {
-          // 404 or network error - just show empty state, no error message
           this.fichesSuivi.set([]);
         } else if (error.status === 401 || error.status === 403) {
-          // Authentication/Authorization error
           this.errorMessage.set('Vous devez être connecté en tant que Chef de Projet pour voir les fiches de suivi');
         } else {
-          // Other errors
           this.errorMessage.set('Erreur lors du chargement des fiches de suivi');
         }
         this.isLoading.set(false);
         console.error('Error loading fiches suivi:', error);
       }
     });
+  }
+
+  loadProjetNames() {
+    const uniqueProjetIds = [...new Set(
+      this.fichesSuivi()
+        .map(f => f.ficheProjetId)
+        .filter(id => id) as string[]
+    )];
+
+    console.log('Loading projet names for IDs:', uniqueProjetIds);
+
+    uniqueProjetIds.forEach(projetId => {
+      console.log('Fetching name for projet:', projetId);
+      this.ficheSuiviService.getProjetName(projetId).subscribe({
+        next: (projetName: string) => {
+          console.log('Received projet name:', projetName, 'for ID:', projetId);
+          this.projetNames.update(names => ({
+            ...names,
+            [projetId]: projetName || 'Projet sans nom'
+          }));
+        },
+        error: (err) => {
+          console.error('Error fetching projet name for ID:', projetId, err);
+          this.projetNames.update(names => ({
+            ...names,
+            [projetId]: 'Projet inconnu'
+          }));
+        }
+      });
+    });
+  }
+
+  getProjetName(projetId: string | undefined): string {
+    if (!projetId) return 'Non assigné';
+    return this.projetNames()[projetId] || 'Chargement...';
+  }
+
+  applyFilters() {
+    let filtered = this.fichesSuivi();
+
+    if (this.searchTerm()) {
+      const term = this.searchTerm().toLowerCase();
+      filtered = filtered.filter(fiche =>
+        fiche.numeroRapport?.toLowerCase().includes(term) ||
+        fiche.ficheSignaletique?.chefProjet?.nom?.toLowerCase().includes(term) ||
+        this.getProjetName(fiche.ficheProjetId).toLowerCase().includes(term)
+      );
+    }
+
+    if (this.selectedProjetId()) {
+      filtered = filtered.filter(fiche => fiche.ficheProjetId === this.selectedProjetId());
+    }
+
+    this.filteredFiches.set(filtered);
+  }
+
+  resetFilters() {
+    this.searchTerm.set('');
+    this.selectedProjetId.set('');
+    this.filteredFiches.set(this.fichesSuivi());
+  }
+
+  getUniqueProjets() {
+    const uniqueIds = [...new Set(this.fichesSuivi().map(f => f.ficheProjetId).filter(id => id))];
+    return uniqueIds.map(id => ({
+      id,
+      name: this.getProjetName(id)
+    }));
   }
 
   formatDate(date: any): string {
@@ -203,7 +319,9 @@ export class FichesSuiviListComponent implements OnInit {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette fiche de suivi ?')) {
       this.ficheSuiviService.deleteFicheSuivi(id).subscribe({
         next: () => {
-          this.fichesSuivi.set(this.fichesSuivi().filter(f => f.id !== id));
+          const updatedList = this.fichesSuivi().filter(f => f.id !== id);
+          this.fichesSuivi.set(updatedList);
+          this.applyFilters();
         },
         error: (error) => {
           this.errorMessage.set('Erreur lors de la suppression de la fiche de suivi');

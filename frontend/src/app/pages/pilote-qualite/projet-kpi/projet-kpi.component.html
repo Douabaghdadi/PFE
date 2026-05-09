@@ -171,14 +171,14 @@
       <!-- Problems & Risks -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Problèmes ({{ kpiData.listeProblemes?.length || 0 }})</h3>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Problèmes ({{ (kpiData.listeProblemes || []).length }})</h3>
           <div *ngIf="!kpiData.listeProblemes || kpiData.listeProblemes.length === 0" style="color: #6b7280; text-align: center; padding: 2rem;">Aucun problème</div>
           <div *ngFor="let probleme of kpiData.listeProblemes" style="padding: 0.75rem; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 0.5rem; margin-bottom: 0.5rem;">
             {{ probleme }}
           </div>
         </div>
         <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Risques ({{ kpiData.listeRisques?.length || 0 }})</h3>
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Risques ({{ (kpiData.listeRisques || []).length }})</h3>
           <div *ngIf="!kpiData.listeRisques || kpiData.listeRisques.length === 0" style="color: #6b7280; text-align: center; padding: 2rem;">Aucun risque</div>
           <div *ngFor="let risque of kpiData.listeRisques" style="padding: 0.75rem; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0.5rem; margin-bottom: 0.5rem;">
             {{ risque }}

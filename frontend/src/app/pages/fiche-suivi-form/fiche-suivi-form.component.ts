@@ -283,7 +283,7 @@ export class FicheSuiviFormComponent implements OnInit {
         this.isLoading.set(false);
         this.successMessage.set('Fiche de suivi enregistrée avec succès!');
         setTimeout(() => {
-          this.router.navigate(['/projets', this.ficheSuivi.ficheProjetId]);
+          this.router.navigate(['/fiches-suivi']);
         }, 1500);
       },
       error: (error) => {

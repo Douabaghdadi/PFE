@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.service.FicheProjetService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,5 +65,23 @@ public class PiloteQualiteFicheProjetController {
     @GetMapping("/chef-projet/{chefProjetId}")
     public ResponseEntity<List<FicheProjet>> getFichesProjetByChefProjet(@PathVariable String chefProjetId) {
         return ResponseEntity.ok(ficheProjetService.getFichesProjetByChefProjet(chefProjetId));
+    }
+
+    /**
+     * Récupère le statut des fiches de suivi pour tous les projets
+     * Retourne uniquement les projets dont la fiche de suivi est en retard
+     */
+    @GetMapping("/suivi-status")
+    public ResponseEntity<List<ProjetSuiviStatusDTO>> getProjetsSuiviStatus() {
+        return ResponseEntity.ok(ficheProjetService.getProjetsSuiviStatus());
+    }
+
+    /**
+     * Initialise les dates de suivi pour tous les projets existants
+     */
+    @PostMapping("/init-suivi-dates")
+    public ResponseEntity<String> initSuiviDates() {
+        int count = ficheProjetService.initializeSuiviDates();
+        return ResponseEntity.ok(count + " projet(s) initialisé(s)");
     }
 }

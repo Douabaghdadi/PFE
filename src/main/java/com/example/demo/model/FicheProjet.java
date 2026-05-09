@@ -67,6 +67,8 @@ public class FicheProjet {
     private String categorie; // Code nomenclature CATEGORIE_PROJET
     private LocalDateTime dateCreation;
     private LocalDateTime dateModification;
+    private LocalDate dateDerniereFicheSuivi; // Date de la dernière fiche de suivi remplie
+    private LocalDate dateProchaineFicheSuivi; // Date attendue pour la prochaine fiche de suivi
 
     // Métadonnées du document
     private String reference; // Réf proj
@@ -331,5 +333,21 @@ public class FicheProjet {
 
     public void setDateDocument(LocalDate dateDocument) {
         this.dateDocument = dateDocument;
+    }
+
+    public LocalDate getDateDerniereFicheSuivi() {
+        return dateDerniereFicheSuivi;
+    }
+
+    public void setDateDerniereFicheSuivi(LocalDate dateDerniereFicheSuivi) {
+        this.dateDerniereFicheSuivi = dateDerniereFicheSuivi;
+    }
+
+    public LocalDate getDateProchaineFicheSuivi() {
+        return dateProchaineFicheSuivi;
+    }
+
+    public void setDateProchaineFicheSuivi(LocalDate dateProchaineFicheSuivi) {
+        this.dateProchaineFicheSuivi = dateProchaineFicheSuivi;
     }
 }

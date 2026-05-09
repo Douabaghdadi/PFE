@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { PiloteQualiteFicheProjetService, FicheProjet } from '../../../services/pilote-qualite-fiche-projet.service';
+import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -21,6 +21,7 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   fichesProjet: FicheProjet[] = [];
   filteredFiches: FicheProjet[] = [];
+  projetsSuiviStatus: ProjetSuiviStatus[] = [];
   loading = true;
   error: string | null = null;
 
@@ -36,6 +37,7 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   ngOnInit() {
     this.loadFichesProjet();
+    this.loadProjetsSuiviStatus();
   }
 
   loadFichesProjet() {
@@ -56,6 +58,25 @@ export class PiloteFichesProjetListComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  loadProjetsSuiviStatus() {
+    this.ficheProjetService.getProjetsSuiviStatus().subscribe({
+      next: (status) => {
+        console.log('Projets suivi status loaded:', status);
+        this.projetsSuiviStatus = status;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement du statut des fiches de suivi:', err);
+      }
+    });
+  }
+
+  getProjetSuiviStatus(projetId: string | undefined): ProjetSuiviStatus | undefined {
+    if (!projetId) return undefined;
+    const status = this.projetsSuiviStatus.find(s => s.projetId === projetId);
+    console.log('Getting status for projet', projetId, ':', status);
+    return status;
   }
 
   extractFilters() {
