@@ -95,10 +95,11 @@ export class AuthService {
     return user?.roles.includes(role) ?? false;
   }
 
-  register(username: string, email: string, password: string) {
+  register(username: string, email: string, phoneNumber: string, password: string) {
     return this.http.post(`${this.apiUrl}/signup`, {
       username,
       email,
+      phoneNumber,
       password
     });
   }

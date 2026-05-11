@@ -54,6 +54,17 @@ import { AuthService } from '../../services/auth.service';
                       required>
                   </div>
                   <div class="mb-3">
+                    <label for="phoneNumber" class="form-label">Numéro de téléphone</label>
+                    <input 
+                      type="tel" 
+                      class="form-control" 
+                      id="phoneNumber" 
+                      [(ngModel)]="phoneNumber"
+                      name="phoneNumber"
+                      placeholder="+216XXXXXXXX"
+                      required>
+                  </div>
+                  <div class="mb-3">
                     <label for="password" class="form-label">Mot de passe</label>
                     <input 
                       type="password" 
@@ -95,6 +106,7 @@ export class RegisterComponent {
   
   username = '';
   email = '';
+  phoneNumber = '';
   password = '';
   confirmPassword = '';
   errorMessage = signal('');
@@ -104,7 +116,7 @@ export class RegisterComponent {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    if (!this.username || !this.email || !this.password || !this.confirmPassword) {
+    if (!this.username || !this.email || !this.phoneNumber || !this.password || !this.confirmPassword) {
       this.errorMessage.set('Veuillez remplir tous les champs');
       return;
     }
@@ -120,7 +132,7 @@ export class RegisterComponent {
     }
 
     // Appel API pour l'inscription
-    this.authService.register(this.username, this.email, this.password).subscribe({
+    this.authService.register(this.username, this.email, this.phoneNumber, this.password).subscribe({
       next: (response: any) => {
         this.successMessage.set('Inscription réussie ! Vous pouvez maintenant vous connecter.');
         

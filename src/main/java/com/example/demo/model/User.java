@@ -26,6 +26,8 @@ public class User {
     @Email
     private String email;
 
+    private String phoneNumber;
+
     @NotBlank
     @Size(max = 120)
     private String password;
@@ -69,6 +71,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getPassword() {

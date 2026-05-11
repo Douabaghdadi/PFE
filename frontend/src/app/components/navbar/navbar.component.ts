@@ -56,6 +56,11 @@ import { AuthService } from '../../services/auth.service';
                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
                   Fiches de Suivi
                 </a>
+                <a routerLink="/pilote-qualite/notifications" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  <i class="fas fa-bell mr-1"></i>Notifications
+                </a>
               } @else {
                 <a routerLink="/dashboard" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
@@ -197,6 +202,9 @@ import { AuthService } from '../../services/auth.service';
               </a>
               <a routerLink="/pilote-qualite/fiches-suivi" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
                 Fiches de Suivi
+              </a>
+              <a routerLink="/pilote-qualite/notifications" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
+                <i class="fas fa-bell mr-1"></i>Notifications
               </a>
             } @else {
               <a routerLink="/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Tableau de bord</a>

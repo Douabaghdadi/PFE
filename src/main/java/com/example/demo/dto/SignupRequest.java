@@ -15,6 +15,8 @@ public class SignupRequest {
     @Email
     private String email;
 
+    private String phoneNumber;
+
     private Set<String> roles;
 
     @NotBlank
@@ -35,6 +37,14 @@ public class SignupRequest {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public String getPassword() {
