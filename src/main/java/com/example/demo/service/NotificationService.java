@@ -70,9 +70,17 @@ public class NotificationService {
 
         int emailsSent = 0;
         int smsSent = 0;
+        boolean hasContactInfo = false;
+
+        // Vérifier qu'au moins un moyen de contact existe
+        if ((chefProjet.getEmail() == null || chefProjet.getEmail().isEmpty()) && 
+            (chefProjet.getPhoneNumber() == null || chefProjet.getPhoneNumber().isEmpty())) {
+            throw new RuntimeException("Le chef de projet n'a ni email ni numéro de téléphone");
+        }
 
         // Envoyer l'email
         if (chefProjet.getEmail() != null && !chefProjet.getEmail().isEmpty()) {
+            hasContactInfo = true;
             try {
                 emailService.sendFicheSuiviReminderEmail(
                     chefProjet.getEmail(),
@@ -81,13 +89,16 @@ public class NotificationService {
                     status.getJoursRetard()
                 );
                 emailsSent = 1;
+                System.out.println("Email envoyé avec succès pour le projet: " + projet.getNomProjet());
             } catch (Exception e) {
                 System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage());
+                // Ne pas lancer d'exception, continuer avec le SMS
             }
         }
 
         // Envoyer le SMS
         if (chefProjet.getPhoneNumber() != null && !chefProjet.getPhoneNumber().isEmpty()) {
+            hasContactInfo = true;
             try {
                 smsService.sendFicheSuiviReminderSms(
                     chefProjet.getPhoneNumber(),
@@ -96,13 +107,11 @@ public class NotificationService {
                     status.getJoursRetard()
                 );
                 smsSent = 1;
+                System.out.println("SMS envoyé avec succès pour le projet: " + projet.getNomProjet());
             } catch (Exception e) {
                 System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
+                // Ne pas lancer d'exception
             }
-        }
-
-        if (emailsSent == 0 && smsSent == 0) {
-            throw new RuntimeException("Le chef de projet n'a ni email ni numéro de téléphone");
         }
 
         return new NotificationResult(emailsSent, smsSent);

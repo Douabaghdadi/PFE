@@ -23,11 +23,15 @@ import { FicheSuiviDetailComponent } from './pages/fiche-suivi-detail/fiche-suiv
 import { ProfileComponent } from './pages/profile/profile.component';
 import { ChangePasswordComponent } from './pages/change-password/change-password.component';
 import { EditProfileComponent } from './pages/edit-profile/edit-profile.component';
+import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'fiche-projet/new', component: FicheProjetFormComponent },
   { path: 'fiche-projet/edit/:id', component: FicheProjetFormComponent },
   { path: 'fiche-suivi/new', component: FicheSuiviFormComponent },

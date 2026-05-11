@@ -5,6 +5,9 @@ public class ChangePasswordRequest {
     private String currentPassword;
     private String newPassword;
 
+    public ChangePasswordRequest() {
+    }
+
     public String getUserId() {
         return userId;
     }

@@ -2,8 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { PiloteQualiteFicheProjetService } from '../../services/pilote-qualite-fiche-projet.service';
-import { PiloteQualiteFicheSuiviService } from '../../services/pilote-qualite-fiche-suivi.service';
+import { FicheProjetService } from '../../services/fiche-projet.service';
+import { FicheSuiviService } from '../../services/fiche-suivi.service';
 
 @Component({
   selector: 'app-profile',
@@ -164,8 +164,8 @@ import { PiloteQualiteFicheSuiviService } from '../../services/pilote-qualite-fi
 })
 export class ProfileComponent implements OnInit {
   authService = inject(AuthService);
-  ficheProjetService = inject(PiloteQualiteFicheProjetService);
-  ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
+  ficheProjetService = inject(FicheProjetService);
+  ficheSuiviService = inject(FicheSuiviService);
   
   user: any = null;
   projectCount: number = 0;
@@ -177,8 +177,8 @@ export class ProfileComponent implements OnInit {
   }
 
   loadStatistics() {
-    // Charger le nombre de projets
-    this.ficheProjetService.getAllFichesProjet().subscribe({
+    // Charger le nombre de projets du chef de projet connecté
+    this.ficheProjetService.getMyFichesProjet().subscribe({
       next: (projets) => {
         this.projectCount = projets.length;
       },
@@ -188,7 +188,7 @@ export class ProfileComponent implements OnInit {
       }
     });
 
-    // Charger le nombre de fiches de suivi
+    // Charger le nombre de fiches de suivi du chef de projet connecté
     this.ficheSuiviService.getAllFichesSuivi().subscribe({
       next: (fiches) => {
         this.ficheSuiviCount = fiches.length;

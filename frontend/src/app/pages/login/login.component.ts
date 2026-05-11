@@ -92,7 +92,7 @@ import { AuthService } from '../../services/auth.service';
                   Se souvenir de moi
                 </label>
               </div>
-              <a href="#" class="text-sm font-medium" style="color: #10b981;">
+              <a routerLink="/forgot-password" class="text-sm font-medium" style="color: #10b981;">
                 Mot de passe oublié ?
               </a>
             </div>
