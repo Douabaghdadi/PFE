@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ChangePasswordRequest;
 import com.example.demo.dto.JwtResponse;
 import com.example.demo.dto.LoginRequest;
 import com.example.demo.dto.MessageResponse;
@@ -118,5 +119,28 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+        try {
+            User user = userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                return ResponseEntity
+                        .badRequest()
+                        .body(new MessageResponse("Le mot de passe actuel est incorrect"));
+            }
+
+            user.setPassword(encoder.encode(request.getNewPassword()));
+            userRepository.save(user);
+
+            return ResponseEntity.ok(new MessageResponse("Mot de passe changé avec succès"));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(new MessageResponse("Erreur lors du changement de mot de passe: " + e.getMessage()));
+        }
     }
 }

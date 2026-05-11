@@ -20,6 +20,9 @@ import { PiloteFicheSuiviDetailComponent } from './pages/pilote-qualite/fiche-su
 import { ProjetKPIComponent } from './pages/pilote-qualite/projet-kpi/projet-kpi.component';
 import { NotificationsComponent } from './pages/pilote-qualite/notifications/notifications.component';
 import { FicheSuiviDetailComponent } from './pages/fiche-suivi-detail/fiche-suivi-detail.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { ChangePasswordComponent } from './pages/change-password/change-password.component';
+import { EditProfileComponent } from './pages/edit-profile/edit-profile.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -33,6 +36,9 @@ export const routes: Routes = [
   { path: 'fiches-suivi', component: FichesSuiviListComponent },
   { path: 'projets', component: ProjetsListComponent },
   { path: 'projets/:id', component: ProjetDetailComponent },
+  { path: 'profile', component: ProfileComponent },
+  { path: 'edit-profile', component: EditProfileComponent },
+  { path: 'change-password', component: ChangePasswordComponent },
   { path: 'dashboard', component: HomeComponent }, // Temporaire, à remplacer par un vrai dashboard
   {
     path: 'admin',

@@ -11,6 +11,7 @@ export interface User {
   token: string;
   firstName?: string;
   lastName?: string;
+  phoneNumber?: string;
   role?: string;
   createdAt?: Date;
 }
