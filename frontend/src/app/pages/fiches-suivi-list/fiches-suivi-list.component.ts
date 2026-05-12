@@ -112,7 +112,7 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @for (fiche of filteredFiches(); track fiche.id) {
+            @for (fiche of paginatedFiches(); track fiche.id) {
               <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column; height: 100%;"
                    onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
@@ -181,6 +181,47 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
               </div>
             }
           </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+              <button (click)="goToPage(currentPage() - 1)" 
+                      [disabled]="currentPage() === 1"
+                      style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      [style.opacity]="currentPage() === 1 ? '0.5' : '1'"
+                      [style.cursor]="currentPage() === 1 ? 'not-allowed' : 'pointer'"
+                      onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                      onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+
+              @for (page of getPageNumbers(); track page) {
+                @if (page === -1) {
+                  <span style="padding: 0.5rem 1rem; color: #6b7280;">...</span>
+                } @else {
+                  <button (click)="goToPage(page)"
+                          [style.background]="currentPage() === page ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'white'"
+                          [style.color]="currentPage() === page ? 'white' : '#374151'"
+                          [style.border]="currentPage() === page ? '2px solid #10b981' : '2px solid #e5e7eb'"
+                          style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 40px;"
+                          onmouseover="if(this.style.background === 'white') { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                          onmouseout="if(this.style.color !== 'white') { this.style.borderColor='#e5e7eb'; this.style.background='white'; }">
+                    {{ page }}
+                  </button>
+                }
+              }
+
+              <button (click)="goToPage(currentPage() + 1)" 
+                      [disabled]="currentPage() === totalPages()"
+                      style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      [style.opacity]="currentPage() === totalPages() ? '0.5' : '1'"
+                      [style.cursor]="currentPage() === totalPages() ? 'not-allowed' : 'pointer'"
+                      onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                      onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          }
         }
       </div>
     </div>
@@ -202,12 +243,18 @@ export class FichesSuiviListComponent implements OnInit {
   
   fichesSuivi = signal<FicheSuivi[]>([]);
   filteredFiches = signal<FicheSuivi[]>([]);
+  paginatedFiches = signal<FicheSuivi[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
   projetNames = signal<{ [key: string]: string }>({});
   
   searchTerm = signal('');
   selectedProjetId = signal('');
+  
+  // Pagination
+  currentPage = signal(1);
+  itemsPerPage = signal(6);
+  totalPages = signal(1);
 
   ngOnInit() {
     this.loadFichesSuivi();
@@ -221,6 +268,7 @@ export class FichesSuiviListComponent implements OnInit {
         this.fichesSuivi.set(data);
         this.filteredFiches.set(data);
         this.loadProjetNames();
+        this.updatePagination();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -289,12 +337,61 @@ export class FichesSuiviListComponent implements OnInit {
     }
 
     this.filteredFiches.set(filtered);
+    this.currentPage.set(1);
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    const total = Math.ceil(this.filteredFiches().length / this.itemsPerPage());
+    this.totalPages.set(total || 1);
+    
+    const start = (this.currentPage() - 1) * this.itemsPerPage();
+    const end = start + this.itemsPerPage();
+    this.paginatedFiches.set(this.filteredFiches().slice(start, end));
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.updatePagination();
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages();
+    const current = this.currentPage();
+    
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 3) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 2) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      }
+    }
+    return pages;
   }
 
   resetFilters() {
     this.searchTerm.set('');
     this.selectedProjetId.set('');
     this.filteredFiches.set(this.fichesSuivi());
+    this.currentPage.set(1);
+    this.updatePagination();
   }
 
   getUniqueProjets() {
