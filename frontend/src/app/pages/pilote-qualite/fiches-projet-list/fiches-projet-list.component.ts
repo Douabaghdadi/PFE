@@ -21,6 +21,7 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   fichesProjet: FicheProjet[] = [];
   filteredFiches: FicheProjet[] = [];
+  paginatedFiches: FicheProjet[] = [];
   projetsSuiviStatus: ProjetSuiviStatus[] = [];
   loading = true;
   error: string | null = null;
@@ -28,12 +29,18 @@ export class PiloteFichesProjetListComponent implements OnInit {
   // Filtres
   selectedStatut = '';
   searchTerm = '';
+  sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
 
   // Listes pour les filtres
   statuts: string[] = [];
   
   // Cache pour les noms des chefs de projet
   chefProjetNames: { [key: string]: string } = {};
+  
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 6;
+  totalPages = 1;
 
   ngOnInit() {
     this.loadFichesProjet();
@@ -50,6 +57,7 @@ export class PiloteFichesProjetListComponent implements OnInit {
         this.filteredFiches = fiches;
         this.extractFilters();
         this.loadChefProjetNames();
+        this.updatePagination();
         this.loading = false;
       },
       error: (err) => {
@@ -96,12 +104,72 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
       return matchesStatut && matchesSearch;
     });
+    
+    // Tri par date
+    this.filteredFiches.sort((a, b) => {
+      const dateA = new Date(a.dateCreation || 0).getTime();
+      const dateB = new Date(b.dateCreation || 0).getTime();
+      return this.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+    
+    this.currentPage = 1;
+    this.updatePagination();
+  }
+
+  toggleSortOrder() {
+    this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+    this.applyFilters();
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredFiches.length / this.itemsPerPage) || 1;
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    this.paginatedFiches = this.filteredFiches.slice(start, end);
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const total = this.totalPages;
+    const current = this.currentPage;
+    
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (current <= 3) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      } else if (current >= total - 2) {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = total - 4; i <= total; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push(-1);
+        for (let i = current - 1; i <= current + 1; i++) pages.push(i);
+        pages.push(-1);
+        pages.push(total);
+      }
+    }
+    return pages;
   }
 
   resetFilters() {
     this.selectedStatut = '';
     this.searchTerm = '';
     this.filteredFiches = this.fichesProjet;
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
   viewDetails(id: string | undefined) {

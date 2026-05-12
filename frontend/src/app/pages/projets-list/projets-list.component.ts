@@ -46,7 +46,7 @@ interface FicheProjet {
         <!-- Filters -->
         <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
           <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-            <div class="md:col-span-4">
+            <div class="md:col-span-3">
               <input type="text" 
                      [(ngModel)]="searchTerm" 
                      (input)="filterProjets()"
@@ -68,7 +68,7 @@ interface FicheProjet {
                 <option value="ANNULE">Annulé</option>
               </select>
             </div>
-            <div class="md:col-span-3">
+            <div class="md:col-span-2">
               <select [(ngModel)]="filterType" 
                       (change)="filterProjets()"
                       style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; background: white;"
@@ -79,6 +79,15 @@ interface FicheProjet {
                 <option value="evolution">Evolution</option>
                 <option value="refonte">Refonte</option>
               </select>
+            </div>
+            <div class="md:col-span-2">
+              <button (click)="toggleSortOrder()"
+                      style="width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; color: #374151; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';"
+                      onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <i [class]="sortOrder === 'desc' ? 'fas fa-sort-amount-down' : 'fas fa-sort-amount-up'" style="margin-right: 0.5rem;"></i>
+                {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
+              </button>
             </div>
             <div class="md:col-span-2">
               <button (click)="resetFilters()"
@@ -271,6 +280,7 @@ export class ProjetsListComponent implements OnInit {
   searchTerm = '';
   filterStatut = '';
   filterType = '';
+  sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
   
   // Pagination
   currentPage = signal(1);
@@ -332,9 +342,21 @@ export class ProjetsListComponent implements OnInit {
       filtered = filtered.filter(p => p.typeProjet === this.filterType);
     }
 
+    // Tri par date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.dateCreation || 0).getTime();
+      const dateB = new Date(b.dateCreation || 0).getTime();
+      return this.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
     this.filteredProjets.set(filtered);
     this.currentPage.set(1);
     this.updatePagination();
+  }
+
+  toggleSortOrder() {
+    this.sortOrder = this.sortOrder === 'desc' ? 'asc' : 'desc';
+    this.filterProjets();
   }
 
   updatePagination() {

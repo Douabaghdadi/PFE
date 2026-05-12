@@ -34,7 +34,7 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
         <!-- Filters -->
         <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
           <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-            <div class="md:col-span-6">
+            <div class="md:col-span-5">
               <input type="text" 
                      [value]="searchTerm()" 
                      (input)="searchTerm.set($any($event.target).value); applyFilters()"
@@ -43,7 +43,7 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
                      onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
                      onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
             </div>
-            <div class="md:col-span-4">
+            <div class="md:col-span-3">
               <select [value]="selectedProjetId()" 
                       (change)="selectedProjetId.set($any($event.target).value); applyFilters()"
                       style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer;"
@@ -54,6 +54,15 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
                   <option [value]="projet.id">{{ projet.name }}</option>
                 }
               </select>
+            </div>
+            <div class="md:col-span-2">
+              <button (click)="toggleSortOrder()"
+                      style="width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; color: #374151; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                      onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';"
+                      onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+                <i [class]="sortOrder() === 'desc' ? 'fas fa-sort-amount-down' : 'fas fa-sort-amount-up'" style="margin-right: 0.5rem;"></i>
+                {{ sortOrder() === 'desc' ? 'Plus récent' : 'Plus ancien' }}
+              </button>
             </div>
             <div class="md:col-span-2">
               <button (click)="resetFilters()"
@@ -250,6 +259,7 @@ export class FichesSuiviListComponent implements OnInit {
   
   searchTerm = signal('');
   selectedProjetId = signal('');
+  sortOrder = signal<'asc' | 'desc'>('desc'); // desc = plus récent d'abord
   
   // Pagination
   currentPage = signal(1);
@@ -336,9 +346,21 @@ export class FichesSuiviListComponent implements OnInit {
       filtered = filtered.filter(fiche => fiche.ficheProjetId === this.selectedProjetId());
     }
 
+    // Tri par date
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.dateRapport || a.dateCreation || 0).getTime();
+      const dateB = new Date(b.dateRapport || b.dateCreation || 0).getTime();
+      return this.sortOrder() === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
     this.filteredFiches.set(filtered);
     this.currentPage.set(1);
     this.updatePagination();
+  }
+
+  toggleSortOrder() {
+    this.sortOrder.set(this.sortOrder() === 'desc' ? 'asc' : 'desc');
+    this.applyFilters();
   }
 
   updatePagination() {

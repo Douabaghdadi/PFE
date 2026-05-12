@@ -16,7 +16,7 @@
     <!-- Filters -->
     <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
       <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div class="md:col-span-10">
+        <div class="md:col-span-8">
           <input type="text" 
                  [(ngModel)]="searchTerm" 
                  (ngModelChange)="applyFilters()"
@@ -24,6 +24,17 @@
                  style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease;"
                  onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
                  onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+        </div>
+        <div class="md:col-span-2">
+          <button (click)="toggleSortOrder()"
+                  style="width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; color: #374151; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                  onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';"
+                  onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+            <svg [style]="sortOrder === 'desc' ? 'transform: rotate(0deg);' : 'transform: rotate(180deg);'" style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle; transition: transform 0.3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+            </svg>
+            {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
+          </button>
         </div>
         <div class="md:col-span-2">
           <button (click)="resetFilters()"
@@ -77,7 +88,7 @@
       </div>
       
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: stretch;">
-        <div *ngFor="let fiche of filteredFiches"
+        <div *ngFor="let fiche of paginatedFiches"
              style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column;"
              (click)="viewDetails(fiche.id)"
              onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
@@ -165,6 +176,46 @@
             Voir les détails
           </button>
         </div>
+      </div>
+
+      <!-- Pagination -->
+      <div *ngIf="totalPages > 1" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+        <button (click)="goToPage(currentPage - 1)" 
+                [disabled]="currentPage === 1"
+                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                [style.opacity]="currentPage === 1 ? '0.5' : '1'"
+                [style.cursor]="currentPage === 1 ? 'not-allowed' : 'pointer'"
+                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+
+        <ng-container *ngFor="let page of getPageNumbers()">
+          <span *ngIf="page === -1" style="padding: 0.5rem 1rem; color: #6b7280;">...</span>
+          <button *ngIf="page !== -1" (click)="goToPage(page)"
+                  [style.background]="currentPage === page ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'white'"
+                  [style.color]="currentPage === page ? 'white' : '#374151'"
+                  [style.border]="currentPage === page ? '2px solid #10b981' : '2px solid #e5e7eb'"
+                  style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 40px;"
+                  onmouseover="if(this.style.background === 'white') { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                  onmouseout="if(this.style.color !== 'white') { this.style.borderColor='#e5e7eb'; this.style.background='white'; }">
+            {{ page }}
+          </button>
+        </ng-container>
+
+        <button (click)="goToPage(currentPage + 1)" 
+                [disabled]="currentPage === totalPages"
+                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
+                [style.opacity]="currentPage === totalPages ? '0.5' : '1'"
+                [style.cursor]="currentPage === totalPages ? 'not-allowed' : 'pointer'"
+                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
+                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
+          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
