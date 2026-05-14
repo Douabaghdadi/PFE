@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
+import { HistoriqueComponent } from '../../components/historique/historique.component';
 
 interface MembreEquipe {
   nom: string;
@@ -38,7 +39,7 @@ interface FicheProjet {
 @Component({
   selector: 'app-projet-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, HistoriqueComponent],
   template: `
     <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
       <div class="container mx-auto px-4" style="max-width: 1200px;">
@@ -460,6 +461,14 @@ interface FicheProjet {
                 </div>
               }
 
+              <!-- Section : Historique et Traçabilité -->
+              @if (projet()!.id) {
+                <app-historique 
+                  [entityType]="'FICHE_PROJET'" 
+                  [entityId]="projet()!.id">
+                </app-historique>
+              }
+
               <!-- Section : Fiches de Suivi associées -->
               <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; border: 2px solid #bfdbfe;">
                 <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 1.5rem; display: flex; align-items: center;">
@@ -554,6 +563,13 @@ interface FicheProjet {
                    onmouseout="this.style.borderColor='#e5e7eb'; this.style.color='#374151'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.05)';">
                   <i class="fas fa-arrow-left mr-2"></i>
                   Retour à la liste
+                </a>
+                <a [routerLink]="['/projets', projet()!.id, 'historique']" 
+                   style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);"
+                   onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(139, 92, 246, 0.4)';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(139, 92, 246, 0.3)';">
+                  <i class="fas fa-history mr-2"></i>
+                  Historique complet
                 </a>
                 <button (click)="editProjet()" 
                         style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); display: inline-flex; align-items: center;"

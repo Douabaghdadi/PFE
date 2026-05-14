@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
+import { HistoriqueComponent } from '../../../components/historique/historique.component';
 
 @Component({
   selector: 'app-pilote-fiche-suivi-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, HistoriqueComponent],
   templateUrl: './fiche-suivi-detail.component.html',
   styleUrls: ['./fiche-suivi-detail.component.css']
 })

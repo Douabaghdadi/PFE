@@ -19,6 +19,9 @@ public class FicheSuiviService {
 
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
+    
+    @Autowired
+    private HistoriqueService historiqueService;
 
     public List<FicheSuivi> getAllFichesSuivi() {
         return ficheSuiviRepository.findAll();
@@ -140,6 +143,9 @@ public class FicheSuiviService {
 
         FicheSuivi saved = ficheSuiviRepository.save(ficheSuivi);
         
+        // Enregistrer dans l'historique avec le projetId
+        historiqueService.enregistrerCreation("FICHE_SUIVI", saved.getId(), chefProjetId, saved, request.getFicheProjetId(), saved.getNumeroRapport());
+        
         // Mettre à jour les dates de suivi dans la fiche projet
         LocalDate today = LocalDate.now();
         ficheProjet.setDateDerniereFicheSuivi(today);
@@ -162,11 +168,49 @@ public class FicheSuiviService {
         if (!ficheSuivi.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only update your own follow-up files");
         }
+        
+        // IMPORTANT: Sauvegarder les anciennes valeurs AVANT toute modification
+        java.util.Map<String, Object> anciennesValeurs = new java.util.HashMap<>();
+        anciennesValeurs.put("numeroRapport", ficheSuivi.getNumeroRapport());
+        anciennesValeurs.put("dateRapport", ficheSuivi.getDateRapport());
+        
+        // Fiche Signalétique
+        if (ficheSuivi.getFicheSignaletique() != null) {
+            if (ficheSuivi.getFicheSignaletique().getChefProjet() != null) {
+                anciennesValeurs.put("chefProjet", ficheSuivi.getFicheSignaletique().getChefProjet().getNom());
+            }
+            anciennesValeurs.put("descriptionProjet", ficheSuivi.getFicheSignaletique().getDescriptionProjet());
+            anciennesValeurs.put("experts", ficheSuivi.getFicheSignaletique().getExperts());
+            anciennesValeurs.put("caracteristiquesTechniques", ficheSuivi.getFicheSignaletique().getCaracteristiquesTechniques());
+        }
+        
+        // Constat Global
+        if (ficheSuivi.getConstatGlobal() != null) {
+            anciennesValeurs.put("etatAvancement", ficheSuivi.getConstatGlobal().getEtatAvancement());
+            anciennesValeurs.put("objectifPrincipal", ficheSuivi.getConstatGlobal().getObjectifPrincipal());
+            anciennesValeurs.put("problemesRencontres", ficheSuivi.getConstatGlobal().getProblemesRencontres());
+            anciennesValeurs.put("principauxRisques", ficheSuivi.getConstatGlobal().getPrincipauxRisques());
+            anciennesValeurs.put("recommandations", ficheSuivi.getConstatGlobal().getRecommandations());
+        }
+        
+        // Tâches de suivi
+        if (ficheSuivi.getTachesSuivi() != null) {
+            anciennesValeurs.put("nombreTaches", ficheSuivi.getTachesSuivi().size());
+        }
+        
+        // Planning actuel
+        if (ficheSuivi.getPlanningActuel() != null && ficheSuivi.getPlanningActuel().getTaches() != null) {
+            anciennesValeurs.put("nombreTachesPlanning", ficheSuivi.getPlanningActuel().getTaches().size());
+        }
+        
+        System.out.println("=== DEBUG UPDATE FICHE SUIVI ===");
+        System.out.println("Anciennes valeurs capturées: " + anciennesValeurs.size() + " champs");
 
         // Récupérer la fiche projet pour les dates
         FicheProjet ficheProjet = ficheProjetRepository.findById(ficheSuivi.getFicheProjetId())
                 .orElseThrow(() -> new RuntimeException("Fiche projet not found"));
 
+        // Maintenant on peut modifier
         ficheSuivi.setNumeroRapport(request.getNumeroRapport());
         ficheSuivi.setDateRapport(request.getDateRapport());
         ficheSuivi.setFicheSignaletique(request.getFicheSignaletique());
@@ -192,7 +236,49 @@ public class FicheSuiviService {
         ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setDateModification(LocalDateTime.now());
 
-        return ficheSuiviRepository.save(ficheSuivi);
+        FicheSuivi updated = ficheSuiviRepository.save(ficheSuivi);
+        
+        // Capturer les nouvelles valeurs APRÈS modification
+        java.util.Map<String, Object> nouvellesValeurs = new java.util.HashMap<>();
+        nouvellesValeurs.put("numeroRapport", updated.getNumeroRapport());
+        nouvellesValeurs.put("dateRapport", updated.getDateRapport());
+        
+        // Fiche Signalétique
+        if (updated.getFicheSignaletique() != null) {
+            if (updated.getFicheSignaletique().getChefProjet() != null) {
+                nouvellesValeurs.put("chefProjet", updated.getFicheSignaletique().getChefProjet().getNom());
+            }
+            nouvellesValeurs.put("descriptionProjet", updated.getFicheSignaletique().getDescriptionProjet());
+            nouvellesValeurs.put("experts", updated.getFicheSignaletique().getExperts());
+            nouvellesValeurs.put("caracteristiquesTechniques", updated.getFicheSignaletique().getCaracteristiquesTechniques());
+        }
+        
+        // Constat Global
+        if (updated.getConstatGlobal() != null) {
+            nouvellesValeurs.put("etatAvancement", updated.getConstatGlobal().getEtatAvancement());
+            nouvellesValeurs.put("objectifPrincipal", updated.getConstatGlobal().getObjectifPrincipal());
+            nouvellesValeurs.put("problemesRencontres", updated.getConstatGlobal().getProblemesRencontres());
+            nouvellesValeurs.put("principauxRisques", updated.getConstatGlobal().getPrincipauxRisques());
+            nouvellesValeurs.put("recommandations", updated.getConstatGlobal().getRecommandations());
+        }
+        
+        // Tâches de suivi
+        if (updated.getTachesSuivi() != null) {
+            nouvellesValeurs.put("nombreTaches", updated.getTachesSuivi().size());
+        }
+        
+        // Planning actuel
+        if (updated.getPlanningActuel() != null && updated.getPlanningActuel().getTaches() != null) {
+            nouvellesValeurs.put("nombreTachesPlanning", updated.getPlanningActuel().getTaches().size());
+        }
+        
+        System.out.println("Nouvelles valeurs capturées: " + nouvellesValeurs.size() + " champs");
+        System.out.println("=== END DEBUG ===");
+        
+        // Enregistrer dans l'historique avec le projetId
+        historiqueService.enregistrerModification("FICHE_SUIVI", id, chefProjetId, anciennesValeurs, nouvellesValeurs, ficheSuivi.getFicheProjetId(), updated.getNumeroRapport());
+        
+        return updated;
     }
 
     public void deleteFicheSuivi(String id, String chefProjetId) {
@@ -203,6 +289,9 @@ public class FicheSuiviService {
         if (!ficheSuivi.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only delete your own follow-up files");
         }
+        
+        // Enregistrer dans l'historique avant suppression avec le projetId
+        historiqueService.enregistrerSuppression("FICHE_SUIVI", id, chefProjetId, ficheSuivi.getFicheProjetId(), ficheSuivi.getNumeroRapport());
 
         ficheSuiviRepository.deleteById(id);
     }

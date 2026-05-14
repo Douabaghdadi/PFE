@@ -17,6 +17,9 @@ import java.util.List;
 public class FicheProjetService {
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
+    
+    @Autowired
+    private HistoriqueService historiqueService;
 
     public List<FicheProjet> getAllFichesProjet() {
         return ficheProjetRepository.findAll();
@@ -92,7 +95,12 @@ public class FicheProjetService {
         ficheProjet.setDateDocument(request.getDateDocument());
         ficheProjet.setDateCreation(LocalDateTime.now());
 
-        return ficheProjetRepository.save(ficheProjet);
+        FicheProjet saved = ficheProjetRepository.save(ficheProjet);
+        
+        // Enregistrer dans l'historique avec le projetId (l'ID de la fiche projet elle-même)
+        historiqueService.enregistrerCreation("FICHE_PROJET", saved.getId(), chefProjetId, saved, saved.getId(), saved.getNomProjet());
+        
+        return saved;
     }
 
     public FicheProjet updateFicheProjet(String id, FicheProjetRequest request, String chefProjetId) {
@@ -103,6 +111,9 @@ public class FicheProjetService {
         if (!ficheProjet.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only update your own project files");
         }
+        
+        // Sauvegarder les anciennes valeurs
+        java.util.Map<String, Object> anciennesValeurs = historiqueService.extraireValeursImportantes(ficheProjet);
 
         // Champs de base
         ficheProjet.setNomProjet(request.getNomProjet());
@@ -161,7 +172,13 @@ public class FicheProjetService {
         ficheProjet.setDateDocument(request.getDateDocument());
         ficheProjet.setDateModification(LocalDateTime.now());
 
-        return ficheProjetRepository.save(ficheProjet);
+        FicheProjet updated = ficheProjetRepository.save(ficheProjet);
+        
+        // Enregistrer dans l'historique avec le projetId
+        java.util.Map<String, Object> nouvellesValeurs = historiqueService.extraireValeursImportantes(updated);
+        historiqueService.enregistrerModification("FICHE_PROJET", id, chefProjetId, anciennesValeurs, nouvellesValeurs, id, updated.getNomProjet());
+        
+        return updated;
     }
 
     public void deleteFicheProjet(String id, String chefProjetId) {
@@ -172,6 +189,9 @@ public class FicheProjetService {
         if (!ficheProjet.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only delete your own project files");
         }
+        
+        // Enregistrer dans l'historique avant suppression avec le projetId
+        historiqueService.enregistrerSuppression("FICHE_PROJET", id, chefProjetId, id, ficheProjet.getNomProjet());
 
         ficheProjetRepository.deleteById(id);
     }

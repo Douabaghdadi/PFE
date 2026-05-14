@@ -25,6 +25,7 @@ import { ChangePasswordComponent } from './pages/change-password/change-password
 import { EditProfileComponent } from './pages/edit-profile/edit-profile.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
+import { HistoriqueProjetComponent } from './pages/historique-projet/historique-projet.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -40,6 +41,7 @@ export const routes: Routes = [
   { path: 'fiches-suivi', component: FichesSuiviListComponent },
   { path: 'projets', component: ProjetsListComponent },
   { path: 'projets/:id', component: ProjetDetailComponent },
+  { path: 'projets/:id/historique', component: HistoriqueProjetComponent },
   { path: 'profile', component: ProfileComponent },
   { path: 'edit-profile', component: EditProfileComponent },
   { path: 'change-password', component: ChangePasswordComponent },

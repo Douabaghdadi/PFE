@@ -224,6 +224,13 @@
       <p>Aucune donnée de planning.</p>
     </div>
   </div>
+
+  <!-- Section : Historique et Traçabilité -->
+  <app-historique 
+    *ngIf="ficheSuivi.id"
+    [entityType]="'FICHE_SUIVI'" 
+    [entityId]="ficheSuivi.id">
+  </app-historique>
 </div>
 
 <!-- Loading -->

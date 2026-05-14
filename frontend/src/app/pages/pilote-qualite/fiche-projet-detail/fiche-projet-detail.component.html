@@ -512,6 +512,13 @@
           </div>
         </div>
 
+        <!-- Section : Historique et Traçabilité -->
+        <app-historique 
+          *ngIf="ficheProjet.id"
+          [entityType]="'FICHE_PROJET'" 
+          [entityId]="ficheProjet.id">
+        </app-historique>
+
         <!-- Actions -->
         <div style="display: flex; gap: 1rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; flex-wrap: wrap;">
           <button (click)="goBack()"

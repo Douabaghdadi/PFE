@@ -9,6 +9,7 @@ import {
   EstimationBudget,
   PlanningAction
 } from '../../../services/pilote-qualite-fiche-projet.service';
+import { HistoriqueComponent } from '../../../components/historique/historique.component';
 
 interface MembreEquipe {
   nom: string;
@@ -19,7 +20,7 @@ interface MembreEquipe {
 @Component({
   selector: 'app-pilote-fiche-projet-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, HistoriqueComponent],
   templateUrl: './fiche-projet-detail.component.html',
   styleUrls: ['./fiche-projet-detail.component.css']
 })
