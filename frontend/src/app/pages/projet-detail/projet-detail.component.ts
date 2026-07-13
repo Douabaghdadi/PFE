@@ -2,8 +2,6 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
-import { HistoriqueComponent } from '../../components/historique/historique.component';
 
 interface MembreEquipe {
   nom: string;
@@ -39,7 +37,7 @@ interface FicheProjet {
 @Component({
   selector: 'app-projet-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, HistoriqueComponent],
+  imports: [CommonModule, RouterLink],
   template: `
     <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
       <div class="container mx-auto px-4" style="max-width: 1200px;">
@@ -461,99 +459,6 @@ interface FicheProjet {
                 </div>
               }
 
-              <!-- Section : Historique et Traçabilité -->
-              @if (projet()!.id) {
-                <app-historique 
-                  [entityType]="'FICHE_PROJET'" 
-                  [entityId]="projet()!.id">
-                </app-historique>
-              }
-
-              <!-- Section : Fiches de Suivi associées -->
-              <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 2rem; border-radius: 1rem; margin-bottom: 2rem; border: 2px solid #bfdbfe;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e40af; margin-bottom: 1.5rem; display: flex; align-items: center;">
-                  <span style="display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 50%; font-size: 1.1rem; margin-right: 1rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-                    <i class="fas fa-clipboard-list"></i>
-                  </span>
-                  Fiches de Suivi associées
-                </h2>
-
-                @if (isLoadingFichesSuivi()) {
-                  <div class="text-center py-4">
-                    <div style="display: inline-block; width: 2rem; height: 2rem; border: 3px solid #bfdbfe; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-                    <p class="mt-2" style="color: #1e40af; font-size: 0.875rem;">Chargement des fiches de suivi...</p>
-                  </div>
-                }
-
-                @if (!isLoadingFichesSuivi() && fichesSuivi().length === 0) {
-                  <div style="background: white; padding: 2rem; border-radius: 0.75rem; text-align: center; border: 2px solid #bfdbfe;">
-                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                      <i class="fas fa-clipboard-list" style="font-size: 2rem; color: #3b82f6;"></i>
-                    </div>
-                    <p style="color: #6b7280; margin-bottom: 1.5rem;">Aucune fiche de suivi n'a encore été créée pour ce projet.</p>
-                    <a routerLink="/fiche-suivi/new" [queryParams]="{projetId: projet()!.id}"
-                       style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;"
-                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4)';"
-                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)';">
-                      <i class="fas fa-plus mr-2"></i>
-                      Créer la première fiche de suivi
-                    </a>
-                  </div>
-                }
-
-                @if (!isLoadingFichesSuivi() && fichesSuivi().length > 0) {
-                  <div style="background: white; padding: 1.5rem; border-radius: 0.75rem; border: 2px solid #bfdbfe; margin-bottom: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                      <p style="color: #1e40af; font-weight: 600; margin: 0;">
-                        <i class="fas fa-chart-line mr-2"></i>
-                        {{ fichesSuivi().length }} fiche(s) de suivi trouvée(s)
-                      </p>
-                      <a routerLink="/fiche-suivi/new" [queryParams]="{projetId: projet()!.id}"
-                         style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; font-size: 0.875rem; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;"
-                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.4)';"
-                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(59, 130, 246, 0.3)';">
-                        <i class="fas fa-plus mr-2"></i>
-                        Nouvelle fiche
-                      </a>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      @for (fiche of fichesSuivi(); track fiche.id) {
-                        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); padding: 1rem; border-radius: 0.5rem; border: 1px solid #bae6fd; transition: all 0.3s ease; cursor: pointer;"
-                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';"
-                             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='#bae6fd';">
-                          <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 0.75rem;">
-                            <div style="flex: 1;">
-                              <h4 style="font-weight: 700; color: #1e40af; margin: 0 0 0.25rem 0; font-size: 0.95rem;">
-                                <i class="fas fa-file-alt mr-2" style="color: #3b82f6;"></i>
-                                {{ fiche.numeroRapport || 'Sans numéro' }}
-                              </h4>
-                              <p style="color: #6b7280; margin: 0; font-size: 0.8rem;">
-                                <i class="fas fa-calendar mr-1"></i>
-                                {{ formatDate(fiche.dateRapport) }}
-                              </p>
-                            </div>
-                          </div>
-                          
-                          @if (fiche.ficheSignaletique && fiche.ficheSignaletique.maitreOuvrage) {
-                            <p style="color: #374151; margin: 0 0 0.5rem 0; font-size: 0.8rem;">
-                              <i class="fas fa-user-tie mr-1" style="color: #3b82f6;"></i>
-                              <strong>MO:</strong> {{ fiche.ficheSignaletique.maitreOuvrage }}
-                            </p>
-                          }
-
-                          <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                            <a [routerLink]="['/fiche-suivi/edit', fiche.id]"
-                               style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem; border-radius: 0.375rem; font-weight: 600; text-align: center; text-decoration: none; font-size: 0.8rem; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);">
-                              <i class="fas fa-eye mr-1"></i>Voir
-                            </a>
-                          </div>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
 
               <!-- Actions -->
               <div style="display: flex; gap: 1rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; flex-wrap: wrap;">
@@ -599,20 +504,17 @@ export class ProjetDetailComponent implements OnInit {
   http = inject(HttpClient);
   route = inject(ActivatedRoute);
   router = inject(Router);
-  ficheSuiviService = inject(FicheSuiviService);
 
   projet = signal<FicheProjet | null>(null);
   isLoading = signal(true);
   errorMessage = signal('');
   
-  fichesSuivi = signal<FicheSuivi[]>([]);
-  isLoadingFichesSuivi = signal(false);
+
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadProjet(id);
-      this.loadFichesSuivi(id);
     }
   }
 
@@ -642,31 +544,7 @@ export class ProjetDetailComponent implements OnInit {
     });
   }
 
-  loadFichesSuivi(projetId: string) {
-    this.isLoadingFichesSuivi.set(true);
-    this.ficheSuiviService.getFichesSuiviByProjet(projetId).subscribe({
-      next: (data) => {
-        this.fichesSuivi.set(data);
-        this.isLoadingFichesSuivi.set(false);
-      },
-      error: (error) => {
-        console.error('Error loading fiches suivi:', error);
-        // Don't show error, just set empty array
-        this.fichesSuivi.set([]);
-        this.isLoadingFichesSuivi.set(false);
-      }
-    });
-  }
 
-  formatDate(date: any): string {
-    if (!date) return 'Date non définie';
-    const d = new Date(date);
-    return d.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  }
 
   getStatutBadgeClass(statut: string): string {
     switch (statut) {

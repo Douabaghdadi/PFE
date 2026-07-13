@@ -26,6 +26,7 @@ import { EditProfileComponent } from './pages/edit-profile/edit-profile.componen
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { HistoriqueProjetComponent } from './pages/historique-projet/historique-projet.component';
+import { PiloteHistoriqueProjetComponent } from './pages/pilote-qualite/historique-projet/historique-projet.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -64,6 +65,7 @@ export const routes: Routes = [
       { path: 'dashboard', component: PiloteDashboardComponent },
       { path: 'fiches-projet', component: PiloteFichesProjetListComponent },
       { path: 'fiches-projet/:id', component: PiloteFicheProjetDetailComponent },
+      { path: 'fiches-projet/:id/historique', component: PiloteHistoriqueProjetComponent },
       { path: 'fiches-suivi', component: PiloteFichesSuiviListComponent },
       { path: 'fiches-suivi/:id', component: PiloteFicheSuiviDetailComponent },
       { path: 'projet-kpi/:id', component: ProjetKPIComponent },

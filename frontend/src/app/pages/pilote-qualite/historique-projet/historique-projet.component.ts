@@ -2,16 +2,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { HistoriqueService, HistoriqueModification } from '../../services/historique.service';
+import { HistoriqueService, HistoriqueModification } from '../../../services/historique.service';
 
 @Component({
-  selector: 'app-historique-projet',
+  selector: 'app-pilote-historique-projet',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './historique-projet.component.html',
   styleUrls: ['./historique-projet.component.css']
 })
-export class HistoriqueProjetComponent implements OnInit {
+export class PiloteHistoriqueProjetComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private historiqueService = inject(HistoriqueService);
@@ -55,11 +55,6 @@ export class HistoriqueProjetComponent implements OnInit {
       next: (data) => {
         this.historique = data;
         this.historiqueFiltered = data;
-        console.log('Historique chargé:', data);
-        // Vérifier si entityName est présent
-        data.forEach(item => {
-          console.log(`Item ${item.id}: entityName = ${item.entityName}`);
-        });
         
         // Extraire les utilisateurs uniques
         this.uniqueUsers = [...new Set(data.map(item => item.username))].sort();
@@ -86,23 +81,13 @@ export class HistoriqueProjetComponent implements OnInit {
     return labels[action] || action;
   }
 
-  getActionClass(action: string): string {
-    const classes: { [key: string]: string } = {
-      'CREATION': 'bg-green-100 text-green-800',
-      'MODIFICATION': 'bg-blue-100 text-blue-800',
-      'SUPPRESSION': 'bg-red-100 text-red-800'
-    };
-    return classes[action] || 'bg-gray-100 text-gray-800';
-  }
-
   goBack() {
-    this.router.navigate(['/projets', this.projetId]);
+    this.router.navigate(['/pilote-qualite/fiches-projet', this.projetId]);
   }
 
   getChangedKeys(item: HistoriqueModification): string[] {
     const keys = new Set<string>();
     
-    // Récupérer toutes les clés
     const allKeys = new Set<string>();
     if (item.anciennesValeurs) {
       Object.keys(item.anciennesValeurs).forEach(k => allKeys.add(k));
@@ -111,12 +96,10 @@ export class HistoriqueProjetComponent implements OnInit {
       Object.keys(item.nouvellesValeurs).forEach(k => allKeys.add(k));
     }
     
-    // Ne garder que les clés dont les valeurs ont changé
     allKeys.forEach(key => {
       const oldValue = item.anciennesValeurs?.[key];
       const newValue = item.nouvellesValeurs?.[key];
       
-      // Comparer les valeurs (conversion en JSON pour les objets/tableaux)
       const oldValueStr = JSON.stringify(oldValue);
       const newValueStr = JSON.stringify(newValue);
       
@@ -155,11 +138,9 @@ export class HistoriqueProjetComponent implements OnInit {
            (item.nouvellesValeurs && Object.keys(item.nouvellesValeurs).length > 0));
   }
 
-  // Méthodes de filtrage
   applyFilters(): void {
     let filtered = [...this.historique];
 
-    // Filtre par recherche
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(item =>
@@ -169,36 +150,31 @@ export class HistoriqueProjetComponent implements OnInit {
       );
     }
 
-    // Filtre par action
     if (this.selectedAction) {
       filtered = filtered.filter(item => item.action === this.selectedAction);
     }
 
-    // Filtre par type d'entité
     if (this.selectedEntityType) {
       filtered = filtered.filter(item => item.entityType === this.selectedEntityType);
     }
 
-    // Filtre par utilisateur
     if (this.selectedUser) {
       filtered = filtered.filter(item => item.username === this.selectedUser);
     }
 
-    // Filtre par date de début
     if (this.dateFrom) {
       const fromDate = new Date(this.dateFrom);
       filtered = filtered.filter(item => new Date(item.dateModification) >= fromDate);
     }
 
-    // Filtre par date de fin
     if (this.dateTo) {
       const toDate = new Date(this.dateTo);
-      toDate.setHours(23, 59, 59, 999); // Fin de journée
+      toDate.setHours(23, 59, 59, 999);
       filtered = filtered.filter(item => new Date(item.dateModification) <= toDate);
     }
 
     this.historiqueFiltered = filtered;
-    this.currentPage = 1; // Réinitialiser à la première page
+    this.currentPage = 1;
     this.updatePagination();
   }
 
@@ -218,26 +194,17 @@ export class HistoriqueProjetComponent implements OnInit {
     this.showFilters = !this.showFilters;
   }
 
-  // Méthodes de pagination
   updatePagination(): void {
     this.totalPages = Math.ceil(this.historiqueFiltered.length / this.itemsPerPage);
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     this.paginatedHistorique = this.historiqueFiltered.slice(startIndex, endIndex);
-    console.log('Pagination mise à jour:', {
-      totalItems: this.historiqueFiltered.length,
-      itemsPerPage: this.itemsPerPage,
-      totalPages: this.totalPages,
-      currentPage: this.currentPage,
-      paginatedCount: this.paginatedHistorique.length
-    });
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
       this.updatePagination();
-      // Scroll vers le haut de la timeline
       window.scrollTo({ top: 400, behavior: 'smooth' });
     }
   }
@@ -269,21 +236,21 @@ export class HistoriqueProjetComponent implements OnInit {
         for (let i = 1; i <= 4; i++) {
           pages.push(i);
         }
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         pages.push(this.totalPages);
       } else if (this.currentPage >= this.totalPages - 2) {
         pages.push(1);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         for (let i = this.totalPages - 3; i <= this.totalPages; i++) {
           pages.push(i);
         }
       } else {
         pages.push(1);
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         for (let i = this.currentPage - 1; i <= this.currentPage + 1; i++) {
           pages.push(i);
         }
-        pages.push(-1); // Ellipsis
+        pages.push(-1);
         pages.push(this.totalPages);
       }
     }

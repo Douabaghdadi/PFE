@@ -20,12 +20,7 @@ import { HistoriqueService, HistoriqueModification } from '../../services/histor
         </div>
       }
 
-      @if (!isLoading() && historique().length === 0) {
-        <div style="text-align: center; padding: 2rem; color: #6b7280;">
-          <i class="fas fa-inbox" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
-          <p>Aucune modification enregistrée</p>
-        </div>
-      }
+
 
       @if (!isLoading() && historique().length > 0) {
         <div style="position: relative;">

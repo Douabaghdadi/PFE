@@ -217,4 +217,10 @@ export class PiloteFicheProjetDetailComponent implements OnInit {
       }
     });
   }
+
+  viewHistorique() {
+    if (this.ficheProjet && this.ficheProjet.id) {
+      this.router.navigate(['/pilote-qualite/fiches-projet', this.ficheProjet.id, 'historique']);
+    }
+  }
 }
