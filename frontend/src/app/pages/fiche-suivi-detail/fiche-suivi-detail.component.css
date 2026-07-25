@@ -78,3 +78,30 @@
 .empty-state p { color: #9ca3af; font-size: 1.1rem; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== GANTT ===== */
+.gantt-wrapper { overflow-x: auto; border: 2px solid #e5e7eb; border-radius: 0.75rem; }
+
+.gantt-header-row { display: flex; background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 2px solid #d1fae5; position: sticky; top: 0; z-index: 2; }
+.gantt-label-col { min-width: 200px; max-width: 200px; padding: 0.75rem 1rem; font-weight: 700; color: #065f46; font-size: 0.85rem; border-right: 2px solid #d1fae5; flex-shrink: 0; }
+.gantt-timeline { display: flex; overflow: hidden; }
+.gantt-month { border-right: 1px solid #d1fae5; padding: 0.5rem 0.25rem; font-size: 0.75rem; font-weight: 700; color: #065f46; text-align: center; white-space: nowrap; overflow: hidden; flex-shrink: 0; }
+
+.gantt-row { display: flex; border-bottom: 1px solid #f3f4f6; min-height: 52px; }
+.gantt-row:last-child { border-bottom: none; }
+.gantt-row:hover { background: #f9fafb; }
+.gantt-label-col { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.gantt-task-name { font-size: 0.85rem; font-weight: 600; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gantt-pct { font-size: 0.7rem; color: #6b7280; font-weight: 600; }
+
+.gantt-timeline-row { position: relative; flex: 1; }
+.gantt-bg { position: absolute; top: 0; left: 0; height: 100%; background: repeating-linear-gradient(90deg, transparent, transparent calc(28px - 1px), #f3f4f6 calc(28px - 1px), #f3f4f6 28px); pointer-events: none; }
+
+.gantt-bar-wrap { position: absolute; top: 50%; transform: translateY(-50%); height: 28px; display: flex; align-items: center; }
+.gantt-bar { height: 100%; width: 100%; border-radius: 6px; position: relative; overflow: hidden; opacity: 0.9; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.gantt-bar-progress { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,255,255,0.35); border-radius: 6px; transition: width 0.4s ease; }
+.gantt-bar-label { position: absolute; left: calc(100% + 6px); white-space: nowrap; font-size: 0.72rem; font-weight: 600; color: #374151; pointer-events: none; }
+
+.gantt-legend { display: flex; gap: 1.25rem; padding: 0.75rem 1rem; border-top: 1px solid #e5e7eb; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 600; color: #374151; }
+.legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }

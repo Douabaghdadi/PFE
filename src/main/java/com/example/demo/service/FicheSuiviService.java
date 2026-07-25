@@ -146,10 +146,11 @@ public class FicheSuiviService {
         // Enregistrer dans l'historique avec le projetId
         historiqueService.enregistrerCreation("FICHE_SUIVI", saved.getId(), chefProjetId, saved, request.getFicheProjetId(), saved.getNumeroRapport());
         
-        // Mettre à jour les dates de suivi dans la fiche projet
+        // Mettre à jour les dates de suivi dans la fiche projet selon la périodicité configurée
         LocalDate today = LocalDate.now();
+        int periodicite = ficheProjet.getPeriodiciteSuiviMois() != null ? ficheProjet.getPeriodiciteSuiviMois() : 1;
         ficheProjet.setDateDerniereFicheSuivi(today);
-        ficheProjet.setDateProchaineFicheSuivi(today.plusMonths(1));
+        ficheProjet.setDateProchaineFicheSuivi(today.plusMonths(periodicite));
         ficheProjet.setDateModification(LocalDateTime.now());
         ficheProjetRepository.save(ficheProjet);
         

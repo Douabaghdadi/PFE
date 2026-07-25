@@ -26,6 +26,14 @@ export class PiloteFichesProjetListComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
+  // Modal périodicité
+  showPeriodiciteModal = false;
+  selectedProjetForPeriodicite: FicheProjet | null = null;
+  periodiciteValue = 1;
+  savingPeriodicite = false;
+  periodiciteSuccess: string | null = null;
+  periodiciteError: string | null = null;
+
   // Filtres
   selectedStatut = '';
   searchTerm = '';
@@ -188,6 +196,43 @@ export class PiloteFichesProjetListComponent implements OnInit {
     if (projetId) {
       this.router.navigate(['/pilote-qualite/projet-kpi', projetId]);
     }
+  }
+
+  openPeriodiciteModal(fiche: FicheProjet, event: Event) {
+    event.stopPropagation();
+    this.selectedProjetForPeriodicite = fiche;
+    this.periodiciteValue = fiche.periodiciteSuiviMois || 1;
+    this.periodiciteSuccess = null;
+    this.periodiciteError = null;
+    this.showPeriodiciteModal = true;
+  }
+
+  closePeriodiciteModal() {
+    this.showPeriodiciteModal = false;
+    this.selectedProjetForPeriodicite = null;
+  }
+
+  savePeriodicite() {
+    if (!this.selectedProjetForPeriodicite?.id || this.periodiciteValue < 1) return;
+    this.savingPeriodicite = true;
+    this.periodiciteSuccess = null;
+    this.periodiciteError = null;
+
+    this.ficheProjetService.configurerPeriodicite(this.selectedProjetForPeriodicite.id, this.periodiciteValue).subscribe({
+      next: (updated) => {
+        // Mettre à jour localement
+        const idx = this.fichesProjet.findIndex(f => f.id === updated.id);
+        if (idx !== -1) this.fichesProjet[idx] = updated;
+        this.applyFilters();
+        this.periodiciteSuccess = `Périodicité configurée : tous les ${this.periodiciteValue} mois`;
+        this.savingPeriodicite = false;
+        setTimeout(() => this.closePeriodiciteModal(), 1500);
+      },
+      error: () => {
+        this.periodiciteError = 'Erreur lors de la sauvegarde';
+        this.savingPeriodicite = false;
+      }
+    });
   }
 
   getStatutClass(statut: string | undefined): string {

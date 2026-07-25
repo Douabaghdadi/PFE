@@ -189,6 +189,15 @@
               </svg>
               KPI
             </button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <button (click)="openPeriodiciteModal(fiche, $event)"
+                      style="flex: 1; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);">
+                <svg style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Périodicité {{ fiche.periodiciteSuiviMois ? '(' + fiche.periodiciteSuiviMois + ' mois)' : '' }}
+              </button>
+            </div>
             <div style="display: flex; gap: 0.5rem;">
               <button (click)="viewFichesSuivi(fiche.id); $event.stopPropagation()" 
                       style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);">
@@ -263,3 +272,123 @@ button:hover {
   box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
 }
 </style>
+
+<!-- Modal Periodicite -->
+<div *ngIf="showPeriodiciteModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" (click)="closePeriodiciteModal()">
+  <div style="background: white; border-radius: 1rem; padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" (click)="$event.stopPropagation()">
+    <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+      <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 0.75rem; border-radius: 0.75rem; margin-right: 1rem;">
+        <svg style="width: 1.5rem; height: 1.5rem; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0;">Configurer la periodicite</h3>
+        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">{{ selectedProjetForPeriodicite?.nomProjet }}</p>
+      </div>
+    </div>
+
+    <p style="color: #374151; margin-bottom: 1.5rem; font-size: 0.95rem;">
+      Definissez la frequence a laquelle le chef de projet doit remplir la fiche de suivi.
+    </p>
+
+    <div style="margin-bottom: 1.5rem;">
+      <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Frequence (en mois)</label>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <input type="number" [(ngModel)]="periodiciteValue" min="1" max="24"
+               style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; text-align: center;"
+               onfocus="this.style.borderColor='#8b5cf6';"
+               onblur="this.style.borderColor='#e5e7eb';">
+        <span style="color: #6b7280; font-weight: 600; white-space: nowrap;">mois</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+        <button *ngFor="let v of [1, 2, 3, 6, 12]" (click)="periodiciteValue = v"
+                [style.background]="periodiciteValue === v ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#f3f4f6'"
+                [style.color]="periodiciteValue === v ? 'white' : '#374151'"
+                style="padding: 0.4rem 0.75rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;">
+          {{ v }} mois
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="periodiciteSuccess" style="background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600;">
+      {{ periodiciteSuccess }}
+    </div>
+    <div *ngIf="periodiciteError" style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600;">
+      {{ periodiciteError }}
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button (click)="closePeriodiciteModal()"
+              style="flex: 1; padding: 0.75rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+        Annuler
+      </button>
+      <button (click)="savePeriodicite()" [disabled]="savingPeriodicite || periodiciteValue < 1"
+              style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
+              [style.opacity]="savingPeriodicite ? '0.7' : '1'">
+        <span *ngIf="!savingPeriodicite">Enregistrer</span>
+        <span *ngIf="savingPeriodicite">Sauvegarde...</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Périodicité -->
+<div *ngIf="showPeriodiciteModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;" (click)="closePeriodiciteModal()">
+  <div style="background: white; border-radius: 1rem; padding: 2rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);" (click)="$event.stopPropagation()">
+    <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+      <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 0.75rem; border-radius: 0.75rem; margin-right: 1rem;">
+        <svg style="width: 1.5rem; height: 1.5rem; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0;">Configurer la périodicité</h3>
+        <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">{{ selectedProjetForPeriodicite?.nomProjet }}</p>
+      </div>
+    </div>
+
+    <p style="color: #374151; margin-bottom: 1.5rem; font-size: 0.95rem;">
+      Définissez la fréquence à laquelle le chef de projet doit remplir la fiche de suivi.
+    </p>
+
+    <div style="margin-bottom: 1.5rem;">
+      <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Fréquence (en mois)</label>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <input type="number" [(ngModel)]="periodiciteValue" min="1" max="24"
+               style="flex: 1; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 1rem; text-align: center;"
+               onfocus="this.style.borderColor='#8b5cf6';"
+               onblur="this.style.borderColor='#e5e7eb';">
+        <span style="color: #6b7280; font-weight: 600; white-space: nowrap;">mois</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+        <button *ngFor="let v of [1, 2, 3, 6, 12]" (click)="periodiciteValue = v"
+                [style.background]="periodiciteValue === v ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#f3f4f6'"
+                [style.color]="periodiciteValue === v ? 'white' : '#374151'"
+                style="padding: 0.4rem 0.75rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 0.875rem;">
+          {{ v }} mois
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="periodiciteSuccess" style="background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600;">
+      ✅ {{ periodiciteSuccess }}
+    </div>
+    <div *ngIf="periodiciteError" style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-weight: 600;">
+      ❌ {{ periodiciteError }}
+    </div>
+
+    <div style="display: flex; gap: 0.75rem;">
+      <button (click)="closePeriodiciteModal()"
+              style="flex: 1; padding: 0.75rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+        Annuler
+      </button>
+      <button (click)="savePeriodicite()" [disabled]="savingPeriodicite || periodiciteValue < 1"
+              style="flex: 1; padding: 0.75rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;"
+              [style.opacity]="savingPeriodicite ? '0.7' : '1'">
+        <span *ngIf="!savingPeriodicite">Enregistrer</span>
+        <span *ngIf="savingPeriodicite">Sauvegarde...</span>
+      </button>
+    </div>
+  </div>
+</div>

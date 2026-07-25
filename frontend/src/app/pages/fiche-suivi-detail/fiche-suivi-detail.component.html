@@ -191,33 +191,46 @@
   <!-- Tab: Planning -->
   <div class="tab-content" *ngIf="currentTab==='planning'">
     <div class="section" *ngIf="ficheSuivi.planningActuel?.taches && ficheSuivi.planningActuel?.taches?.length! > 0">
-      <h2 class="section-title"><span class="num green">📅</span> Planning actuel</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Tâche</th>
-              <th>Date début</th>
-              <th>Date fin</th>
-              <th>Avancement</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let tg of ficheSuivi.planningActuel.taches">
-              <td><strong>{{ tg.nom || '-' }}</strong></td>
-              <td>{{ formatShortDate(tg.dateDebut) }}</td>
-              <td>{{ formatShortDate(tg.dateFin) }}</td>
-              <td>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar" [style.width.%]="tg.tauxAvancement || 0"></div>
-                </div>
-                <span class="progress-text">{{ tg.tauxAvancement || 0 }}%</span>
-              </td>
-              <td><span [style]="getStatutStyle(tg.statut)">{{ tg.statut || '-' }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+      <h2 class="section-title"><span class="num green">📅</span> Diagramme de Gantt</h2>
+
+      <!-- Gantt Header: months -->
+      <div class="gantt-wrapper">
+        <div class="gantt-header-row">
+          <div class="gantt-label-col">Tâche</div>
+          <div class="gantt-timeline">
+            <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.px]="ganttDayWidth * m.days">{{ m.label }}</div>
+          </div>
+        </div>
+
+        <!-- Gantt Rows -->
+        <div class="gantt-row" *ngFor="let tg of ficheSuivi.planningActuel.taches">
+          <div class="gantt-label-col">
+            <span class="gantt-task-name">{{ tg.nom || '-' }}</span>
+            <span class="gantt-pct">{{ tg.tauxAvancement || 0 }}%</span>
+          </div>
+          <div class="gantt-timeline gantt-timeline-row">
+            <!-- background day lines -->
+            <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
+            <!-- bar -->
+            <div class="gantt-bar-wrap"
+                 [style.left.px]="getBarLeft(tg.dateDebut)"
+                 [style.width.px]="getBarWidth(tg.dateDebut, tg.dateFin)">
+              <div class="gantt-bar" [style]="getBarStyle(tg.statut)">
+                <div class="gantt-bar-progress" [style.width.%]="tg.tauxAvancement || 0"></div>
+              </div>
+              <span class="gantt-bar-label">{{ tg.nom }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="gantt-legend">
+          <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>Terminé</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>En cours</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>En retard</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Bloqué</span>
+          <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>Autre</span>
+        </div>
       </div>
     </div>
     <div class="empty-state" *ngIf="!ficheSuivi.planningActuel?.taches || ficheSuivi.planningActuel?.taches?.length === 0">

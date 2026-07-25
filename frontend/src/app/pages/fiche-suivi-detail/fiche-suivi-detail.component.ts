@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
+import { FicheSuiviService, FicheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
 
 @Component({
   selector: 'app-fiche-suivi-detail',
@@ -20,6 +20,14 @@ export class FicheSuiviDetailComponent implements OnInit {
   error: string | null = null;
   currentTab = 'signaletique';
 
+  // Gantt
+  ganttDayWidth = 28;
+  ganttStart: Date = new Date();
+  ganttEnd: Date = new Date();
+  ganttTotalDays = 1;
+  ganttTotalWidth = 1;
+  ganttMonths: { label: string; days: number }[] = [];
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -37,6 +45,7 @@ export class FicheSuiviDetailComponent implements OnInit {
     this.ficheSuiviService.getFicheSuiviById(id).subscribe({
       next: (fiche) => {
         this.ficheSuivi = fiche;
+        this.buildGantt(fiche.planningActuel?.taches || []);
         this.loading = false;
       },
       error: (err) => {
@@ -90,5 +99,62 @@ export class FicheSuiviDetailComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/fiches-suivi']);
+  }
+
+  buildGantt(taches: TacheGantt[]) {
+    const dates = taches
+      .flatMap(t => [t.dateDebut, t.dateFin])
+      .filter(Boolean)
+      .map(d => new Date(d!));
+    if (!dates.length) return;
+
+    this.ganttStart = new Date(Math.min(...dates.map(d => d.getTime())));
+    this.ganttEnd   = new Date(Math.max(...dates.map(d => d.getTime())));
+    // start at first day of month
+    this.ganttStart = new Date(this.ganttStart.getFullYear(), this.ganttStart.getMonth(), 1);
+    // end at last day of month
+    this.ganttEnd   = new Date(this.ganttEnd.getFullYear(), this.ganttEnd.getMonth() + 1, 0);
+
+    this.ganttTotalDays = Math.ceil((this.ganttEnd.getTime() - this.ganttStart.getTime()) / 86400000) + 1;
+    this.ganttTotalWidth = this.ganttTotalDays * this.ganttDayWidth;
+
+    // Build months
+    this.ganttMonths = [];
+    let cur = new Date(this.ganttStart);
+    while (cur <= this.ganttEnd) {
+      const year = cur.getFullYear();
+      const month = cur.getMonth();
+      const lastDay = new Date(year, month + 1, 0);
+      const endOfMonth = lastDay < this.ganttEnd ? lastDay : this.ganttEnd;
+      const days = Math.ceil((endOfMonth.getTime() - cur.getTime()) / 86400000) + 1;
+      this.ganttMonths.push({
+        label: cur.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
+        days
+      });
+      cur = new Date(year, month + 1, 1);
+    }
+  }
+
+  getBarLeft(dateDebut?: string): number {
+    if (!dateDebut) return 0;
+    const diff = Math.ceil((new Date(dateDebut).getTime() - this.ganttStart.getTime()) / 86400000);
+    return Math.max(0, diff) * this.ganttDayWidth;
+  }
+
+  getBarWidth(dateDebut?: string, dateFin?: string): number {
+    if (!dateDebut || !dateFin) return this.ganttDayWidth;
+    const days = Math.ceil((new Date(dateFin).getTime() - new Date(dateDebut).getTime()) / 86400000) + 1;
+    return Math.max(1, days) * this.ganttDayWidth;
+  }
+
+  getBarStyle(statut?: string): string {
+    const colors: Record<string, string> = {
+      'terminé': '#10b981',
+      'en cours': '#3b82f6',
+      'en retard': '#f59e0b',
+      'bloqué': '#ef4444'
+    };
+    const color = colors[(statut || '').toLowerCase()] || '#6b7280';
+    return `background:${color};`;
   }
 }

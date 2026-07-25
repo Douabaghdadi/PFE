@@ -443,6 +443,12 @@ export class FicheProjetFormComponent implements OnInit {
       total: ''
     } as EstimationBudget,
     delaisPrevisionnels: '',
+    dateDebutPrevision: null as string | null,
+    dateFinPrevision: null as string | null,
+    dureeEnMois: null as number | null,
+    dateDebutRealisation: null as string | null,
+    dateFinRealisation: null as string | null,
+    ecartConventionnel: null as number | null,
     risquesPotentiels: '',
     preRequis: '',
     planning: [] as PlanningAction[],

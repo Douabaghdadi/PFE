@@ -9,6 +9,7 @@ public class ProjetSuiviStatusDTO {
     private LocalDate dateProchaineFicheSuivi;
     private boolean ficheSuiviEnRetard;
     private int joursRetard;
+    private Integer periodiciteSuiviMois;
 
     public ProjetSuiviStatusDTO() {
     }
@@ -59,5 +60,13 @@ public class ProjetSuiviStatusDTO {
 
     public void setJoursRetard(int joursRetard) {
         this.joursRetard = joursRetard;
+    }
+
+    public Integer getPeriodiciteSuiviMois() {
+        return periodiciteSuiviMois;
+    }
+
+    public void setPeriodiciteSuiviMois(Integer periodiciteSuiviMois) {
+        this.periodiciteSuiviMois = periodiciteSuiviMois;
     }
 }

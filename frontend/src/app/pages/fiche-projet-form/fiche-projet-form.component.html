@@ -185,23 +185,7 @@
               </div>
 
               <!-- Dates du projet et Statut -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-calendar-alt mr-2" style="color: #10b981;"></i>Date de début
-                  </label>
-                  <input type="date" [(ngModel)]="formData.dateDebut" name="dateDebut"
-                         class="form-control"
-                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-calendar-check mr-2" style="color: #10b981;"></i>Date de fin prévue
-                  </label>
-                  <input type="date" [(ngModel)]="formData.dateFinPrevue" name="dateFinPrevue"
-                         class="form-control"
-                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                </div>
+              <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
                     <i class="fas fa-flag mr-2" style="color: #10b981;"></i>Statut du projet
@@ -476,6 +460,47 @@
                 </label>
                 <input type="text" [(ngModel)]="formData.estimationBudget.budgetMDHT" name="budgetMDHT" readonly
                        style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f0fdf4; cursor: not-allowed; font-weight: 600; color: #065f46; font-size: 1.1rem;">
+              </div>
+            </div>
+
+            <!-- Délais -->
+            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
+              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
+                <i class="fas fa-clock mr-2"></i>Délais
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision)</label>
+                  <input type="date" [(ngModel)]="formData.dateDebutPrevision" name="dateDebutPrevision"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision)</label>
+                  <input type="date" [(ngModel)]="formData.dateFinPrevision" name="dateFinPrevision"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Durée (Mois)</label>
+                  <input type="number" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Réalisation)</label>
+                  <input type="date" [(ngModel)]="formData.dateDebutRealisation" name="dateDebutRealisation"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Réalisation)</label>
+                  <input type="date" [(ngModel)]="formData.dateFinRealisation" name="dateFinRealisation"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
+                <div>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart Conv. (jours)</label>
+                  <input type="number" [(ngModel)]="formData.ecartConventionnel" name="ecartConventionnel"
+                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                </div>
               </div>
             </div>
 

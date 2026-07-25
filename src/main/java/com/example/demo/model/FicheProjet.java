@@ -47,6 +47,14 @@ public class FicheProjet {
     // Section 8: Délais prévisionnels
     private String delaisPrevisionnels;
 
+    // Section 8b: Délais détaillés
+    private LocalDate dateDebutPrevision;
+    private LocalDate dateFinPrevision;
+    private Integer dureeEnMois;
+    private LocalDate dateDebutRealisation;
+    private LocalDate dateFinRealisation;
+    private Integer ecartConventionnel;
+
     // Section 9: Risques potentiels
     private String risquesPotentiels;
 
@@ -69,6 +77,7 @@ public class FicheProjet {
     private LocalDateTime dateModification;
     private LocalDate dateDerniereFicheSuivi; // Date de la dernière fiche de suivi remplie
     private LocalDate dateProchaineFicheSuivi; // Date attendue pour la prochaine fiche de suivi
+    private Integer periodiciteSuiviMois; // Périodicité en mois définie par le pilote qualité (ex: 6 = tous les 6 mois)
 
     // Métadonnées du document
     private String reference; // Réf proj
@@ -295,6 +304,24 @@ public class FicheProjet {
         this.delaisPrevisionnels = delaisPrevisionnels;
     }
 
+    public LocalDate getDateDebutPrevision() { return dateDebutPrevision; }
+    public void setDateDebutPrevision(LocalDate dateDebutPrevision) { this.dateDebutPrevision = dateDebutPrevision; }
+
+    public LocalDate getDateFinPrevision() { return dateFinPrevision; }
+    public void setDateFinPrevision(LocalDate dateFinPrevision) { this.dateFinPrevision = dateFinPrevision; }
+
+    public Integer getDureeEnMois() { return dureeEnMois; }
+    public void setDureeEnMois(Integer dureeEnMois) { this.dureeEnMois = dureeEnMois; }
+
+    public LocalDate getDateDebutRealisation() { return dateDebutRealisation; }
+    public void setDateDebutRealisation(LocalDate dateDebutRealisation) { this.dateDebutRealisation = dateDebutRealisation; }
+
+    public LocalDate getDateFinRealisation() { return dateFinRealisation; }
+    public void setDateFinRealisation(LocalDate dateFinRealisation) { this.dateFinRealisation = dateFinRealisation; }
+
+    public Integer getEcartConventionnel() { return ecartConventionnel; }
+    public void setEcartConventionnel(Integer ecartConventionnel) { this.ecartConventionnel = ecartConventionnel; }
+
     public String getRisquesPotentiels() {
         return risquesPotentiels;
     }
@@ -349,5 +376,13 @@ public class FicheProjet {
 
     public void setDateProchaineFicheSuivi(LocalDate dateProchaineFicheSuivi) {
         this.dateProchaineFicheSuivi = dateProchaineFicheSuivi;
+    }
+
+    public Integer getPeriodiciteSuiviMois() {
+        return periodiciteSuiviMois;
+    }
+
+    public void setPeriodiciteSuiviMois(Integer periodiciteSuiviMois) {
+        this.periodiciteSuiviMois = periodiciteSuiviMois;
     }
 }

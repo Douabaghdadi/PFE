@@ -43,6 +43,14 @@ public class FicheProjetRequest {
     // Section 8: Délais prévisionnels
     private String delaisPrevisionnels;
 
+    // Section 8b: Délais détaillés
+    private LocalDate dateDebutPrevision;
+    private LocalDate dateFinPrevision;
+    private Integer dureeEnMois;
+    private LocalDate dateDebutRealisation;
+    private LocalDate dateFinRealisation;
+    private Integer ecartConventionnel;
+
     // Section 9: Risques potentiels
     private String risquesPotentiels;
 
@@ -248,6 +256,24 @@ public class FicheProjetRequest {
     public void setDelaisPrevisionnels(String delaisPrevisionnels) {
         this.delaisPrevisionnels = delaisPrevisionnels;
     }
+
+    public LocalDate getDateDebutPrevision() { return dateDebutPrevision; }
+    public void setDateDebutPrevision(LocalDate d) { this.dateDebutPrevision = d; }
+
+    public LocalDate getDateFinPrevision() { return dateFinPrevision; }
+    public void setDateFinPrevision(LocalDate d) { this.dateFinPrevision = d; }
+
+    public Integer getDureeEnMois() { return dureeEnMois; }
+    public void setDureeEnMois(Integer d) { this.dureeEnMois = d; }
+
+    public LocalDate getDateDebutRealisation() { return dateDebutRealisation; }
+    public void setDateDebutRealisation(LocalDate d) { this.dateDebutRealisation = d; }
+
+    public LocalDate getDateFinRealisation() { return dateFinRealisation; }
+    public void setDateFinRealisation(LocalDate d) { this.dateFinRealisation = d; }
+
+    public Integer getEcartConventionnel() { return ecartConventionnel; }
+    public void setEcartConventionnel(Integer d) { this.ecartConventionnel = d; }
 
     public String getRisquesPotentiels() {
         return risquesPotentiels;

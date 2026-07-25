@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contrôleur pour permettre au Pilote Qualité de consulter toutes les fiches projet
@@ -83,5 +84,23 @@ public class PiloteQualiteFicheProjetController {
     public ResponseEntity<String> initSuiviDates() {
         int count = ficheProjetService.initializeSuiviDates();
         return ResponseEntity.ok(count + " projet(s) initialisé(s)");
+    }
+
+    /**
+     * Configure la périodicité de remplissage des fiches de suivi pour un projet
+     */
+    @PutMapping("/{id}/periodicite")
+    public ResponseEntity<FicheProjet> configurerPeriodicite(
+            @PathVariable String id,
+            @RequestBody Map<String, Integer> body) {
+        Integer periodiciteMois = body.get("periodiciteMois");
+        if (periodiciteMois == null || periodiciteMois < 1) {
+            return ResponseEntity.badRequest().build();
+        }
+        try {
+            return ResponseEntity.ok(ficheProjetService.configurerPeriodicite(id, periodiciteMois));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

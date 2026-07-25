@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { PiloteQualiteFicheProjetService, FicheProjet } from '../../../services/pilote-qualite-fiche-projet.service';
+import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 
@@ -54,6 +54,7 @@ export class PiloteDashboardComponent implements OnInit {
 
   fichesProjet: FicheProjet[] = [];
   fichesSuivi: FicheSuivi[] = [];
+  projetsEnRetardSuivi: ProjetSuiviStatus[] = [];
 
   stats: StatCard[] = [];
   
@@ -67,6 +68,14 @@ export class PiloteDashboardComponent implements OnInit {
   ngOnInit() {
     this.loadData();
     this.loadKPIData();
+    this.loadRetardAlerts();
+  }
+
+  loadRetardAlerts() {
+    this.ficheProjetService.getProjetsSuiviStatus().subscribe({
+      next: (status) => { this.projetsEnRetardSuivi = status; },
+      error: () => {}
+    });
   }
 
   loadData() {

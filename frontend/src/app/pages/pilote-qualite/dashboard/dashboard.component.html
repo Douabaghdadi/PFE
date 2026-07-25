@@ -18,6 +18,41 @@
 
   <!-- Contenu -->
   <div *ngIf="!loading && !error">
+    <!-- Alertes Retard Fiches de Suivi -->
+    <div *ngIf="projetsEnRetardSuivi.length > 0" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px solid #f97316; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);">
+      <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+        <svg style="width: 1.75rem; height: 1.75rem; color: #ea580c; margin-right: 0.75rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h2 style="font-size: 1.25rem; font-weight: 700; color: #9a3412; margin: 0;">
+          Alertes - Fiches de suivi en retard ({{ projetsEnRetardSuivi.length }})
+        </h2>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <div *ngFor="let alerte of projetsEnRetardSuivi"
+             style="background: white; border-left: 4px solid #ef4444; border-radius: 0.5rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+          <div>
+            <p style="font-weight: 700; color: #111827; margin: 0 0 0.25rem 0;">{{ alerte.nomProjet }}</p>
+            <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">
+              Prochaine fiche attendue le : <strong>{{ alerte.dateProchaineFicheSuivi | date:'dd/MM/yyyy' }}</strong>
+              <span *ngIf="alerte.periodiciteSuiviMois"> &bull; Periodicite : {{ alerte.periodiciteSuiviMois }} mois</span>
+            </p>
+          </div>
+          <div style="text-align: right; flex-shrink: 0; margin-left: 1rem;">
+            <span style="background: #fee2e2; color: #991b1b; padding: 0.4rem 0.75rem; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
+              {{ alerte.joursRetard }} jour(s) de retard
+            </span>
+            <div style="margin-top: 0.5rem;">
+              <button (click)="navigateTo('/pilote-qualite/fiches-projet')"
+                      style="font-size: 0.75rem; color: #2563eb; background: none; border: none; cursor: pointer; text-decoration: underline; font-weight: 600;">
+                Voir le projet
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Statistiques -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div

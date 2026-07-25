@@ -11,6 +11,13 @@ interface FicheProjet {
   designationProjet: string;
   maitreOuvrage?: string;
   maitreOeuvre?: string;
+  presentation?: string;
+  dateDebutPrevision?: string;
+  dateFinPrevision?: string;
+  dureeEnMois?: number;
+  dateDebutRealisation?: string;
+  dateFinRealisation?: string;
+  ecartConventionnel?: number;
 }
 
 @Component({
@@ -111,6 +118,10 @@ export class FicheSuiviFormComponent implements OnInit {
       next: (data) => {
         this.projets.set(data);
         this.isLoadingProjets.set(false);
+        // Remplir auto si projetId déjà sélectionné
+        if (this.ficheSuivi.ficheProjetId) {
+          this.onProjetChange();
+        }
       },
       error: (error) => {
         console.error('Error loading projets:', error);
@@ -121,8 +132,18 @@ export class FicheSuiviFormComponent implements OnInit {
   }
 
   onProjetChange() {
-    // Le projet a été sélectionné
-    // Plus besoin de remplir automatiquement les champs MO et MOE
+    const selected = this.projets().find(p => p.id === this.ficheSuivi.ficheProjetId);
+    if (selected) {
+      if (selected.presentation) {
+        this.ficheSuivi.ficheSignaletique.descriptionProjet = selected.presentation;
+      }
+      if (selected.dateDebutPrevision) this.ficheSuivi.ficheSignaletique.delais.dateDebutPrevision = selected.dateDebutPrevision;
+      if (selected.dateFinPrevision) this.ficheSuivi.ficheSignaletique.delais.dateFinPrevision = selected.dateFinPrevision;
+      if (selected.dureeEnMois) this.ficheSuivi.ficheSignaletique.delais.dureeEnMois = selected.dureeEnMois;
+      if (selected.dateDebutRealisation) this.ficheSuivi.ficheSignaletique.delais.dateDebutRealisation = selected.dateDebutRealisation;
+      if (selected.dateFinRealisation) this.ficheSuivi.ficheSignaletique.delais.dateFinRealisation = selected.dateFinRealisation;
+      if (selected.ecartConventionnel) this.ficheSuivi.ficheSignaletique.delais.ecartConventionnel = selected.ecartConventionnel;
+    }
   }
 
   loadFicheSuivi(id: string) {

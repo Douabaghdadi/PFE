@@ -70,6 +70,12 @@ public class FicheProjetService {
         
         // Section 8: Délais prévisionnels
         ficheProjet.setDelaisPrevisionnels(request.getDelaisPrevisionnels());
+        ficheProjet.setDateDebutPrevision(request.getDateDebutPrevision());
+        ficheProjet.setDateFinPrevision(request.getDateFinPrevision());
+        ficheProjet.setDureeEnMois(request.getDureeEnMois());
+        ficheProjet.setDateDebutRealisation(request.getDateDebutRealisation());
+        ficheProjet.setDateFinRealisation(request.getDateFinRealisation());
+        ficheProjet.setEcartConventionnel(request.getEcartConventionnel());
         
         // Section 9: Risques potentiels
         ficheProjet.setRisquesPotentiels(request.getRisquesPotentiels());
@@ -148,6 +154,12 @@ public class FicheProjetService {
         
         // Section 8: Délais prévisionnels
         ficheProjet.setDelaisPrevisionnels(request.getDelaisPrevisionnels());
+        ficheProjet.setDateDebutPrevision(request.getDateDebutPrevision());
+        ficheProjet.setDateFinPrevision(request.getDateFinPrevision());
+        ficheProjet.setDureeEnMois(request.getDureeEnMois());
+        ficheProjet.setDateDebutRealisation(request.getDateDebutRealisation());
+        ficheProjet.setDateFinRealisation(request.getDateFinRealisation());
+        ficheProjet.setEcartConventionnel(request.getEcartConventionnel());
         
         // Section 9: Risques potentiels
         ficheProjet.setRisquesPotentiels(request.getRisquesPotentiels());
@@ -210,7 +222,6 @@ public class FicheProjetService {
         LocalDate today = LocalDate.now();
 
         for (FicheProjet projet : projets) {
-            // Ignorer les projets terminés ou annulés
             if (projet.getStatut() != null && 
                 (projet.getStatut().equals("TERMINE") || projet.getStatut().equals("ANNULE"))) {
                 continue;
@@ -221,8 +232,8 @@ public class FicheProjetService {
             status.setNomProjet(projet.getNomProjet());
             status.setDateDerniereFicheSuivi(projet.getDateDerniereFicheSuivi());
             status.setDateProchaineFicheSuivi(projet.getDateProchaineFicheSuivi());
+            status.setPeriodiciteSuiviMois(projet.getPeriodiciteSuiviMois());
 
-            // Vérifier si la fiche de suivi est en retard
             if (projet.getDateProchaineFicheSuivi() != null && 
                 today.isAfter(projet.getDateProchaineFicheSuivi())) {
                 status.setFicheSuiviEnRetard(true);
@@ -239,18 +250,16 @@ public class FicheProjetService {
         int count = 0;
 
         for (FicheProjet projet : projets) {
-            // Ignorer les projets terminés ou annulés
             if (projet.getStatut() != null && 
                 (projet.getStatut().equals("TERMINE") || projet.getStatut().equals("ANNULE"))) {
                 continue;
             }
 
-            // Si les dates ne sont pas déjà définies
             if (projet.getDateDerniereFicheSuivi() == null || projet.getDateProchaineFicheSuivi() == null) {
-                // Utiliser la date de début du projet comme date de dernière fiche
                 LocalDate dateRef = projet.getDateDebut() != null ? projet.getDateDebut() : LocalDate.now();
+                int periodicite = projet.getPeriodiciteSuiviMois() != null ? projet.getPeriodiciteSuiviMois() : 1;
                 projet.setDateDerniereFicheSuivi(dateRef);
-                projet.setDateProchaineFicheSuivi(dateRef.plusMonths(1));
+                projet.setDateProchaineFicheSuivi(dateRef.plusMonths(periodicite));
                 projet.setDateModification(LocalDateTime.now());
                 ficheProjetRepository.save(projet);
                 count++;
@@ -258,5 +267,17 @@ public class FicheProjetService {
         }
 
         return count;
+    }
+
+    public FicheProjet configurerPeriodicite(String projetId, int periodiciteMois) {
+        FicheProjet projet = ficheProjetRepository.findById(projetId)
+                .orElseThrow(() -> new RuntimeException("Fiche projet not found"));
+        projet.setPeriodiciteSuiviMois(periodiciteMois);
+        // Recalculer la prochaine date si une dernière date existe
+        if (projet.getDateDerniereFicheSuivi() != null) {
+            projet.setDateProchaineFicheSuivi(projet.getDateDerniereFicheSuivi().plusMonths(periodiciteMois));
+        }
+        projet.setDateModification(LocalDateTime.now());
+        return ficheProjetRepository.save(projet);
     }
 }

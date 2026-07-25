@@ -29,46 +29,22 @@ export interface FicheProjet {
   nomProjet?: string;
   designationProjet?: string;
   designationClient?: string;
-  
-  // Section 1: Identification
   cadreContractuelProjet?: string;
   caractereProjet?: string;
   typeProjet?: string;
-  
-  // Section 2: Présentation
   presentation?: string;
-  
-  // Section 3: Historique
   historique?: string;
-  
-  // Section 4: Périmètre
   perimetre?: string;
-  
-  // Section 5: Organisation
   maitreOuvrage?: string;
   maitreOeuvre?: string;
   equipeProjet?: any;
-  
-  // Section 6: Estimation des charges
   estimationsCharges?: EstimationCharge[];
   modaliteDeveloppement?: string;
-  
-  // Section 7: Estimation du budget
   estimationBudget?: EstimationBudget;
-  
-  // Section 8: Délais prévisionnels
   delaisPrevisionnels?: string;
-  
-  // Section 9: Risques potentiels
   risquesPotentiels?: string;
-  
-  // Section 10: Pré-requis
   preRequis?: string;
-  
-  // Planning
   planning?: PlanningAction[];
-  
-  // Autres champs
   description?: string;
   objectifs?: string;
   responsable?: string;
@@ -83,6 +59,7 @@ export interface FicheProjet {
   dateDocument?: string;
   dateDerniereFicheSuivi?: string;
   dateProchaineFicheSuivi?: string;
+  periodiciteSuiviMois?: number;
 }
 
 export interface ProjetSuiviStatus {
@@ -92,6 +69,7 @@ export interface ProjetSuiviStatus {
   dateProchaineFicheSuivi?: string;
   ficheSuiviEnRetard: boolean;
   joursRetard: number;
+  periodiciteSuiviMois?: number;
 }
 
 @Injectable({
@@ -141,5 +119,12 @@ export class PiloteQualiteFicheProjetService {
    */
   getProjetsSuiviStatus(): Observable<ProjetSuiviStatus[]> {
     return this.http.get<ProjetSuiviStatus[]>(`${this.apiUrl}/suivi-status`);
+  }
+
+  /**
+   * Configure la périodicité de remplissage des fiches de suivi
+   */
+  configurerPeriodicite(projetId: string, periodiciteMois: number): Observable<FicheProjet> {
+    return this.http.put<FicheProjet>(`${this.apiUrl}/${projetId}/periodicite`, { periodiciteMois });
   }
 }
