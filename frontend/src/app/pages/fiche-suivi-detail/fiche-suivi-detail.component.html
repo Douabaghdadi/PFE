@@ -21,20 +21,6 @@
 
   <!-- Tab: Signalétique -->
   <div class="tab-content" *ngIf="currentTab==='signaletique'">
-    <div class="section green-section">
-      <h2 class="section-title"><span class="num green">1</span> Identification du projet</h2>
-      <div class="grid-2">
-        <div class="field-card green-border">
-          <label>Chef de projet</label>
-          <p>{{ ficheSuivi.ficheSignaletique?.chefProjet?.nom || '-' }}</p>
-        </div>
-        <div class="field-card green-border">
-          <label>Suppléant</label>
-          <p>{{ ficheSuivi.ficheSignaletique?.chefProjet?.suppleant || '-' }}</p>
-        </div>
-      </div>
-    </div>
-
     <!-- Description -->
     <div class="section" *ngIf="ficheSuivi.ficheSignaletique?.descriptionProjet">
       <h2 class="section-title"><span class="num green">2</span> Description du projet</h2>
@@ -223,14 +209,6 @@
           </div>
         </div>
 
-        <!-- Legend -->
-        <div class="gantt-legend">
-          <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>Terminé</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>En cours</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>En retard</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Bloqué</span>
-          <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>Autre</span>
-        </div>
       </div>
     </div>
     <div class="empty-state" *ngIf="!ficheSuivi.planningActuel?.taches || ficheSuivi.planningActuel?.taches?.length === 0">

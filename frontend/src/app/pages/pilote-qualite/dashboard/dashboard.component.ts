@@ -2,9 +2,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
+import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
 
 interface StatCard {
   title: string;
@@ -39,7 +41,7 @@ interface KPIData {
 @Component({
   selector: 'app-pilote-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ChatbotComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
@@ -48,6 +50,11 @@ export class PiloteDashboardComponent implements OnInit {
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
   private router = inject(Router);
   private http = inject(HttpClient);
+  private sanitizer = inject(DomSanitizer);
+
+  powerBiUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    'https://app.powerbi.com/reportEmbed?reportId=TON_REPORT_ID&autoAuth=true&ctid=TON_TENANT_ID'
+  );
 
   loading = true;
   error: string | null = null;
@@ -101,17 +108,21 @@ export class PiloteDashboardComponent implements OnInit {
     this.loadingKPI = true;
     const token = localStorage.getItem('token');
     
-    this.http.get<KPIData>('http://localhost:8081/api/pilote-qualite/rapports/kpi', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => {
-        this.kpiData = data;
-        this.loadingKPI = false;
+    this.ficheProjetService.getAllFichesProjet().subscribe({
+      next: (projets) => {
+        if (projets && projets.length > 0) {
+          // Charger les KPI du premier projet disponible
+          this.http.get<KPIData>(`http://localhost:8081/api/pilote-qualite/rapports/projet/${projets[0].id}/kpi`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }).subscribe({
+            next: (data) => { this.kpiData = data; this.loadingKPI = false; },
+            error: () => { this.loadingKPI = false; }
+          });
+        } else {
+          this.loadingKPI = false;
+        }
       },
-      error: (err) => {
-        console.error('Erreur lors du chargement des KPI:', err);
-        this.loadingKPI = false;
-      }
+      error: () => { this.loadingKPI = false; }
     });
   }
 
@@ -127,7 +138,15 @@ export class PiloteDashboardComponent implements OnInit {
     this.downloadError = null;
     
     const token = localStorage.getItem('token');
-    const url = `http://localhost:8081/api/pilote-qualite/rapports/kpi/download/${format}`;
+    
+    if (!this.fichesProjet || this.fichesProjet.length === 0) {
+      this.downloadError = 'Aucun projet disponible pour générer un rapport.';
+      this.downloadingReport = false;
+      return;
+    }
+
+    const projetId = this.fichesProjet[0].id;
+    const url = `http://localhost:8081/api/pilote-qualite/rapports/projet/${projetId}/kpi/download/${format}`;
     
     this.http.get(url, {
       headers: { 'Authorization': `Bearer ${token}` },
@@ -135,18 +154,12 @@ export class PiloteDashboardComponent implements OnInit {
       observe: 'response'
     }).subscribe({
       next: (response) => {
-        // Extraire le nom du fichier depuis les headers
         const contentDisposition = response.headers.get('Content-Disposition');
         let filename = `rapport_kpi_${new Date().getTime()}.${format}`;
-        
         if (contentDisposition) {
           const matches = /filename="?([^"]+)"?/.exec(contentDisposition);
-          if (matches && matches[1]) {
-            filename = matches[1];
-          }
+          if (matches && matches[1]) filename = matches[1];
         }
-        
-        // Créer un lien de téléchargement
         const blob = response.body;
         if (blob) {
           const url = window.URL.createObjectURL(blob);
@@ -155,16 +168,13 @@ export class PiloteDashboardComponent implements OnInit {
           link.download = filename;
           link.click();
           window.URL.revokeObjectURL(url);
-          
           this.downloadSuccess = true;
           setTimeout(() => this.downloadSuccess = false, 5000);
         }
-        
         this.downloadingReport = false;
       },
       error: (err) => {
-        console.error('Erreur lors du téléchargement du rapport:', err);
-        this.downloadError = 'Erreur lors du téléchargement du rapport. Veuillez réessayer.';
+        this.downloadError = 'Erreur lors du téléchargement du rapport.';
         setTimeout(() => this.downloadError = null, 5000);
         this.downloadingReport = false;
       }

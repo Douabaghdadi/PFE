@@ -130,7 +130,32 @@ export class HistoriqueProjetComponent implements OnInit {
 
   formatValue(value: any): string {
     if (value === null || value === undefined) return 'N/A';
-    if (typeof value === 'object') return JSON.stringify(value);
+    if (value === '' || value === '[]' || value === '{}') return 'Vide';
+
+    // Si c'est une string qui ressemble à du JSON, essayer de la parser
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if ((trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+          (trimmed.startsWith('{') && trimmed.endsWith('}'))) {
+        try { value = JSON.parse(trimmed); } catch (e) {}
+      }
+    }
+
+    // Tableau → liste à puces
+    if (Array.isArray(value)) {
+      if (value.length === 0) return 'Vide';
+      return value.map((item: any) =>
+        typeof item === 'object' ? JSON.stringify(item) : String(item)
+      ).join(', ');
+    }
+
+    // Objet → clé: valeur
+    if (typeof value === 'object') {
+      return Object.entries(value)
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+    }
+
     return String(value);
   }
 

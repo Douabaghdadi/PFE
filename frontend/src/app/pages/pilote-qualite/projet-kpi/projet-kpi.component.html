@@ -120,15 +120,15 @@
           <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Dates</h3>
           <div style="margin-bottom: 0.75rem;">
             <span style="color: #6b7280; font-weight: 600;">Début:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ kpiData.dateDebut | date:'dd/MM/yyyy' }}</span>
+            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateDebut) }}</span>
           </div>
           <div style="margin-bottom: 0.75rem;">
             <span style="color: #6b7280; font-weight: 600;">Fin prévue:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ kpiData.dateFinPrevue | date:'dd/MM/yyyy' }}</span>
+            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateFinPrevue) }}</span>
           </div>
           <div *ngIf="kpiData.dateFinReelle">
             <span style="color: #6b7280; font-weight: 600;">Fin réelle:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ kpiData.dateFinReelle | date:'dd/MM/yyyy' }}</span>
+            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateFinReelle) }}</span>
           </div>
           <div *ngIf="kpiData.joursRetard > 0" style="margin-top: 1rem; padding: 0.75rem; background: #fee2e2; border-radius: 0.5rem;">
             <span style="color: #991b1b; font-weight: 600;">⚠️ Retard: {{ kpiData.joursRetard }} jours</span>

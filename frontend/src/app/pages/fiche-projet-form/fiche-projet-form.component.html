@@ -98,7 +98,11 @@
             </label>
             <input type="text" [(ngModel)]="formData.designationProjet" name="designationProjet" 
                    class="form-control" placeholder="Nom du projet"
-                   style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+                   [style.border]="errors['designationProjet'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                   style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+            @if (errors['designationProjet']) {
+              <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['designationProjet'] }}</p>
+            }
           </div>
           <div>
             <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
@@ -106,7 +110,11 @@
             </label>
             <input type="text" [(ngModel)]="formData.designationClient" name="designationClient" 
                    class="form-control" placeholder="Nom du client"
-                   style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+                   [style.border]="errors['designationClient'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                   style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
+            @if (errors['designationClient']) {
+              <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['designationClient'] }}</p>
+            }
           </div>
         </div>
 
@@ -132,21 +140,29 @@
                 </label>
                 <input type="text" [(ngModel)]="formData.nomProjet" name="nomProjet" required
                        class="form-control" placeholder="Entrez le nom du projet"
-                       style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                       [style.border]="errors['nomProjet'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
+                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                @if (errors['nomProjet']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['nomProjet'] }}</p>
+                }
               </div>
 
               <div class="mb-4">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Cadre contractuel Projet
+                  Cadre contractuel Projet <span style="color: #ef4444;">*</span>
                 </label>
                 <input type="text" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet"
                        class="form-control" placeholder="Ex: convention en cours"
-                       style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                       [style.border]="errors['cadreContractuelProjet'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
+                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                @if (errors['cadreContractuelProjet']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['cadreContractuelProjet'] }}</p>
+                }
               </div>
 
               <div class="mb-4">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                  Caractère Projet
+                  Caractère Projet <span style="color: #ef4444;">*</span>
                 </label>
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                   <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
@@ -162,11 +178,14 @@
                     <span style="font-weight: 500;">CNI</span>
                   </label>
                 </div>
+                @if (errors['caractereProjet']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['caractereProjet'] }}</p>
+                }
               </div>
 
               <div class="mb-0">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                  Type Projet
+                  Type Projet <span style="color: #ef4444;">*</span>
                 </label>
                 <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                   <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
@@ -182,6 +201,9 @@
                     <span style="font-weight: 500;">Refonte</span>
                   </label>
                 </div>
+                @if (errors['typeProjet']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['typeProjet'] }}</p>
+                }
               </div>
 
               <!-- Dates du projet et Statut -->
@@ -191,7 +213,8 @@
                     <i class="fas fa-flag mr-2" style="color: #10b981;"></i>Statut du projet
                   </label>
                   <select [(ngModel)]="formData.statut" name="statut"
-                          style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
+                          [style.border]="errors['statut'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
+                          style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
                     <option value="" disabled>-- Sélectionnez un statut --</option>
                     @if (statuts.length === 0) {
                       <option value="EN_COURS">En cours</option>
@@ -203,6 +226,9 @@
                       }
                     }
                   </select>
+                  @if (errors['statut']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['statut'] }}</p>
+                  }
                 </div>
               </div>
             </div>
@@ -210,11 +236,15 @@
             <!-- Présentation -->
             <div>
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Présentation
+                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Présentation <span style="color: #ef4444;">*</span>
               </label>
               <textarea [(ngModel)]="formData.presentation" name="presentation" rows="5"
                         class="form-control" placeholder="Décrivez la présentation du projet..."
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+                        [style.border]="errors['presentation'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+              @if (errors['presentation']) {
+                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['presentation'] }}</p>
+              }
             </div>
 
             <!-- Historique -->
@@ -231,11 +261,15 @@
             <!-- Périmètre -->
             <div>
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-border-all mr-2" style="color: #10b981;"></i>Périmètre
+                <i class="fas fa-border-all mr-2" style="color: #10b981;"></i>Périmètre <span style="color: #ef4444;">*</span>
               </label>
               <textarea [(ngModel)]="formData.perimetre" name="perimetre" rows="4"
                         class="form-control" placeholder="Définissez le périmètre du projet..."
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+                        [style.border]="errors['perimetre'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
+              @if (errors['perimetre']) {
+                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['perimetre'] }}</p>
+              }
             </div>
 
             <!-- Organisation -->
@@ -246,20 +280,28 @@
               
               <div class="mb-4">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Maître d'ouvrage
+                  Maître d'ouvrage <span style="color: #ef4444;">*</span>
                 </label>
                 <input type="text" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage"
                        class="form-control" placeholder="Nom du maître d'ouvrage"
-                       style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                       [style.border]="errors['maitreOuvrage'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                @if (errors['maitreOuvrage']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['maitreOuvrage'] }}</p>
+                }
               </div>
 
               <div class="mb-4">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Maître d'œuvre
+                  Maître d'œuvre <span style="color: #ef4444;">*</span>
                 </label>
                 <input type="text" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre"
                        class="form-control" placeholder="Nom du maître d'œuvre"
-                       style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                       [style.border]="errors['maitreOeuvre'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
+                @if (errors['maitreOeuvre']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['maitreOeuvre'] }}</p>
+                }
               </div>
 
               <div class="mb-0">
@@ -399,11 +441,12 @@
 
               <div class="mt-4">
                 <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Modalité de développement
+                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Modalité de développement <span style="color: #ef4444;">*</span>
                   <span style="color: #6b7280; font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem;">(Sélectionnez le mode)</span>
                 </label>
                 <select [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement"
-                        style="width: 100%; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
+                        [style.border]="errors['modaliteDeveloppement'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
                   <option value="" disabled selected style="color: #9ca3af;">-- Sélectionnez une modalité --</option>
                   <option value="I" style="color: #374151; font-weight: 500;">
                     I - Interne (Développement en interne)
@@ -415,6 +458,9 @@
                     CO - Co-traitance (Développement mixte)
                   </option>
                 </select>
+                @if (errors['modaliteDeveloppement']) {
+                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['modaliteDeveloppement'] }}</p>
+                }
                 <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
                   <i class="fas fa-info-circle mr-1"></i>
                   I: Interne | ST: Sous-traitance | CO: Co-traitance
@@ -435,7 +481,11 @@
                   </label>
                   <input type="number" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp" 
                          (change)="calculateBudget()" placeholder="Ex: 50000"
-                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                         [style.border]="errors['budget_cp'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                  @if (errors['budget_cp']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['budget_cp'] }}</p>
+                  }
                 </div>
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
@@ -443,7 +493,11 @@
                   </label>
                   <input type="number" [(ngModel)]="formData.estimationBudget.id" name="budget_id" 
                          (change)="calculateBudget()" placeholder="Ex: 120000"
-                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                         [style.border]="errors['budget_id'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
+                  @if (errors['budget_id']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['budget_id'] }}</p>
+                  }
                 </div>
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
@@ -470,19 +524,31 @@
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision)</label>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision) <span style="color:#ef4444">*</span></label>
                   <input type="date" [(ngModel)]="formData.dateDebutPrevision" name="dateDebutPrevision"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                         [style.border]="errors['dateDebutPrevision'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  @if (errors['dateDebutPrevision']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateDebutPrevision'] }}</p>
+                  }
                 </div>
                 <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision)</label>
+                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision) <span style="color:#ef4444">*</span></label>
                   <input type="date" [(ngModel)]="formData.dateFinPrevision" name="dateFinPrevision"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                         [style.border]="errors['dateFinPrevision'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  @if (errors['dateFinPrevision']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateFinPrevision'] }}</p>
+                  }
                 </div>
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Durée (Mois)</label>
-                  <input type="number" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  <input type="number" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois" min="0"
+                         [style.border]="errors['dureeEnMois'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  @if (errors['dureeEnMois']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dureeEnMois'] }}</p>
+                  }
                 </div>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -494,7 +560,11 @@
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Réalisation)</label>
                   <input type="date" [(ngModel)]="formData.dateFinRealisation" name="dateFinRealisation"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                         [style.border]="errors['dateFinRealisation'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
+                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
+                  @if (errors['dateFinRealisation']) {
+                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateFinRealisation'] }}</p>
+                  }
                 </div>
                 <div>
                   <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart Conv. (jours)</label>
@@ -507,11 +577,15 @@
             <!-- Délais prévisionnels -->
             <div>
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-clock mr-2" style="color: #10b981;"></i>Délais prévisionnels
+                <i class="fas fa-clock mr-2" style="color: #10b981;"></i>Délais prévisionnels <span style="color: #ef4444;">*</span>
               </label>
               <textarea [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels" rows="3"
                         class="form-control" placeholder="Ex: Le délai prévisionnel du projet est de 6 mois (hors délais de validation)"
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+                        [style.border]="errors['delaisPrevisionnels'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+              @if (errors['delaisPrevisionnels']) {
+                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['delaisPrevisionnels'] }}</p>
+              }
             </div>
           </div>
         }
@@ -529,21 +603,29 @@
             <!-- Risques potentiels -->
             <div>
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Risques potentiels
+                <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Risques potentiels <span style="color: #ef4444;">*</span>
               </label>
               <textarea [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels" rows="4"
                         class="form-control" placeholder="Ex: Convention en cours de discussion avec MTIC"
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+                        [style.border]="errors['risquesPotentiels'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+              @if (errors['risquesPotentiels']) {
+                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['risquesPotentiels'] }}</p>
+              }
             </div>
 
             <!-- Pré-requis -->
             <div>
               <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-list-check mr-2" style="color: #10b981;"></i>Pré-requis
+                <i class="fas fa-list-check mr-2" style="color: #10b981;"></i>Pré-requis <span style="color: #ef4444;">*</span>
               </label>
               <textarea [(ngModel)]="formData.preRequis" name="preRequis" rows="4"
                         class="form-control" placeholder="Listez les pré-requis du projet..."
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+                        [style.border]="errors['preRequis'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
+                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+              @if (errors['preRequis']) {
+                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['preRequis'] }}</p>
+              }
             </div>
 
             <!-- Planning du projet -->
@@ -652,6 +734,9 @@
               <p style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
                 <strong>(*)</strong> CP : Chef de Projet / ID : Ingénieur Développeur / CMIP : Comité de Pilotage / CMU : Comité utilisateurs
               </p>
+              @if (errors['planning']) {
+                <p style="color:#ef4444; font-size:0.85rem; margin-top:0.5rem; font-weight:600;">⚠ {{ errors['planning'] }}</p>
+              }
             </div>
           </div>
         }

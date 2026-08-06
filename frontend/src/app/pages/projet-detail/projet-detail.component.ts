@@ -533,6 +533,10 @@ export class ProjetDetailComponent implements OnInit {
       }
     }).subscribe({
       next: (data) => {
+        // Parser equipeProjet si c'est un JSON string
+        if (data.equipeProjet && typeof data.equipeProjet === 'string') {
+          try { data.equipeProjet = JSON.parse(data.equipeProjet); } catch (e) {}
+        }
         this.projet.set(data);
         this.isLoading.set(false);
       },

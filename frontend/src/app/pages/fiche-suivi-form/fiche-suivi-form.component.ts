@@ -38,6 +38,7 @@ export class FicheSuiviFormComponent implements OnInit {
   isLoading = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
+  validationErrors = signal<Record<string, string>>({});
   
   projets = signal<FicheProjet[]>([]);
   isLoadingProjets = signal(false);
@@ -176,11 +177,62 @@ export class FicheSuiviFormComponent implements OnInit {
   }
 
   nextTab() {
+    if (!this.validateCurrentTab()) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     const tabs = ['signaletique', 'constat', 'taches', 'planning'];
     const currentIndex = tabs.indexOf(this.currentTab());
     if (currentIndex < tabs.length - 1) {
       this.currentTab.set(tabs[currentIndex + 1]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  validateCurrentTab(): boolean {
+    const errors: Record<string, string> = {};
+    const tab = this.currentTab();
+
+    if (tab === 'signaletique') {
+      if (!this.ficheSuivi.ficheProjetId) errors['ficheProjetId'] = 'Veuillez sélectionner un projet.';
+      if (!this.ficheSuivi.dateRapport) errors['dateRapport'] = 'La date du rapport est obligatoire.';
+    }
+
+    if (tab === 'constat') {
+      if (!this.ficheSuivi.constatGlobal.etatAvancement?.trim())
+        errors['etatAvancement'] = "L'état d'avancement est obligatoire.";
+    }
+
+    if (tab === 'taches') {
+      this.ficheSuivi.tachesSuivi.forEach((t, i) => {
+        if (!t.sujet?.trim()) errors[`tacheSujet_${i}`] = 'Le sujet est obligatoire.';
+        if ((t.pourcentageRealise ?? 0) < 0 || (t.pourcentageRealise ?? 0) > 100)
+          errors[`tachePourcent_${i}`] = 'Le pourcentage doit être entre 0 et 100.';
+        if (t.debut && t.echeance && t.echeance < t.debut)
+          errors[`tacheEcheance_${i}`] = "L'échéance doit être après la date de début.";
+      });
+    }
+
+    if (tab === 'planning') {
+      this.ficheSuivi.planningActuel.taches.forEach((t, i) => {
+        if (!t.nom?.trim()) errors[`ganttNom_${i}`] = 'Le nom de la tâche est obligatoire.';
+        if (t.dateDebut && t.dateFin && t.dateFin < t.dateDebut)
+          errors[`ganttFin_${i}`] = 'La date de fin doit être après la date de début.';
+        if ((t.tauxAvancement ?? 0) < 0 || (t.tauxAvancement ?? 0) > 100)
+          errors[`ganttTaux_${i}`] = 'Le taux doit être entre 0 et 100.';
+      });
+    }
+
+    this.validationErrors.set(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  hasError(field: string): boolean {
+    return !!this.validationErrors()[field];
+  }
+
+  getError(field: string): string {
+    return this.validationErrors()[field] || '';
   }
 
   previousTab() {
@@ -278,17 +330,16 @@ export class FicheSuiviFormComponent implements OnInit {
   onSubmit() {
     this.errorMessage.set('');
     this.successMessage.set('');
-    
-    // Validation côté client
-    if (!this.ficheSuivi.ficheProjetId) {
-      this.errorMessage.set('Veuillez sélectionner un projet');
-      return;
+
+    const allTabs = ['signaletique', 'constat', 'taches', 'planning'];
+    for (const tab of allTabs) {
+      this.currentTab.set(tab);
+      if (!this.validateCurrentTab()) {
+        this.errorMessage.set('Veuillez corriger les erreurs avant de soumettre.');
+        return;
+      }
     }
-    
-    if (!this.ficheSuivi.dateRapport) {
-      this.errorMessage.set('Veuillez saisir la date du rapport');
-      return;
-    }
+    this.currentTab.set('planning');
     
     this.isLoading.set(true);
     

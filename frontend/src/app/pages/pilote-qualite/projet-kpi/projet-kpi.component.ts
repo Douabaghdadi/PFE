@@ -254,6 +254,15 @@ export class ProjetKPIComponent implements OnInit {
     return '#ef4444';
   }
 
+  formatDate(date: string | undefined): string {
+    if (!date) return '-';
+    try {
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return date;
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch { return date; }
+  }
+
   formatBudget(budgetMDH: number): string {
     if (!budgetMDH || budgetMDH === 0) return '0';
     // Convertir MDH en DH (1 MDH = 1,000,000 DH)

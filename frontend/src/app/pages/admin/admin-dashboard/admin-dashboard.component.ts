@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 interface DashboardStats {
   totalUsers: number;
@@ -124,6 +125,27 @@ interface DashboardStats {
         </div>
       </div>
 
+      <!-- Power BI Dashboard -->
+      <div class="flex flex-wrap -mx-3 mb-6">
+        <div class="w-full px-3">
+          <div class="relative flex flex-col min-w-0 break-words bg-white shadow-xl dark:bg-slate-850 dark:shadow-dark-xl rounded-2xl bg-clip-border">
+            <div class="border-black/12.5 mb-0 rounded-t-2xl border-b-0 border-solid p-6 pt-4 pb-0">
+              <h6 class="capitalize dark:text-white font-bold">Rapport Power BI</h6>
+              <p class="mb-0 text-sm leading-normal dark:text-white dark:opacity-60">Analyse et statistiques de la plateforme</p>
+            </div>
+            <div class="flex-auto p-4">
+              <iframe
+                [src]="powerBiUrl"
+                width="100%"
+                height="600"
+                frameborder="0"
+                allowfullscreen="true">
+              </iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Activity -->
       <div class="flex flex-wrap -mx-3">
         <div class="w-full max-w-full px-3 mb-6 lg:w-7/12 lg:flex-none">
@@ -227,6 +249,11 @@ interface DashboardStats {
 })
 export class AdminDashboardComponent implements OnInit {
   http = inject(HttpClient);
+  sanitizer = inject(DomSanitizer);
+
+  powerBiUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    'https://app.powerbi.com/reportEmbed?reportId=TON_REPORT_ID&autoAuth=true&ctid=TON_TENANT_ID'
+  );
   
   stats = signal<DashboardStats>({
     totalUsers: 0,

@@ -1,10 +1,8 @@
-/* Tailwind CSS directives - FIRST for priority */
+/* @import rules MUST come first */
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
+@import './assets/scss/style.scss';
+
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Open Sans Font */
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700');
-
-/* Import existing SCSS styles AFTER Tailwind */
-@import './assets/scss/style.scss';

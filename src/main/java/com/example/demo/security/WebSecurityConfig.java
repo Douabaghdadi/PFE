@@ -78,7 +78,10 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
                                 .requestMatchers("/api/public/**").permitAll()
+                                .requestMatchers("/api/public/powerbi/**").permitAll()
                                 .requestMatchers("/api/test/all").permitAll()
+                                .requestMatchers("/api/gemini/**").permitAll()
+                                .requestMatchers("/api/chat").authenticated()
                                 .requestMatchers("/error").permitAll()
                                 .anyRequest().authenticated()
                 );

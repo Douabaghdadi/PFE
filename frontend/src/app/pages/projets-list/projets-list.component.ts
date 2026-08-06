@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 
 interface FicheProjet {
   id: string;
@@ -19,7 +20,7 @@ interface FicheProjet {
 @Component({
   selector: 'app-projets-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ChatbotComponent],
   template: `
     <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
       <div class="container mx-auto px-4" style="max-width: 1400px;">
@@ -262,6 +263,8 @@ interface FicheProjet {
         box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
       }
     </style>
+
+    <app-chatbot context="chef_projet"></app-chatbot>
   `,
   styles: [`
     /* Styles are now inline in the template */
