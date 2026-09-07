@@ -131,19 +131,7 @@ interface Chef {
           </div>
         </div>
 
-        <!-- Actions -->
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <button (click)="sendAllNotifications()" 
-                  [disabled]="sending || lateProjects.length === 0"
-                  style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"
-                  [style.opacity]="sending || lateProjects.length === 0 ? '0.5' : '1'"
-                  [style.cursor]="sending || lateProjects.length === 0 ? 'not-allowed' : 'pointer'">
-            <i class="fas fa-paper-plane mr-2"></i>
-            {{ sending ? 'Envoi en cours...' : 'Envoyer à tous (' + lateProjects.length + ')' }}
-          </button>
-        </div>
-
-        <!-- Success Message -->
+<!-- Success Message -->
         <div *ngIf="successMessage" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
           <div style="display: flex; align-items: center; color: #065f46;">
             <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>

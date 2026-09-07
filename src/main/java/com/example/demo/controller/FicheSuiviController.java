@@ -5,6 +5,7 @@ import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.FicheSuivi;
 import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.FicheSuiviService;
+import com.example.demo.service.UserNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,9 @@ import java.util.List;
 public class FicheSuiviController {
     @Autowired
     private FicheSuiviService ficheSuiviService;
+    
+    @Autowired
+    private UserNotificationService userNotificationService;
 
     @GetMapping
     public ResponseEntity<List<FicheSuivi>> getMyFichesSuivi(Authentication authentication) {
@@ -60,6 +64,16 @@ public class FicheSuiviController {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             FicheSuivi ficheSuivi = ficheSuiviService.createFicheSuivi(request, userDetails.getId());
+            
+            // Créer une notification pour les pilotes qualité
+            String projetName = ficheSuiviService.getProjetName(request.getFicheProjetId());
+            userNotificationService.createFicheSuiviNotification(
+                ficheSuivi.getId(),
+                projetName,
+                "CREATED",
+                userDetails.getId()
+            );
+            
             return ResponseEntity.ok(ficheSuivi);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -74,6 +88,16 @@ public class FicheSuiviController {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             FicheSuivi ficheSuivi = ficheSuiviService.updateFicheSuivi(id, request, userDetails.getId());
+            
+            // Créer une notification pour les pilotes qualité
+            String projetName = ficheSuiviService.getProjetName(request.getFicheProjetId());
+            userNotificationService.createFicheSuiviNotification(
+                ficheSuivi.getId(),
+                projetName,
+                "UPDATED",
+                userDetails.getId()
+            );
+            
             return ResponseEntity.ok(ficheSuivi);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -86,6 +110,19 @@ public class FicheSuiviController {
                                               Authentication authentication) {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            
+            // Récupérer le nom du projet avant de supprimer
+            FicheSuivi ficheSuivi = ficheSuiviService.getFicheSuiviById(id);
+            String projetName = ficheSuiviService.getProjetName(ficheSuivi.getFicheProjetId());
+            
+            // Créer une notification avant de supprimer
+            userNotificationService.createFicheSuiviNotification(
+                id,
+                projetName,
+                "DELETED",
+                userDetails.getId()
+            );
+            
             ficheSuiviService.deleteFicheSuivi(id, userDetails.getId());
             return ResponseEntity.ok(new MessageResponse("Fiche suivi deleted successfully"));
         } catch (RuntimeException e) {

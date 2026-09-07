@@ -2,10 +2,13 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
+import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.FicheProjetService;
+import com.example.demo.service.UserNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +26,9 @@ public class PiloteQualiteFicheProjetController {
     
     @Autowired
     private FicheProjetService ficheProjetService;
+    
+    @Autowired
+    private UserNotificationService userNotificationService;
 
     /**
      * Récupère toutes les fiches projet (lecture seule)
@@ -36,9 +42,24 @@ public class PiloteQualiteFicheProjetController {
      * Récupère une fiche projet par son ID (lecture seule)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FicheProjet> getFicheProjetById(@PathVariable String id) {
+    public ResponseEntity<FicheProjet> getFicheProjetById(
+            @PathVariable String id,
+            Authentication authentication) {
         try {
-            return ResponseEntity.ok(ficheProjetService.getFicheProjetById(id));
+            FicheProjet ficheProjet = ficheProjetService.getFicheProjetById(id);
+            
+            if (authentication != null) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                userNotificationService.createViewNotification(
+                    ficheProjet.getId(),
+                    "FICHE_PROJET",
+                    ficheProjet.getNomProjet(),
+                    userDetails.getId(),
+                    ficheProjet.getChefProjetId()
+                );
+            }
+            
+            return ResponseEntity.ok(ficheProjet);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -92,13 +113,25 @@ public class PiloteQualiteFicheProjetController {
     @PutMapping("/{id}/periodicite")
     public ResponseEntity<FicheProjet> configurerPeriodicite(
             @PathVariable String id,
-            @RequestBody Map<String, Integer> body) {
+            @RequestBody Map<String, Integer> body,
+            Authentication authentication) {
         Integer periodiciteMois = body.get("periodiciteMois");
         if (periodiciteMois == null || periodiciteMois < 1) {
             return ResponseEntity.badRequest().build();
         }
         try {
-            return ResponseEntity.ok(ficheProjetService.configurerPeriodicite(id, periodiciteMois));
+            FicheProjet updated = ficheProjetService.configurerPeriodicite(id, periodiciteMois);
+            if (authentication != null && updated.getChefProjetId() != null) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                userNotificationService.createViewNotification(
+                    updated.getId(),
+                    "PERIODICITE",
+                    updated.getNomProjet() + "|" + periodiciteMois,
+                    userDetails.getId(),
+                    updated.getChefProjetId()
+                );
+            }
+            return ResponseEntity.ok(updated);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

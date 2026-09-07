@@ -126,6 +126,18 @@ interface FicheProjet {
                   </div>
                   <div style="background: white; padding: 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5;">
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">
+                      <i class="fas fa-align-left mr-1" style="color: #10b981;"></i>Désignation du Projet
+                    </label>
+                    <p style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0;">{{ projet()!.designationProjet || '-' }}</p>
+                  </div>
+                  <div style="background: white; padding: 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">
+                      <i class="fas fa-building mr-1" style="color: #10b981;"></i>Désignation du Client
+                    </label>
+                    <p style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0;">{{ projet()!.designationClient || '-' }}</p>
+                  </div>
+                  <div style="background: white; padding: 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">
                       <i class="fas fa-file-contract mr-1" style="color: #10b981;"></i>Cadre contractuel
                     </label>
                     <p style="font-size: 1rem; font-weight: 600; color: #111827; margin: 0;">{{ projet()!.cadreContractuelProjet || '-' }}</p>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Notifications API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #059669;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        input {
+            padding: 8px;
+            width: 300px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 Test API Notifications</h1>
+    
+    <div class="section">
+        <h2>1. Configuration</h2>
+        <label>Token JWT:</label><br>
+        <input type="text" id="token" placeholder="Collez votre token JWT ici">
+    </div>
+
+    <div class="section">
+        <h2>2. Tester les endpoints</h2>
+        <button onclick="getAllNotifications()">GET /api/user-notifications</button>
+        <button onclick="getUnreadCount()">GET /unread/count</button>
+        <button onclick="getDebugAll()">GET /debug/all (toutes les notifications en DB)</button>
+    </div>
+
+    <div class="section">
+        <h2>3. Résultat</h2>
+        <pre id="result">Les résultats s'afficheront ici...</pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8080/api/user-notifications';
+
+        function getToken() {
+            const token = document.getElementById('token').value;
+            if (!token) {
+                alert('Veuillez entrer un token JWT');
+                return null;
+            }
+            return token;
+        }
+
+        function displayResult(data) {
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function getAllNotifications() {
+            const token = getToken();
+            if (!token) return;
+
+            try {
+                const response = await fetch(API_URL, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                const data = await response.json();
+                displayResult({
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                displayResult({ error: error.message });
+            }
+        }
+
+        async function getUnreadCount() {
+            const token = getToken();
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_URL}/unread/count`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                const data = await response.json();
+                displayResult({
+                    status: response.status,
+                    data: data
+                });
+            } catch (error) {
+                displayResult({ error: error.message });
+            }
+        }
+
+        async function getDebugAll() {
+            const token = getToken();
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_URL}/debug/all`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                const data = await response.json();
+                displayResult({
+                    status: response.status,
+                    count: data.length,
+                    data: data
+                });
+            } catch (error) {
+                displayResult({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

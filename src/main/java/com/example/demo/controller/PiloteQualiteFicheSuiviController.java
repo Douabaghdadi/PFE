@@ -1,10 +1,15 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.FicheProjet;
 import com.example.demo.model.FicheSuivi;
+import com.example.demo.security.services.UserDetailsImpl;
+import com.example.demo.service.FicheProjetService;
 import com.example.demo.service.FicheSuiviService;
+import com.example.demo.service.UserNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +26,12 @@ public class PiloteQualiteFicheSuiviController {
     
     @Autowired
     private FicheSuiviService ficheSuiviService;
+    
+    @Autowired
+    private FicheProjetService ficheProjetService;
+    
+    @Autowired
+    private UserNotificationService userNotificationService;
 
     /**
      * Récupère toutes les fiches de suivi (lecture seule)
@@ -34,9 +45,22 @@ public class PiloteQualiteFicheSuiviController {
      * Récupère une fiche de suivi par son ID (lecture seule)
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FicheSuivi> getFicheSuiviById(@PathVariable String id) {
+    public ResponseEntity<FicheSuivi> getFicheSuiviById(@PathVariable String id, Authentication authentication) {
         try {
-            return ResponseEntity.ok(ficheSuiviService.getFicheSuiviById(id));
+            FicheSuivi ficheSuivi = ficheSuiviService.getFicheSuiviById(id);
+            FicheProjet ficheProjet = ficheProjetService.getFicheProjetById(ficheSuivi.getFicheProjetId());
+            
+            // Créer une notification pour le chef de projet
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            userNotificationService.createViewNotification(
+                ficheSuivi.getId(),
+                "FICHE_SUIVI",
+                ficheProjet.getNomProjet(),
+                userDetails.getId(),
+                ficheProjet.getChefProjetId()
+            );
+            
+            return ResponseEntity.ok(ficheSuivi);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

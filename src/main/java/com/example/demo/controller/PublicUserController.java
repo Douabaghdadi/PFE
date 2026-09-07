@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.UserResponse;
-import com.example.demo.service.UserService;
+import com.example.demo.model.User;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,15 +11,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/public/users")
 public class PublicUserController {
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
 
     @GetMapping("/{id}/name")
     public ResponseEntity<String> getUserNameById(@PathVariable String id) {
-        try {
-            UserResponse user = userService.getUserById(id);
+        return userRepository.findById(id).map(user -> {
+            String firstName = user.getFirstName();
+            String lastName = user.getLastName();
+            if (firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank()) {
+                return ResponseEntity.ok(firstName + " " + lastName);
+            } else if (firstName != null && !firstName.isBlank()) {
+                return ResponseEntity.ok(firstName);
+            }
             return ResponseEntity.ok(user.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.ok("Utilisateur inconnu");
-        }
+        }).orElse(ResponseEntity.ok("Utilisateur inconnu"));
     }
 }

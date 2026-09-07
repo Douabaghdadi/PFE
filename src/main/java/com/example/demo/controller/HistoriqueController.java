@@ -1,10 +1,15 @@
 package com.example.demo.controller;
 
+import com.example.demo.model.FicheProjet;
 import com.example.demo.model.HistoriqueModification;
+import com.example.demo.repository.FicheProjetRepository;
+import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.HistoriqueService;
+import com.example.demo.service.UserNotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +22,12 @@ public class HistoriqueController {
     
     @Autowired
     private HistoriqueService historiqueService;
+
+    @Autowired
+    private UserNotificationService userNotificationService;
+
+    @Autowired
+    private FicheProjetRepository ficheProjetRepository;
 
     /**
      * Récupère l'historique d'une entité spécifique
@@ -34,8 +45,31 @@ public class HistoriqueController {
      */
     @GetMapping("/projet/{projetId}/complet")
     public ResponseEntity<List<HistoriqueModification>> getHistoriqueCompletProjet(
-            @PathVariable String projetId) {
+            @PathVariable String projetId, Authentication authentication) {
         List<HistoriqueModification> historique = historiqueService.getHistoriqueCompletProjet(projetId);
+
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof UserDetailsImpl) {
+                UserDetailsImpl userDetails = (UserDetailsImpl) principal;
+                boolean isPilote = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_PILOTE_QUALITE"));
+                if (isPilote) {
+                    ficheProjetRepository.findById(projetId).ifPresent(ficheProjet -> {
+                        if (ficheProjet.getChefProjetId() != null) {
+                            userNotificationService.createViewNotification(
+                                projetId,
+                                "HISTORIQUE_PROJET",
+                                ficheProjet.getNomProjet(),
+                                userDetails.getId(),
+                                ficheProjet.getChefProjetId()
+                            );
+                        }
+                    });
+                }
+            }
+        }
+
         return ResponseEntity.ok(historique);
     }
 

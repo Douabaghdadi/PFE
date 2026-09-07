@@ -5,6 +5,7 @@ import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.FicheProjetService;
+import com.example.demo.service.UserNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,9 @@ import java.util.List;
 public class FicheProjetController {
     @Autowired
     private FicheProjetService ficheProjetService;
+    
+    @Autowired
+    private UserNotificationService userNotificationService;
 
     @GetMapping
     public ResponseEntity<List<FicheProjet>> getMyFichesProjet(Authentication authentication) {
@@ -59,6 +63,14 @@ public class FicheProjetController {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             FicheProjet ficheProjet = ficheProjetService.createFicheProjet(request, userDetails.getId());
+            
+            // Créer une notification pour les pilotes qualité
+            userNotificationService.createFicheProjetNotification(
+                ficheProjet.getId(), 
+                "CREATED", 
+                userDetails.getId()
+            );
+            
             return ResponseEntity.ok(ficheProjet);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -73,6 +85,14 @@ public class FicheProjetController {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             FicheProjet ficheProjet = ficheProjetService.updateFicheProjet(id, request, userDetails.getId());
+            
+            // Créer une notification pour les pilotes qualité
+            userNotificationService.createFicheProjetNotification(
+                ficheProjet.getId(), 
+                "UPDATED", 
+                userDetails.getId()
+            );
+            
             return ResponseEntity.ok(ficheProjet);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
@@ -85,6 +105,14 @@ public class FicheProjetController {
                                                Authentication authentication) {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            
+            // Créer une notification avant de supprimer
+            userNotificationService.createFicheProjetNotification(
+                id, 
+                "DELETED", 
+                userDetails.getId()
+            );
+            
             ficheProjetService.deleteFicheProjet(id, userDetails.getId());
             return ResponseEntity.ok(new MessageResponse("Fiche projet deleted successfully"));
         } catch (RuntimeException e) {

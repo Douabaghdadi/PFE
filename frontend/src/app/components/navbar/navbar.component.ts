@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { UserNotificationService, Notification } from '../../services/user-notification.service';
 
 @Component({
   selector: 'app-navbar',
@@ -152,6 +153,94 @@ import { AuthService } from '../../services/auth.service';
                 Connexion
               </a>
             } @else {
+              <!-- Notification Bell Icon -->
+              <div class="dropdown position-relative">
+                <button class="btn position-relative" type="button" data-bs-toggle="dropdown" 
+                        style="background: transparent; border: none; padding: 0.5rem; color: #6b7280;"
+                        (click)="loadNotifications()">
+                  <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                  </svg>
+                  @if (notificationService.getUnreadCountSignal()() > 0) {
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" 
+                          style="font-size: 0.65rem; padding: 0.25rem 0.4rem;">
+                      {{ notificationService.getUnreadCountSignal()() }}
+                    </span>
+                  }
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 0.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 350px; max-height: 500px; overflow-y: auto;">
+                  <li class="px-3 py-2 d-flex justify-content-between align-items-center border-bottom">
+                    <span style="font-weight: 600; font-size: 1rem;">Notifications</span>
+                    @if (notifications.length > 0) {
+                      <button class="btn btn-sm" style="color: #10b981; padding: 0.25rem 0.5rem; font-size: 0.875rem;" 
+                              (click)="markAllAsRead(); $event.stopPropagation();">
+                        Tout marquer comme lu
+                      </button>
+                    }
+                  </li>
+                  @if (notifications.length === 0) {
+                    <li class="px-3 py-4 text-center" style="color: #9ca3af;">
+                      <svg style="width: 48px; height: 48px; margin: 0 auto 0.5rem; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                      </svg>
+                      <div>Aucune notification</div>
+                    </li>
+                  } @else {
+                    @for (notification of notifications; track notification.id) {
+                      <li>
+                        <a class="dropdown-item d-flex align-items-start" 
+                           [routerLink]="getNotificationLink(notification)"
+                           (click)="markAsRead(notification); $event.stopPropagation();"
+                           [style.background]="notification.read ? 'transparent' : '#f0fdf4'"
+                           style="padding: 0.75rem 1rem; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.2s;">
+                          <div class="flex-shrink-0 me-2">
+                            @if (notification.type.includes('CREATED')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #dcfce7;">
+                                <svg style="width: 16px; height: 16px; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                                </svg>
+                              </div>
+                            } @else if (notification.type.includes('UPDATED')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #dbeafe;">
+                                <svg style="width: 16px; height: 16px; color: #3b82f6;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                                </svg>
+                              </div>
+                            } @else if (notification.type.includes('DELETED')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fee2e2;">
+                                <svg style="width: 16px; height: 16px; color: #ef4444;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                              </div>
+                            } @else {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #f3f4f6;">
+                                <svg style="width: 16px; height: 16px; color: #6b7280;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+                                  <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+                                </svg>
+                              </div>
+                            }
+                          </div>
+                          <div class="flex-grow-1" style="min-width: 0;">
+                            <div style="font-size: 0.875rem; color: #111827; line-height: 1.4;">
+                              {{ notification.message }}
+                            </div>
+                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                              {{ formatDate(notification.createdAt) }}
+                            </div>
+                          </div>
+                          @if (!notification.read) {
+                            <div class="flex-shrink-0 ms-2">
+                              <div class="rounded-circle" style="width: 8px; height: 8px; background: #10b981;"></div>
+                            </div>
+                          }
+                        </a>
+                      </li>
+                    }
+                  }
+                </ul>
+              </div>
+
               <div class="dropdown">
                 <button class="btn d-flex align-items-center gap-2 dropdown-toggle" type="button" data-bs-toggle="dropdown" 
                         style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; color: #374151;">
@@ -261,8 +350,96 @@ import { AuthService } from '../../services/auth.service';
     </nav>
   `
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   authService = inject(AuthService);
+  notificationService = inject(UserNotificationService);
+  notifications: Notification[] = [];
+
+  ngOnInit() {
+    // Charger les notifications au démarrage si l'utilisateur est connecté
+    if (this.authService.isAuthenticated()) {
+      console.log('User is authenticated, starting notification service...');
+      this.notificationService.startPolling();
+      this.loadNotifications();
+    } else {
+      console.log('User is not authenticated');
+    }
+  }
+
+  loadNotifications() {
+    console.log('Loading notifications...');
+    this.notificationService.getNotifications().subscribe({
+      next: (notifications) => {
+        console.log('Notifications loaded:', notifications);
+        this.notifications = notifications;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des notifications:', error);
+      }
+    });
+  }
+
+  markAsRead(notification: Notification) {
+    if (!notification.read) {
+      this.notificationService.markAsRead(notification.id).subscribe({
+        next: () => {
+          notification.read = true;
+        },
+        error: (error) => {
+          console.error('Erreur lors du marquage de la notification:', error);
+        }
+      });
+    }
+  }
+
+  markAllAsRead() {
+    this.notificationService.markAllAsRead().subscribe({
+      next: () => {
+        this.notifications.forEach(n => n.read = true);
+      },
+      error: (error) => {
+        console.error('Erreur lors du marquage de toutes les notifications:', error);
+      }
+    });
+  }
+
+  getNotificationLink(notification: Notification): string {
+    if (notification.entityType === 'FICHE_PROJET') {
+      if (this.authService.hasRole('ROLE_PILOTE_QUALITE')) {
+        return `/pilote-qualite/fiches-projet/${notification.entityId}`;
+      } else {
+        return `/projet/${notification.entityId}`;
+      }
+    } else if (notification.entityType === 'FICHE_SUIVI') {
+      if (this.authService.hasRole('ROLE_PILOTE_QUALITE')) {
+        return `/pilote-qualite/fiches-suivi/${notification.entityId}`;
+      } else {
+        return `/fiche-suivi/${notification.entityId}`;
+      }
+    }
+    return '#';
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) {
+      return 'À l\'instant';
+    } else if (diffMins < 60) {
+      return `Il y a ${diffMins} min`;
+    } else if (diffHours < 24) {
+      return `Il y a ${diffHours}h`;
+    } else if (diffDays < 7) {
+      return `Il y a ${diffDays}j`;
+    } else {
+      return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    }
+  }
 
   logout() {
     this.authService.logout();

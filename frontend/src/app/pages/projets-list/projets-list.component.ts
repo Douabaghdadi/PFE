@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
+import { UserService } from '../../services/user.service';
 
 interface FicheProjet {
   id: string;
@@ -156,7 +157,7 @@ interface FicheProjet {
                     </h3>
                     <p style="color: #6b7280; font-size: 0.875rem; min-height: 20px;">
                       <i class="fas fa-user mr-1"></i>
-                      {{ projet.designationClient || '-' }}
+                      {{ getChefProjetName(projet.chefProjetId) }}
                     </p>
                   </div>
                   <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 0.5rem; border-radius: 0.5rem;">
@@ -273,17 +274,19 @@ interface FicheProjet {
 export class ProjetsListComponent implements OnInit {
   http = inject(HttpClient);
   router = inject(Router);
+  private userService = inject(UserService);
 
   projets = signal<FicheProjet[]>([]);
   filteredProjets = signal<FicheProjet[]>([]);
   paginatedProjets = signal<FicheProjet[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
+  chefProjetNames: { [key: string]: string } = {};
   
   searchTerm = '';
   filterStatut = '';
   filterType = '';
-  sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
+  sortOrder: 'asc' | 'desc' = 'desc';
   
   // Pagination
   currentPage = signal(1);
@@ -311,6 +314,7 @@ export class ProjetsListComponent implements OnInit {
       next: (data) => {
         this.projets.set(data);
         this.filteredProjets.set(data);
+        this.loadChefProjetNames(data);
         this.updatePagination();
         this.isLoading.set(false);
       },
@@ -320,6 +324,21 @@ export class ProjetsListComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  loadChefProjetNames(projets: FicheProjet[]) {
+    const uniqueIds = [...new Set(projets.map(p => p.chefProjetId).filter(id => id))];
+    uniqueIds.forEach(id => {
+      this.userService.getUserNameById(id).subscribe({
+        next: (name) => { this.chefProjetNames[id] = name; },
+        error: () => { this.chefProjetNames[id] = '-'; }
+      });
+    });
+  }
+
+  getChefProjetName(chefProjetId: string): string {
+    if (!chefProjetId) return '-';
+    return this.chefProjetNames[chefProjetId] || 'Chargement...';
   }
 
   filterProjets() {
