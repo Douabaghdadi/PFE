@@ -3,6 +3,17 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
+interface AIKPIReport {
+  scorePerformanceIA: string;
+  niveauRisque: string;
+  predictionDateFin: string;
+  analyseGlobale: string;
+  recommandationsIA: string;
+  alertes: string;
+  success: boolean;
+  errorMessage?: string;
+}
+
 interface ProjetKPI {
   projetId: string;
   nomProjet: string;
@@ -41,6 +52,11 @@ export class ProjetKPIComponent implements OnInit {
   downloading = false;
   downloadSuccess = false;
   downloadError: string | null = null;
+
+  activeTab: 'classique' | 'ia' = 'classique';
+  aiKpiData: AIKPIReport | null = null;
+  loadingAI = false;
+  aiError: string | null = null;
 
   ngOnInit() {
     const projetId = this.route.snapshot.paramMap.get('id');
@@ -130,6 +146,52 @@ export class ProjetKPIComponent implements OnInit {
         setTimeout(() => this.downloadError = null, 3000);
       }
     });
+  }
+
+  setTab(tab: 'classique' | 'ia') {
+    this.activeTab = tab;
+  }
+
+  analyzeWithAI() {
+    if (!this.kpiData) return;
+    this.loadingAI = true;
+    this.aiError = null;
+    const token = localStorage.getItem('token');
+
+    this.http.get<AIKPIReport>(
+      `http://localhost:8081/api/pilote-qualite/rapports/projet/${this.kpiData.projetId}/kpi/ai`,
+      { headers: { 'Authorization': `Bearer ${token}` } }
+    ).subscribe({
+      next: (data) => {
+        this.aiKpiData = data;
+        this.loadingAI = false;
+        this.activeTab = 'ia';
+      },
+      error: () => {
+        this.aiError = 'Erreur lors de l\'analyse IA';
+        this.loadingAI = false;
+      }
+    });
+  }
+
+  getAIRiskStyle(niveau: string): string {
+    switch (niveau?.toUpperCase()) {
+      case 'FAIBLE': return 'background:#d1fae5; color:#065f46; border:1px solid #6ee7b7;';
+      case 'MOYEN': return 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
+      case 'ÉLEVÉ': return 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;';
+      case 'CRITIQUE': return 'background:#4c0519; color:#fecdd3; border:1px solid #e11d48;';
+      default: return 'background:#f3f4f6; color:#374151;';
+    }
+  }
+
+  getAIRecommandations(): string[] {
+    if (!this.aiKpiData?.recommandationsIA) return [];
+    return this.aiKpiData.recommandationsIA.split('|').map(r => r.trim()).filter(r => r.length > 0);
+  }
+
+  getAIAlertes(): string[] {
+    if (!this.aiKpiData?.alertes || this.aiKpiData.alertes === 'Aucune alerte') return [];
+    return this.aiKpiData.alertes.split('|').map(a => a.trim()).filter(a => a.length > 0);
   }
 
   goBack() {

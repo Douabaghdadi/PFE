@@ -9,148 +9,207 @@ import { AuthService } from '../../services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);">
-      <div class="w-full" style="max-width: 600px;">
-        <!-- Logo et titre -->
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 mb-4 shadow-lg" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1rem;">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <h2 class="text-3xl font-bold text-gray-900">Connexion</h2>
-          <p class="mt-2 text-sm text-gray-600">Application de Suivi des Processus Qualité</p>
-        </div>
+    <div class="login-page">
+      <div class="login-card">
 
-        <!-- Carte de connexion -->
-        <div class="bg-white shadow-xl p-8" style="border-radius: 1rem;">
+        <!-- LEFT: Form -->
+        <div class="login-left">
+          <h2 class="login-title">Connexion</h2>
+
           @if (errorMessage()) {
-            <div class="mb-6 p-4 border-l-4" style="background-color: #fef2f2; border-color: #ef4444; border-radius: 0.5rem;">
-              <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-                <p class="text-sm text-red-700">{{ errorMessage() }}</p>
-              </div>
-            </div>
+            <div class="error-box">{{ errorMessage() }}</div>
           }
 
-          <form (ngSubmit)="onSubmit()" class="space-y-6">
-            <!-- Email -->
-            <div>
-              <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                Adresse email
-              </label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i class="fas fa-envelope text-gray-400"></i>
-                </div>
-                <input 
-                  type="email" 
-                  id="username" 
-                  [(ngModel)]="username"
-                  name="username"
-                  placeholder="exemple@email.com"
-                  required
-                  class="block w-full py-3 border border-gray-300 transition-colors"
-                  style="padding-left: 2.5rem; padding-right: 0.75rem; border-radius: 0.5rem;"
-                  (focus)="onFocus($event)"
-                  (blur)="onBlur($event)">
-              </div>
+          <form (ngSubmit)="onSubmit()" class="login-form">
+            <div class="field-group">
+              <label>Email</label>
+              <input type="email" [(ngModel)]="username" name="username"
+                placeholder="mail@gmail.com" required />
             </div>
 
-            <!-- Mot de passe -->
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                Mot de passe
-              </label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <i class="fas fa-lock text-gray-400"></i>
-                </div>
-                <input 
-                  type="password" 
-                  id="password" 
-                  [(ngModel)]="password"
-                  name="password"
-                  placeholder="••••••••"
-                  required
-                  class="block w-full py-3 border border-gray-300 transition-colors"
-                  style="padding-left: 2.5rem; padding-right: 0.75rem; border-radius: 0.5rem;"
-                  (focus)="onFocus($event)"
-                  (blur)="onBlur($event)">
+            <div class="field-group">
+              <div class="field-row">
+                <label>Mot de passe</label>
+                <a routerLink="/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
               </div>
+              <input type="password" [(ngModel)]="password" name="password"
+                placeholder="••••••" required />
             </div>
 
-            <!-- Se souvenir de moi -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <input 
-                  type="checkbox" 
-                  id="remember"
-                  class="h-4 w-4 border-gray-300"
-                  style="border-radius: 0.25rem; color: #10b981;">
-                <label for="remember" class="ml-2 block text-sm text-gray-700">
-                  Se souvenir de moi
-                </label>
-              </div>
-              <a routerLink="/forgot-password" class="text-sm font-medium" style="color: #10b981;">
-                Mot de passe oublié ?
-              </a>
-            </div>
-
-            <!-- Bouton de connexion -->
-            <button 
-              type="submit" 
-              [disabled]="isLoading()"
-              class="w-full flex justify-center items-center py-3 px-4 border-0 shadow-sm text-sm font-semibold text-white transition-all"
-              style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.5rem;"
-              [style.opacity]="isLoading() ? '0.5' : '1'"
-              [style.cursor]="isLoading() ? 'not-allowed' : 'pointer'">
-              @if (isLoading()) {
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Connexion en cours...
-              } @else {
-                Se connecter
-              }
+            <button type="submit" [disabled]="isLoading()" class="login-btn">
+              @if (isLoading()) { <span class="spinner"></span> }
+              LOGIN
             </button>
           </form>
 
-          <!-- Lien d'inscription -->
-          <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">
-              Pas encore de compte ? 
-              <a routerLink="/register" class="font-medium" style="color: #10b981;">
-                S'inscrire ici
-              </a>
-            </p>
+          <p class="register-text">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+        </div>
+
+        <!-- RIGHT: Illustration -->
+        <div class="login-right">
+          <div class="right-bg">
+            <div class="deco-circle c1"></div>
+            <div class="deco-circle c2"></div>
+<img src="assets/images/login.png" class="illustration-img" alt="login illustration" />
           </div>
         </div>
 
-        <!-- Footer -->
-        <p class="mt-8 text-center text-xs text-gray-500">
-          © 2024 QualityHub. Tous droits réservés.
-        </p>
       </div>
     </div>
   `,
   styles: [`
-    input:focus {
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f6fa;
+    }
+    .login-card {
+      display: flex;
+      width: 820px;
+      min-height: 490px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.13);
+      overflow: hidden;
+    }
+    .login-left {
+      flex: 1;
+      padding: 42px 48px;
+      display: flex;
+      flex-direction: column;
+    }
+    .logo-badge {
+      display: inline-flex;
+      margin-bottom: 24px;
+    }
+    .logo-eba {
+      background: #fff;
+      border: 2px solid #10b981;
+      color: #10b981;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 4px 0 0 4px;
+    }
+    .logo-dms {
+      background: #10b981;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 2px 8px;
+      border-radius: 0 4px 4px 0;
+    }
+    .login-title {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      margin: 0 0 32px 0;
+      letter-spacing: -0.5px;
+      text-align: center;
+    }
+    .error-box {
+      background: #fef2f2;
+      border-left: 4px solid #ef4444;
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .login-form { display: flex; flex-direction: column; gap: 22px; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group label { font-size: 12px; color: #9ca3af; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
+    .field-row { display: flex; justify-content: space-between; align-items: center; }
+    .forgot-link { font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500; }
+    .forgot-link:hover { text-decoration: underline; }
+    .field-group input {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
       outline: none;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+      padding: 11px 14px;
+      font-size: 14px;
+      color: #111827;
+      background: #f9fafb;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    
-    button:hover:not(:disabled) {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    .field-group input:focus {
+      border-color: #10b981;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
     }
+    .login-btn {
+      margin-top: 6px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+    }
+    .login-btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
+    .login-btn:active:not(:disabled) { transform: translateY(0); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .switch-account { text-align: center; font-size: 12px; color: #888; margin: 14px 0 4px; }
+    .switch-account a { color: #10b981; text-decoration: none; }
+    .switch-account a:hover { text-decoration: underline; }
+    .or-text { text-align: center; font-size: 12px; color: #bbb; margin: 4px 0; }
+    .social-icons { display: flex; justify-content: center; gap: 14px; margin: 8px 0; }
+    .social-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+    .social-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .register-text { text-align: center; font-size: 12px; color: #888; margin-top: 16px; }
+    .register-text a { color: #10b981; text-decoration: none; }
+    .register-text a:hover { text-decoration: underline; }
+    .terms-text { text-align: center; font-size: 11px; color: #bbb; margin: 0; }
+    .terms-text a { color: #10b981; text-decoration: none; }
+    .terms-text a:hover { text-decoration: underline; }
+    .login-right { width: 360px; position: relative; overflow: hidden; }
+    .right-bg {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .deco-circle { position: absolute; border-radius: 50%; }
+    .c1 { width: 210px; height: 210px; background: rgba(255,255,255,0.12); top: -70px; right: -70px; }
+    .c2 { width: 130px; height: 130px; background: rgba(255,255,255,0.1); bottom: 10px; left: -40px; }
+    .illustration-img { width: 92%; height: auto; position: relative; z-index: 1; object-fit: contain; }
   `]
 })
 export class LoginComponent {
   authService = inject(AuthService);
   router = inject(Router);
-  
+
   username = '';
   password = '';
   errorMessage = signal('');
@@ -161,15 +220,12 @@ export class LoginComponent {
       this.errorMessage.set('Veuillez remplir tous les champs');
       return;
     }
-
     this.errorMessage.set('');
     this.isLoading.set(true);
-    
+
     this.authService.login(this.username, this.password).subscribe({
       next: () => {
         this.isLoading.set(false);
-        
-        // Rediriger selon le rôle de l'utilisateur
         if (this.authService.hasRole('ROLE_ADMIN')) {
           this.router.navigate(['/admin/dashboard']);
         } else if (this.authService.hasRole('ROLE_CHEF_PROJET')) {
@@ -183,23 +239,11 @@ export class LoginComponent {
         if (error.status === 401) {
           this.errorMessage.set('Email ou mot de passe incorrect');
         } else if (error.status === 0) {
-          this.errorMessage.set('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+          this.errorMessage.set('Impossible de se connecter au serveur.');
         } else {
           this.errorMessage.set('Une erreur est survenue. Veuillez réessayer.');
         }
       }
     });
-  }
-
-  onFocus(event: Event) {
-    const input = event.target as HTMLInputElement;
-    input.style.borderColor = '#10b981';
-    input.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-  }
-
-  onBlur(event: Event) {
-    const input = event.target as HTMLInputElement;
-    input.style.borderColor = '#d1d5db';
-    input.style.boxShadow = 'none';
   }
 }

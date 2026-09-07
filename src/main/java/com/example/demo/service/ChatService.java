@@ -45,7 +45,7 @@ public class ChatService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String getGeminiUrl() {
-        return "https://generativelanguage.googleapis.com/v1/models/" + model + ":generateContent?key=" + geminiApiKey;
+        return "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + geminiApiKey;
     }
 
     private String buildDataContext() {

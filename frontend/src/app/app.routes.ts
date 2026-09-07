@@ -27,6 +27,8 @@ import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password
 import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { HistoriqueProjetComponent } from './pages/historique-projet/historique-projet.component';
 import { PiloteHistoriqueProjetComponent } from './pages/pilote-qualite/historique-projet/historique-projet.component';
+import { TeamSuggestionComponent } from './pages/team-suggestion/team-suggestion.component';
+import { FeaturesComponent } from './pages/features/features.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -72,5 +74,7 @@ export const routes: Routes = [
       { path: 'notifications', component: NotificationsComponent },
     ]
   },
+  { path: 'team-suggestion', component: TeamSuggestionComponent },
+  { path: 'features', component: FeaturesComponent },
   { path: '**', redirectTo: '' }
 ];

@@ -94,6 +94,12 @@ import { AuthService } from '../../services/auth.service';
                         Liste des projets
                       </a>
                     </li>
+                    <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
+                    <li>
+                      <a class="dropdown-item d-flex align-items-center" routerLink="/team-suggestion" style="padding: 0.5rem 1rem; border-radius: 0.375rem; color: #7c3aed; font-weight: 600;">
+                        🤖 Suggestion d'équipe IA
+                      </a>
+                    </li>
                   </ul>
                 </div>
               }

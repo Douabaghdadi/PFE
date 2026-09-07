@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.AIKPIReportDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
+import com.example.demo.service.AIKPIService;
 import com.example.demo.service.KPIService;
 import com.example.demo.service.ExcelReportService;
 import com.example.demo.service.PDFReportService;
@@ -27,6 +29,9 @@ public class KPIReportController {
 
     @Autowired
     private KPIService kpiService;
+
+    @Autowired
+    private AIKPIService aiKpiService;
     
     @Autowired
     private ExcelReportService excelReportService;
@@ -48,6 +53,20 @@ public class KPIReportController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Analyse IA des KPI d'un projet via Gemini
+     */
+    @GetMapping("/projet/{projetId}/kpi/ai")
+    public ResponseEntity<AIKPIReportDTO> getProjetKPIsAI(@PathVariable String projetId) {
+        try {
+            AIKPIReportDTO aiKpi = aiKpiService.analyzeKPIsWithAI(projetId);
+            return ResponseEntity.ok(aiKpi);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new AIKPIReportDTO("Erreur : " + e.getMessage()));
         }
     }
 
