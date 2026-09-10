@@ -22,3 +22,31 @@
   background-color: #dbeafe;
   color: #1e40af;
 }
+
+/* Project card button hover effects */
+.projet-card button:hover {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18) !important;
+}
+
+.projet-card button:active {
+  transform: translateY(0) !important;
+  filter: brightness(0.97);
+}
+
+/* Card entrance animation */
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.projet-card {
+  animation: cardFadeIn 0.35s ease both;
+}

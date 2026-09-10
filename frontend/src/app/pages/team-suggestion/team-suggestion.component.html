@@ -5,6 +5,10 @@
     <div class="ts-banner-left">
       <div class="ts-banner-icon">🤖</div>
       <div>
+        <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.3rem 0.875rem; margin-bottom: 0.5rem;">
+          <span style="width: 7px; height: 7px; background: white; border-radius: 50%; margin-right: 0.4rem;"></span>
+          <span style="color: white; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;">SUGGESTION IA</span>
+        </div>
         <h1 class="ts-banner-title">Suggestion d'Équipe IA</h1>
         <p class="ts-banner-sub">Gemini AI analyse l'historique de vos projets et suggère la composition optimale</p>
       </div>
@@ -220,28 +224,36 @@
 .ts-banner {
   max-width: 960px;
   margin: 0 auto 1.75rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-radius: 1rem;
-  padding: 1.75rem 2rem;
+  background: linear-gradient(135deg, #09C82C 0%, #07a625 100%);
+  border-radius: 1.25rem;
+  padding: 1.5rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 8px 24px rgba(16,185,129,0.25);
+  position: relative;
+  overflow: hidden;
 }
-.ts-banner-left { display: flex; align-items: center; gap: 1rem; }
-.ts-banner-icon { font-size: 2.5rem; line-height: 1; }
-.ts-banner-title { color: white; font-size: 1.75rem; font-weight: 800; margin: 0; }
-.ts-banner-sub { color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0.25rem 0 0; }
+.ts-banner::before {
+  content: ''; position: absolute; top: -60px; right: -60px;
+  width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;
+}
+.ts-banner::after {
+  content: ''; position: absolute; bottom: -40px; left: 30%;
+  width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;
+}
+.ts-banner-left { display: flex; align-items: center; gap: 1rem; position: relative; z-index: 1; }
+.ts-banner-icon { font-size: 2rem; line-height: 1; }
+.ts-banner-title { color: white; font-size: 1.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.ts-banner-sub { color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0.2rem 0 0; }
 .ts-back-btn {
   display: flex; align-items: center; gap: 0.5rem;
-  background: rgba(255,255,255,0.15);
-  color: white; border: 1.5px solid rgba(255,255,255,0.6);
-  padding: 0.6rem 1.25rem; border-radius: 0.5rem;
-  font-weight: 600; font-size: 0.9rem; cursor: pointer;
-  transition: background 0.2s;
-  white-space: nowrap;
+  background: white; color: #09C82C;
+  border: none; padding: 0.6rem 1.25rem; border-radius: 0.75rem;
+  font-weight: 700; font-size: 0.9rem; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15); position: relative; z-index: 1;
 }
-.ts-back-btn:hover { background: rgba(255,255,255,0.25); }
+.ts-back-btn:hover { transform: translateY(-1px); }
 
 /* Card */
 .ts-card {

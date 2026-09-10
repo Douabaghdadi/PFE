@@ -1,27 +1,29 @@
 
-<div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
+<div class="min-h-screen py-8" style="background: #f8fafc;">
   <div class="container mx-auto px-4" style="max-width: 1400px;">
     
-    <!-- Header with Green Gradient - Modern Design -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1.5rem; padding: 3rem 2.5rem; box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
+    <!-- Header -->
+    <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
+      <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+      <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+      <div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;">
         <div>
-          <h1 style="color: white; font-size: 2.5rem; font-weight: 700; margin: 0; margin-bottom: 0.5rem; text-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+          <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 0.75rem;">
+            <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
+            <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">FICHE DE PROJET</span>
+          </div>
+          <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">
             {{ isEditMode() ? 'Modifier la Fiche de Projet' : 'Créer une Fiche de Projet' }}
           </h1>
-          <p style="color: rgba(255,255,255,0.95); font-size: 1.15rem; margin: 0; font-weight: 400;">
-            Système de Management de la Qualité
-          </p>
+          <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0 0 0.75rem;">Système de Management de la Qualité</p>
           @if (chefProjetName()) {
-            <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 0.75rem 1.25rem; border-radius: 0.75rem; margin-top: 1rem; display: inline-flex; align-items: center; border: 1px solid rgba(255,255,255,0.2);">
-              <i class="fas fa-user-tie mr-2" style="color: rgba(255,255,255,0.9);"></i>
-              <span style="color: rgba(255,255,255,0.9); font-size: 0.95rem; font-weight: 600;">
-                Chef de projet: <span style="color: white; font-weight: 700;">{{ chefProjetName() }}</span>
-              </span>
+            <div style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); padding: 0.4rem 1rem; border-radius: 2rem; display: inline-flex; align-items: center;">
+              <i class="fas fa-user-tie mr-2" style="color: white; font-size: 0.8rem;"></i>
+              <span style="color: white; font-size: 0.85rem; font-weight: 600;">Chef de projet: {{ chefProjetName() }}</span>
             </div>
           }
         </div>
-        <a routerLink="/dashboard" style="background: rgba(255,255,255,0.25); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.4); padding: 0.875rem 1.75rem; border-radius: 0.875rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; font-size: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <a routerLink="/dashboard" style="background: white; color: #09C82C; border: none; padding: 0.75rem 1.5rem; border-radius: 0.875rem; font-weight: 700; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; font-size: 0.95rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
           Retour
         </a>
       </div>

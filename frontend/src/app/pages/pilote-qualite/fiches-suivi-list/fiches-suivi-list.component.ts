@@ -98,6 +98,14 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     return this.projetNames[projetId] || 'Chargement...';
   }
 
+  getInitials(name: string | undefined): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
   applyFilters() {
     this.filteredFiches = this.fichesSuivi.filter(fiche => {
       const matchesProjet = !this.selectedProjetId || fiche.ficheProjetId === this.selectedProjetId;

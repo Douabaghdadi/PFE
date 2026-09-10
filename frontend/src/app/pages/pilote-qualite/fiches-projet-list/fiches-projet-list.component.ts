@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
+import { PiloteQualiteFicheProjetService, FicheProjet } from '../../../services/pilote-qualite-fiche-projet.service';
 import { UserService } from '../../../services/user.service';
 import { AuthService } from '../../../services/auth.service';
 
@@ -22,7 +22,6 @@ export class PiloteFichesProjetListComponent implements OnInit {
   fichesProjet: FicheProjet[] = [];
   filteredFiches: FicheProjet[] = [];
   paginatedFiches: FicheProjet[] = [];
-  projetsSuiviStatus: ProjetSuiviStatus[] = [];
   loading = true;
   error: string | null = null;
 
@@ -52,7 +51,6 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   ngOnInit() {
     this.loadFichesProjet();
-    this.loadProjetsSuiviStatus();
   }
 
   loadFichesProjet() {
@@ -74,25 +72,6 @@ export class PiloteFichesProjetListComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  loadProjetsSuiviStatus() {
-    this.ficheProjetService.getProjetsSuiviStatus().subscribe({
-      next: (status) => {
-        console.log('Projets suivi status loaded:', status);
-        this.projetsSuiviStatus = status;
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement du statut des fiches de suivi:', err);
-      }
-    });
-  }
-
-  getProjetSuiviStatus(projetId: string | undefined): ProjetSuiviStatus | undefined {
-    if (!projetId) return undefined;
-    const status = this.projetsSuiviStatus.find(s => s.projetId === projetId);
-    console.log('Getting status for projet', projetId, ':', status);
-    return status;
   }
 
   extractFilters() {
@@ -250,25 +229,27 @@ export class PiloteFichesProjetListComponent implements OnInit {
     }
   }
 
-  getStatutBadgeStyle(statut: string | undefined): string {
-    let bgGradient = '';
+  getStatutColor(statut: string | undefined): string {
     switch (statut?.toLowerCase()) {
       case 'en cours':
-        bgGradient = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
-        break;
+        return '#2563eb';
       case 'terminé':
-        bgGradient = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
-        break;
+        return '#059669';
       case 'en attente':
-        bgGradient = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
-        break;
+        return '#d97706';
       case 'annulé':
-        bgGradient = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-        break;
+        return '#dc2626';
       default:
-        bgGradient = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
+        return '#64748b';
     }
-    return `background: ${bgGradient}; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600; display: inline-block; box-shadow: 0 2px 8px rgba(0,0,0,0.15);`;
+  }
+
+  getInitials(name: string | undefined): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
   /**

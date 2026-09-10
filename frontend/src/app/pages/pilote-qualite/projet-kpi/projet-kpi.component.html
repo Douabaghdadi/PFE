@@ -1,217 +1,325 @@
-<div class="min-h-screen py-8" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-  <div class="container mx-auto px-4" style="max-width: 1400px;">
-    
+<div class="kpi-page">
+  <div class="kpi-container">
+
+    <!-- Back Button -->
+    <button class="back-btn" (click)="goBack()">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Retour aux fiches projet
+    </button>
+
     <!-- Header -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);">
-      <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="hero">
+      <div class="hero-inner">
         <div>
-          <h1 class="text-4xl font-bold" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <svg style="width: 2.5rem; height: 2.5rem; display: inline-block; margin-right: 0.75rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
+          <div class="hero-badge">
+            <span class="dot"></span>
+            <span>PILOTE QUALITÉ</span>
+          </div>
+          <h1 class="hero-title">
+            <span class="hero-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </span>
             KPI du Projet
           </h1>
-          <p *ngIf="kpiData" style="color: rgba(255,255,255,0.9); margin-top: 0.5rem; font-size: 1.1rem;">{{ kpiData.nomProjet }}</p>
+          <p *ngIf="kpiData" class="hero-sub">{{ kpiData.nomProjet }}</p>
         </div>
-        <button (click)="goBack()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
-          ← Retour
-        </button>
       </div>
     </div>
 
     <!-- Loading -->
-    <div *ngIf="loading" class="text-center py-12">
-      <div style="display: inline-block; width: 3rem; height: 3rem; border: 4px solid #fde68a; border-top-color: #f59e0b; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-      <p class="mt-4" style="color: #92400e; font-weight: 600;">Chargement des KPI...</p>
+    <div *ngIf="loading" class="state-box">
+      <div class="spinner"></div>
+      <p class="state-text">Chargement des KPI...</p>
     </div>
 
     <!-- Error -->
-    <div *ngIf="error" style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
-      <p style="color: #991b1b; font-weight: 600;">{{ error }}</p>
+    <div *ngIf="error" class="alert-error">
+      <p>{{ error }}</p>
     </div>
 
     <!-- Tabs -->
-    <div *ngIf="!loading && kpiData" style="display: flex; gap: 0.5rem; margin-bottom: 2rem;">
-      <button (click)="setTab('classique')"
-        [style]="activeTab === 'classique' ? 'background: #f59e0b; color: white; border: none; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 700; cursor: pointer; font-size: 1rem;' : 'background: white; color: #92400e; border: 2px solid #f59e0b; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; font-size: 1rem;'">
+    <div *ngIf="!loading && kpiData" class="tabs">
+      <button class="tab-btn classique" [class.active]="activeTab === 'classique'" (click)="setTab('classique')">
         📊 KPI Classique
       </button>
-      <button (click)="setTab('ia')"
-        [style]="activeTab === 'ia' ? 'background: #7c3aed; color: white; border: none; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 700; cursor: pointer; font-size: 1rem;' : 'background: white; color: #7c3aed; border: 2px solid #7c3aed; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; font-size: 1rem;'">
+      <button class="tab-btn ia" [class.active]="activeTab === 'ia'" (click)="setTab('ia')">
         🤖 KPI IA
       </button>
     </div>
 
     <!-- KPI Content -->
     <div *ngIf="!loading && kpiData">
-      
+
       <!-- Main Stats -->
       <div *ngIf="activeTab === 'classique'">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">Statut</div>
-          <div [style]="'display: inline-block; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; ' + getStatusStyle(kpiData.statut)">
-            {{ kpiData.statut }}
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-icon blue">🏷️</span>
+            Statut
+          </div>
+          <div class="stat-badge" [style]="getStatusStyle(kpiData.statut)">
+            {{ formatStatut(kpiData.statut) }}
           </div>
         </div>
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">Avancement</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #111827;">{{ kpiData.tauxAvancement | number:'1.0-0' }}%</div>
-          <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; margin-top: 0.5rem;">
-            <div [style]="'width: ' + kpiData.tauxAvancement + '%; height: 100%; border-radius: 4px; ' + getProgressStyle(kpiData.tauxAvancement)"></div>
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-icon green">📈</span>
+            Avancement
           </div>
-          <div style="margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280;">
-            {{ getProgressLabel(kpiData.tauxAvancement) }}
+          <div class="stat-number">{{ kpiData.tauxAvancement | number:'1.0-0' }}%</div>
+          <div class="stat-bar-track">
+            <div class="stat-bar-fill" [style]="'width: ' + kpiData.tauxAvancement + '%; ' + getProgressStyle(kpiData.tauxAvancement)"></div>
           </div>
+          <div class="stat-foot">{{ getProgressLabel(kpiData.tauxAvancement) }}</div>
         </div>
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">Problèmes</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #ef4444;">{{ kpiData.nombreProblemes }}</div>
-          <div style="margin-top: 0.5rem; font-size: 0.75rem;" [style.color]="kpiData.nombreProblemes > 5 ? '#ef4444' : '#10b981'">
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-icon red">⚠️</span>
+            Problèmes
+          </div>
+          <div class="stat-number" style="color: #ef4444;">{{ kpiData.nombreProblemes }}</div>
+          <div class="stat-foot" [style.color]="kpiData.nombreProblemes > 5 ? '#ef4444' : '#10b981'">
             {{ kpiData.nombreProblemes > 5 ? '⚠️ Attention requise' : '✅ Sous contrôle' }}
           </div>
         </div>
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="color: #6b7280; font-size: 0.875rem; margin-bottom: 0.5rem;">Risques</div>
-          <div style="font-size: 2rem; font-weight: 700; color: #f59e0b;">{{ kpiData.nombreRisques }}</div>
-          <div style="margin-top: 0.5rem; font-size: 0.75rem;" [style.color]="kpiData.nombreRisques > 3 ? '#f59e0b' : '#10b981'">
+        <div class="stat-card">
+          <div class="stat-head">
+            <span class="stat-icon amber">🛡️</span>
+            Risques
+          </div>
+          <div class="stat-number" style="color: #f59e0b;">{{ kpiData.nombreRisques }}</div>
+          <div class="stat-foot" [style.color]="kpiData.nombreRisques > 3 ? '#f59e0b' : '#10b981'">
             {{ kpiData.nombreRisques > 3 ? '🚨 Vigilance' : '✅ Acceptable' }}
           </div>
         </div>
       </div>
 
       <!-- Health Indicator -->
-      <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 2rem;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">
-          🎯 Santé du Projet
-        </h3>
-        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-          <div [style]="'width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; ' + getHealthStyle()">
-            {{ getHealthIcon() }}
+      <div class="card health-card">
+        <h3 class="card-title">🎯 Santé du Projet</h3>
+        <div class="health-top">
+          <div class="health-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="health-ring-bg" cx="50" cy="50" r="42"></circle>
+              <circle class="health-ring-fill" cx="50" cy="50" r="42"
+                [style.stroke]="getHealthScoreColor()"
+                [style.stroke-dasharray]="getHealthRingDashArray()"></circle>
+            </svg>
+            <div class="health-ring-label">{{ getHealthIcon() }}</div>
           </div>
-          <div style="flex: 1;">
-            <div style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">
-              {{ getHealthLabel() }} - {{ calculateHealthScore() }}/100
-            </div>
-            <div style="color: #6b7280; font-size: 0.95rem;">
-              {{ getHealthDescription() }}
-            </div>
+          <div class="health-info">
+            <div class="health-name">{{ getHealthLabel() }}<span class="score">{{ calculateHealthScore() }}/100</span></div>
+            <div class="health-desc">{{ getHealthDescription() }}</div>
           </div>
         </div>
-        
+
         <!-- Score Breakdown -->
-        <div style="background: #f9fafb; border-radius: 0.75rem; padding: 1rem;">
-          <div style="font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.875rem;">📊 Détail du calcul</div>
-          <div style="display: grid; gap: 0.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: white; border-radius: 0.5rem;">
-              <span style="color: #6b7280; font-size: 0.875rem;">📈 Avancement (40 pts max)</span>
-              <span style="font-weight: 600; color: #10b981;">+{{ getAvancementScore() }} pts</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: white; border-radius: 0.5rem;">
-              <span style="color: #6b7280; font-size: 0.875rem;">⚠️ Problèmes (30 pts max)</span>
-              <span style="font-weight: 600;" [style.color]="getProblemsScore() > 15 ? '#10b981' : '#ef4444'">{{ getProblemsScore() > 0 ? '+' : '' }}{{ getProblemsScore() }} pts</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: white; border-radius: 0.5rem;">
-              <span style="color: #6b7280; font-size: 0.875rem;">🛡️ Risques (20 pts max)</span>
-              <span style="font-weight: 600;" [style.color]="getRisksScore() > 10 ? '#10b981' : '#f59e0b'">{{ getRisksScore() > 0 ? '+' : '' }}{{ getRisksScore() }} pts</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: white; border-radius: 0.5rem;">
-              <span style="color: #6b7280; font-size: 0.875rem;">⏰ Respect des délais (10 pts max)</span>
-              <span style="font-weight: 600;" [style.color]="getDelayScore() === 10 ? '#10b981' : '#f59e0b'">+{{ getDelayScore() }} pts</span>
-            </div>
+        <div class="breakdown">
+          <div class="breakdown-title">📊 Détail du calcul</div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">📈 Avancement (40 pts max)</span>
+            <span class="breakdown-value" style="color: #10b981;">+{{ getAvancementScore() }} pts</span>
           </div>
-          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; color: #111827;">Score Total</span>
-            <span style="font-size: 1.5rem; font-weight: 700;" [style.color]="getHealthScoreColor()">{{ calculateHealthScore() }}/100</span>
+          <div class="breakdown-row">
+            <span class="breakdown-label">⚠️ Problèmes (30 pts max)</span>
+            <span class="breakdown-value" [style.color]="getProblemsScore() > 15 ? '#10b981' : '#ef4444'">{{ getProblemsScore() > 0 ? '+' : '' }}{{ getProblemsScore() }} pts</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">🛡️ Risques (20 pts max)</span>
+            <span class="breakdown-value" [style.color]="getRisksScore() > 10 ? '#10b981' : '#f59e0b'">{{ getRisksScore() > 0 ? '+' : '' }}{{ getRisksScore() }} pts</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">⏰ Respect des délais (10 pts max)</span>
+            <span class="breakdown-value" [style.color]="getDelayScore() === 10 ? '#10b981' : '#f59e0b'">+{{ getDelayScore() }} pts</span>
+          </div>
+          <div class="breakdown-total">
+            <span>Score Total</span>
+            <span [style.color]="getHealthScoreColor()">{{ calculateHealthScore() }}/100</span>
           </div>
         </div>
       </div>
 
-      <!-- Dates & Budget -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Dates</h3>
-          <div style="margin-bottom: 0.75rem;">
-            <span style="color: #6b7280; font-weight: 600;">Début:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateDebut) }}</span>
+      <!-- Calendrier & Équipe -->
+      <div class="grid-timeline">
+        <div class="card">
+          <div class="card-head">
+            <h3 class="card-title">📅 Calendrier</h3>
+            <span class="chip" *ngIf="getDurationDays() !== null">{{ getDurationDays() }} jours</span>
           </div>
-          <div style="margin-bottom: 0.75rem;">
-            <span style="color: #6b7280; font-weight: 600;">Fin prévue:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateFinPrevue) }}</span>
+
+          <div class="timeline">
+            <div class="timeline-track">
+              <div class="timeline-fill" [style.width.%]="getTimelineProgress()"></div>
+              <span class="timeline-node start"></span>
+              <span class="timeline-node end"></span>
+              <span class="timeline-today"
+                    *ngIf="getTimelineProgress() > 0 && getTimelineProgress() < 100"
+                    [style.left.%]="getTimelineProgress()"></span>
+            </div>
+            <div class="timeline-labels">
+              <div class="timeline-point">
+                <span class="tp-label">Début</span>
+                <span class="tp-date">{{ kpiData.dateDebut ? formatDate(kpiData.dateDebut) : 'Non définie' }}</span>
+              </div>
+              <div class="timeline-point right">
+                <span class="tp-label">Fin prévue</span>
+                <span class="tp-date">{{ kpiData.dateFinPrevue ? formatDate(kpiData.dateFinPrevue) : 'Non définie' }}</span>
+              </div>
+            </div>
           </div>
-          <div *ngIf="kpiData.dateFinReelle">
-            <span style="color: #6b7280; font-weight: 600;">Fin réelle:</span>
-            <span style="margin-left: 0.5rem; color: #111827;">{{ formatDate(kpiData.dateFinReelle) }}</span>
-          </div>
-          <div *ngIf="kpiData.joursRetard > 0" style="margin-top: 1rem; padding: 0.75rem; background: #fee2e2; border-radius: 0.5rem;">
-            <span style="color: #991b1b; font-weight: 600;">⚠️ Retard: {{ kpiData.joursRetard }} jours</span>
+
+          <div class="timeline-chips">
+            <span class="status-chip done" *ngIf="kpiData.dateFinReelle">
+              🏁 Livré le {{ formatDate(kpiData.dateFinReelle) }}
+            </span>
+            <span class="status-chip late" *ngIf="kpiData.joursRetard > 0">
+              ⚠️ {{ kpiData.joursRetard }} jour(s) de retard
+            </span>
+            <span class="status-chip ontime" *ngIf="kpiData.joursRetard === 0">
+              ✅ Dans les délais
+            </span>
           </div>
         </div>
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Budget</h3>
-          <div style="margin-bottom: 0.75rem;">
-            <span style="color: #6b7280; font-weight: 600;">Total:</span>
-            <span style="margin-left: 0.5rem; color: #111827; font-size: 1.5rem; font-weight: 700;">{{ formatBudget(kpiData.budgetTotal) }} DH</span>
+
+        <div class="card team-card">
+          <div class="card-head">
+            <h3 class="card-title" style="margin: 0;">👥 Équipe</h3>
+            <span class="chip" *ngIf="kpiData.tailleEquipe > 0">
+              {{ kpiData.tailleEquipe }} {{ kpiData.tailleEquipe > 1 ? 'membres' : 'membre' }}
+            </span>
           </div>
-          <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">
-            <i class="fas fa-info-circle"></i> Budget converti depuis {{ kpiData.budgetTotal }} MDH
+
+          <div class="team-list" *ngIf="teamMembers.length > 0">
+            <div class="team-member" *ngFor="let membre of teamMembers">
+              <span class="member-avatar">{{ getInitials(membre.nom) }}</span>
+              <div class="member-info">
+                <div class="member-name">{{ membre.nom }}</div>
+                <div class="member-role" *ngIf="membre.role">{{ membre.role }}</div>
+              </div>
+            </div>
+            <div class="team-more" *ngIf="teamOverflow > 0">+{{ teamOverflow }} autre(s) membre(s)</div>
+          </div>
+
+          <div class="team-body" *ngIf="teamMembers.length === 0 && kpiData.tailleEquipe > 0">
+            <div class="team-count">{{ kpiData.tailleEquipe }}</div>
+            <div class="team-label">{{ kpiData.tailleEquipe > 1 ? 'membres affectés' : 'membre affecté' }}</div>
+          </div>
+
+          <div class="team-empty" *ngIf="kpiData.tailleEquipe === 0">
+            <span class="team-empty-icon">👤</span>
+            Aucun membre affecté à ce projet
           </div>
         </div>
       </div>
 
-      <!-- Team -->
-      <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 2rem;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Équipe</h3>
-        <div style="font-size: 1.5rem; font-weight: 700; color: #111827;">{{ kpiData.tailleEquipe }} membres</div>
+      <!-- Budget -->
+      <div class="card budget-card">
+        <div class="card-head">
+          <h3 class="card-title">💰 Budget</h3>
+          <span class="chip muted">{{ kpiData.budgetTotal }} MDH</span>
+        </div>
+        <div class="budget-label">Budget total alloué</div>
+        <div class="budget-amount">{{ formatBudget(kpiData.budgetTotal) }} <span class="cur">DH</span></div>
+
+        <div class="budget-split" *ngIf="budgetBreakdown.length > 0">
+          <div class="budget-bar">
+            <span *ngFor="let p of budgetBreakdown"
+                  [style.width.%]="p.percent"
+                  [style.background]="p.color"
+                  [title]="p.label"></span>
+          </div>
+          <div class="budget-legend">
+            <div class="legend-item" *ngFor="let p of budgetBreakdown">
+              <span class="legend-dot" [style.background]="p.color"></span>
+              <div>
+                <div class="legend-label">{{ p.label }}</div>
+                <div class="legend-value">
+                  {{ formatBudget(p.amount) }} DH
+                  <span class="legend-pct">· {{ p.percent | number:'1.0-0' }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="budget-note" *ngIf="budgetBreakdown.length === 0">
+          ℹ️ Aucune répartition détaillée (matériel, logiciel, ressources humaines) n'a été renseignée.
+        </p>
       </div>
 
       <!-- Recommendations -->
-      <div *ngIf="getRecommendations().length > 0" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 2rem; border-left: 4px solid #3b82f6;">
-        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #1e40af;">
-          💡 Recommandations
-        </h3>
-        <ul style="list-style: none; padding: 0; margin: 0;">
-          <li *ngFor="let rec of getRecommendations()" style="padding: 0.75rem; background: white; border-radius: 0.5rem; margin-bottom: 0.5rem; display: flex; align-items: start; gap: 0.75rem;">
-            <span style="font-size: 1.25rem;">{{ rec.icon }}</span>
-            <div style="flex: 1;">
-              <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">{{ rec.title }}</div>
-              <div style="color: #6b7280; font-size: 0.875rem;">{{ rec.description }}</div>
+      <div *ngIf="getRecommendations().length > 0" class="reco-card">
+        <h3 class="card-title">💡 Recommandations</h3>
+        <ul class="reco-list">
+          <li *ngFor="let rec of getRecommendations()" class="reco-item">
+            <span class="icon">{{ rec.icon }}</span>
+            <div>
+              <div class="title">{{ rec.title }}</div>
+              <div class="desc">{{ rec.description }}</div>
             </div>
           </li>
         </ul>
       </div>
 
       <!-- Problems & Risks -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Problèmes ({{ (kpiData.listeProblemes || []).length }})</h3>
-          <div *ngIf="!kpiData.listeProblemes || kpiData.listeProblemes.length === 0" style="color: #6b7280; text-align: center; padding: 2rem;">Aucun problème</div>
-          <div *ngFor="let probleme of kpiData.listeProblemes" style="padding: 0.75rem; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+      <div class="grid-2">
+        <div class="card">
+          <div class="issue-card-title">
+            <h3 class="card-title" style="margin: 0;">Problèmes</h3>
+            <span class="issue-count red">{{ (kpiData.listeProblemes || []).length }}</span>
+          </div>
+          <div *ngIf="!kpiData.listeProblemes || kpiData.listeProblemes.length === 0" class="empty-state">Aucun problème</div>
+          <div *ngFor="let probleme of kpiData.listeProblemes" class="issue-item red">
             {{ probleme }}
           </div>
         </div>
-        <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Risques ({{ (kpiData.listeRisques || []).length }})</h3>
-          <div *ngIf="!kpiData.listeRisques || kpiData.listeRisques.length === 0" style="color: #6b7280; text-align: center; padding: 2rem;">Aucun risque</div>
-          <div *ngFor="let risque of kpiData.listeRisques" style="padding: 0.75rem; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+        <div class="card">
+          <div class="issue-card-title">
+            <h3 class="card-title" style="margin: 0;">Risques</h3>
+            <span class="issue-count amber">{{ (kpiData.listeRisques || []).length }}</span>
+          </div>
+          <div *ngIf="!kpiData.listeRisques || kpiData.listeRisques.length === 0" class="empty-state">Aucun risque</div>
+          <div *ngFor="let risque of kpiData.listeRisques" class="issue-item amber">
             {{ risque }}
           </div>
         </div>
       </div>
 
       <!-- Download Buttons -->
-      <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #111827;">Télécharger le rapport</h3>
-        <div style="display: flex; gap: 1rem;">
-          <button (click)="downloadPDF()" [disabled]="downloading" style="flex: 1; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
-            📄 PDF
+      <div class="card">
+        <h3 class="card-title" style="margin-bottom: 0.25rem;">Télécharger le rapport</h3>
+        <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Exportez les indicateurs de ce projet dans le format de votre choix.</p>
+        <div class="download-grid">
+          <button (click)="downloadPDF()" [disabled]="downloading" class="download-btn pdf">
+            <span class="download-icon pdf">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </span>
+            <span>
+              <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport PDF' }}</span>
+              <span class="download-sub">Document formaté prêt à imprimer</span>
+            </span>
           </button>
-          <button (click)="downloadExcel()" [disabled]="downloading" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
-            📊 Excel
+          <button (click)="downloadExcel()" [disabled]="downloading" class="download-btn excel">
+            <span class="download-icon excel">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h6v6M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2m-4 0h4"/>
+              </svg>
+            </span>
+            <span>
+              <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport Excel' }}</span>
+              <span class="download-sub">Tableur avec données détaillées</span>
+            </span>
           </button>
         </div>
-        <p *ngIf="downloadSuccess" style="color: #059669; margin-top: 1rem; text-align: center;">✓ Téléchargement réussi</p>
-        <p *ngIf="downloadError" style="color: #dc2626; margin-top: 1rem; text-align: center;">{{ downloadError }}</p>
+        <p *ngIf="downloadSuccess" class="download-status ok">✓ Téléchargement réussi</p>
+        <p *ngIf="downloadError" class="download-status err">{{ downloadError }}</p>
       </div>
 
       </div>
@@ -221,76 +329,75 @@
       <div *ngIf="activeTab === 'ia'">
 
         <!-- Bouton Analyser -->
-        <div *ngIf="!aiKpiData && !loadingAI" style="text-align: center; padding: 4rem 2rem; background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="font-size: 4rem; margin-bottom: 1rem;">🤖</div>
-          <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 0.75rem;">Analyse IA du Projet</h3>
-          <p style="color: #6b7280; margin-bottom: 2rem;">Obtenez une analyse intelligente de vos KPI par Gemini AI : score de performance, niveau de risque, prédictions et recommandations.</p>
-          <button (click)="analyzeWithAI()" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; padding: 1rem 2.5rem; border-radius: 0.75rem; font-weight: 700; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 15px rgba(124,58,237,0.4);">
+        <div *ngIf="!aiKpiData && !loadingAI" class="ia-hero">
+          <div class="emoji">🤖</div>
+          <h3>Analyse IA du Projet</h3>
+          <p>Obtenez une analyse intelligente de vos KPI par Gemini AI : score de performance, niveau de risque, prédictions et recommandations.</p>
+          <button (click)="analyzeWithAI()" class="ia-cta">
             ✨ Analyser avec l'IA
           </button>
         </div>
 
         <!-- Loading IA -->
-        <div *ngIf="loadingAI" style="text-align: center; padding: 4rem; background: white; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          <div style="display: inline-block; width: 3rem; height: 3rem; border: 4px solid #ede9fe; border-top-color: #7c3aed; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-          <p style="margin-top: 1rem; color: #7c3aed; font-weight: 600;">Analyse en cours par Gemini AI...</p>
+        <div *ngIf="loadingAI" class="state-box card">
+          <div class="spinner purple"></div>
+          <p class="state-text" style="color: #7c3aed;">Analyse en cours par Gemini AI...</p>
         </div>
 
         <!-- Erreur IA -->
-        <div *ngIf="aiError" style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem;">
-          <p style="color: #991b1b; font-weight: 600;">{{ aiError }}</p>
+        <div *ngIf="aiError" class="alert-error" style="margin-bottom: 2rem;">
+          <p>{{ aiError }}</p>
         </div>
 
         <!-- Résultats IA -->
         <div *ngIf="aiKpiData && aiKpiData.success">
 
           <!-- Score + Risque -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-            <div style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); border-radius: 1rem; padding: 1.5rem; color: white; box-shadow: 0 4px 15px rgba(124,58,237,0.3);">
-              <div style="font-size: 0.875rem; opacity: 0.85; margin-bottom: 0.5rem;">🎯 Score Performance IA</div>
-              <div style="font-size: 3rem; font-weight: 800;">{{ aiKpiData.scorePerformanceIA }}<span style="font-size: 1.5rem;">/100</span></div>
+          <div class="ia-grid-top">
+            <div class="ia-score-card">
+              <div class="label">🎯 Score Performance IA</div>
+              <div class="value">{{ aiKpiData.scorePerformanceIA }}<span>/100</span></div>
             </div>
-            <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-              <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.75rem;">⚠️ Niveau de Risque IA</div>
-              <div [style]="'display: inline-block; padding: 0.5rem 1.25rem; border-radius: 0.5rem; font-weight: 700; font-size: 1.1rem; ' + getAIRiskStyle(aiKpiData.niveauRisque)">
+            <div class="ia-risk-card">
+              <div class="label">⚠️ Niveau de Risque IA</div>
+              <div class="ia-risk-badge" [style]="getAIRiskStyle(aiKpiData.niveauRisque)">
                 {{ aiKpiData.niveauRisque }}
               </div>
             </div>
           </div>
 
           <!-- Prédiction date fin -->
-          <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; border-left: 4px solid #7c3aed;">
-            <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">🔮 Prédiction Date de Fin</div>
-            <div style="font-size: 1.1rem; font-weight: 600; color: #111827;">{{ aiKpiData.predictionDateFin }}</div>
+          <div class="ia-block accent">
+            <div class="label">🔮 Prédiction Date de Fin</div>
+            <div class="val">{{ aiKpiData.predictionDateFin }}</div>
           </div>
 
           <!-- Analyse globale -->
-          <div style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; color: #4c1d95; margin-bottom: 0.75rem;">🧠 Analyse Globale IA</h3>
-            <p style="color: #374151; line-height: 1.7;">{{ aiKpiData.analyseGlobale }}</p>
+          <div class="ia-analysis">
+            <h3>🧠 Analyse Globale IA</h3>
+            <p>{{ aiKpiData.analyseGlobale }}</p>
           </div>
 
           <!-- Recommandations IA -->
-          <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; color: #111827; margin-bottom: 1rem;">💡 Recommandations IA</h3>
-            <div *ngFor="let rec of getAIRecommandations(); let i = index"
-              style="display: flex; align-items: start; gap: 0.75rem; padding: 0.75rem; background: #f5f3ff; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="background: #7c3aed; color: white; border-radius: 50%; width: 1.5rem; height: 1.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0;">{{ i + 1 }}</span>
-              <span style="color: #374151;">{{ rec }}</span>
+          <div class="ia-block">
+            <h3 class="card-title">💡 Recommandations IA</h3>
+            <div *ngFor="let rec of getAIRecommandations(); let i = index" class="ia-reco-item">
+              <span class="ia-reco-num">{{ i + 1 }}</span>
+              <span class="ia-reco-text">{{ rec }}</span>
             </div>
           </div>
 
           <!-- Alertes -->
-          <div *ngIf="getAIAlertes().length > 0" style="background: #fff7ed; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 1.5rem; border-left: 4px solid #f97316;">
-            <h3 style="font-size: 1.1rem; font-weight: 700; color: #9a3412; margin-bottom: 1rem;">🚨 Alertes IA</h3>
-            <div *ngFor="let alerte of getAIAlertes()" style="padding: 0.75rem; background: #ffedd5; border-radius: 0.5rem; margin-bottom: 0.5rem; color: #7c2d12;">
+          <div *ngIf="getAIAlertes().length > 0" class="ia-alert-card">
+            <h3>🚨 Alertes IA</h3>
+            <div *ngFor="let alerte of getAIAlertes()" class="ia-alert-item">
               ⚠️ {{ alerte }}
             </div>
           </div>
 
           <!-- Relancer analyse -->
-          <div style="text-align: center; margin-top: 1rem;">
-            <button (click)="analyzeWithAI()" [disabled]="loadingAI" style="background: white; color: #7c3aed; border: 2px solid #7c3aed; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer;">
+          <div class="ia-retry-wrap">
+            <button (click)="analyzeWithAI()" [disabled]="loadingAI" class="ia-retry-btn">
               🔄 Relancer l'analyse
             </button>
           </div>
@@ -298,9 +405,9 @@
         </div>
 
         <!-- Erreur success=false -->
-        <div *ngIf="aiKpiData && !aiKpiData.success" style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem;">
-          <p style="color: #991b1b; font-weight: 600;">{{ aiKpiData.errorMessage }}</p>
-          <button (click)="analyzeWithAI()" style="margin-top: 1rem; background: #ef4444; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 0.5rem; cursor: pointer;">Réessayer</button>
+        <div *ngIf="aiKpiData && !aiKpiData.success" class="ia-error-card">
+          <p>{{ aiKpiData.errorMessage }}</p>
+          <button (click)="analyzeWithAI()" class="ia-retry-red">Réessayer</button>
         </div>
 
       </div>
@@ -309,9 +416,3 @@
     <!-- /KPI Content -->
   </div>
 </div>
-
-<style>
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-</style>

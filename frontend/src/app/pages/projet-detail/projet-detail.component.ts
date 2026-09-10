@@ -75,24 +75,22 @@ interface FicheProjet {
         @if (projet() && !isLoading()) {
           <div style="background: white; border-radius: 1.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;">
             
-            <!-- Header with Green Gradient -->
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 2.5rem 2rem; position: relative; overflow: hidden;">
-              <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
-              <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
-              
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); padding: 1.5rem 2rem; position: relative; overflow: hidden;">
+              <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+              <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
               <div style="position: relative; z-index: 1;">
                 <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
                   <div style="flex: 1; min-width: 250px;">
-                    <div style="display: inline-block; background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                      <span style="color: white; font-size: 0.875rem; font-weight: 600;">
-                        <i class="fas fa-folder-open mr-2"></i>FICHE DE PROJET
-                      </span>
+                    <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 1rem;">
+                      <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
+                      <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">FICHE DE PROJET</span>
                     </div>
-                    <h1 style="color: white; font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <h1 style="color: white; font-size: 1.5rem; font-weight: 800; margin: 0 0 0.25rem;">
                       {{ projet()!.nomProjet || projet()!.designationProjet }}
                     </h1>
                     @if (projet()!.designationClient) {
-                      <p style="color: rgba(255,255,255,0.9); font-size: 1.1rem; margin: 0;">
+                      <p style="color: rgba(255,255,255,0.85); font-size: 1.1rem; margin: 0;">
                         <i class="fas fa-building mr-2"></i>
                         {{ projet()!.designationClient }}
                       </p>

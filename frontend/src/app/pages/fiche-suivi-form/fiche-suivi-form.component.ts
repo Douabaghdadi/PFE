@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FicheSuiviService, FicheSuivi, TacheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 interface FicheProjet {
   id: string;
@@ -31,6 +32,7 @@ export class FicheSuiviFormComponent implements OnInit {
   router = inject(Router);
   route = inject(ActivatedRoute);
   http = inject(HttpClient);
+  authService = inject(AuthService);
 
   isEditMode = signal(false);
   ficheSuiviId = signal<string | null>(null);
@@ -66,7 +68,6 @@ export class FicheSuiviFormComponent implements OnInit {
   };
 
   ngOnInit() {
-    // Charger la liste des projets
     this.loadProjets();
     
     const id = this.route.snapshot.paramMap.get('id');
@@ -81,9 +82,67 @@ export class FicheSuiviFormComponent implements OnInit {
       this.ficheSuiviId.set(id);
       this.loadFicheSuivi(id);
     } else {
-      // Générer automatiquement le numéro de rapport pour une nouvelle fiche
       this.generateNumeroRapport();
+      this.ficheSuivi.ficheSignaletique.chefProjet.nom = this.getCurrentUserName();
+      if (projetId) {
+        this.prefillFromLastFiche(projetId);
+      }
     }
+  }
+
+  /**
+   * Nom du chef de projet actuellement connecté (celui qui crée la fiche).
+   */
+  getCurrentUserName(): string {
+    const currentUser = this.authService.currentUser();
+    if (currentUser?.username) {
+      return currentUser.username;
+    }
+    try {
+      const stored = localStorage.getItem('currentUser');
+      if (stored) {
+        const user = JSON.parse(stored);
+        if (user?.username) {
+          return user.username;
+        }
+      }
+    } catch {
+      // Ignorer les erreurs de parsing
+    }
+    return '';
+  }
+
+  prefillFromLastFiche(projetId: string) {
+    this.ficheSuiviService.getFichesSuiviByProjet(projetId).subscribe({
+      next: (fiches) => {
+        if (!fiches || fiches.length === 0) return;
+        // Prendre la fiche la plus récente
+        const last = fiches.sort((a, b) =>
+          new Date(b.dateCreation || 0).getTime() - new Date(a.dateCreation || 0).getTime()
+        )[0];
+
+        // Pré-remplir depuis la dernière fiche (sans écraser id, numeroRapport, dateRapport)
+        this.ficheSuivi.ficheSignaletique = {
+          ...last.ficheSignaletique,
+          chefProjet: { ...last.ficheSignaletique.chefProjet, nom: this.getCurrentUserName() },
+          experts: last.ficheSignaletique.experts ? [...last.ficheSignaletique.experts] : []
+        };
+        this.ficheSuivi.constatGlobal = {
+          ...last.constatGlobal,
+          problemesRencontres: [...(last.constatGlobal.problemesRencontres || [])],
+          principauxRisques: [...(last.constatGlobal.principauxRisques || [])],
+          recommandations: [...(last.constatGlobal.recommandations || [])]
+        };
+        this.ficheSuivi.tachesSuivi = last.tachesSuivi.map(t => ({ ...t }));
+        this.ficheSuivi.planningActuel = {
+          taches: last.planningActuel.taches.map(t => ({ ...t, sousTaches: [...(t.sousTaches || [])] }))
+        };
+        // Réinitialiser les champs propres à la nouvelle fiche
+        this.ficheSuivi.dateRapport = new Date().toISOString().split('T')[0];
+        this.generateNumeroRapport();
+      },
+      error: () => {} // silencieux, le formulaire reste vide
+    });
   }
 
   /**

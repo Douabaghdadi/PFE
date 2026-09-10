@@ -29,6 +29,7 @@ public class ProjetKPIReportDTO {
     
     // KPI d'équipe
     private int tailleEquipe;
+    private List<MembreEquipeDTO> listeMembresEquipe;
 
     // Constructeurs
     public ProjetKPIReportDTO() {
@@ -169,5 +170,13 @@ public class ProjetKPIReportDTO {
 
     public void setTailleEquipe(int tailleEquipe) {
         this.tailleEquipe = tailleEquipe;
+    }
+
+    public List<MembreEquipeDTO> getListeMembresEquipe() {
+        return listeMembresEquipe;
+    }
+
+    public void setListeMembresEquipe(List<MembreEquipeDTO> listeMembresEquipe) {
+        this.listeMembresEquipe = listeMembresEquipe;
     }
 }

@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
 
@@ -12,22 +12,24 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
     <div class="min-h-screen py-8" style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
       <div class="container mx-auto px-4" style="max-width: 1400px;">
         
-        <!-- Header with Green Gradient -->
-        <div class="mb-8" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 1rem; padding: 2rem; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);">
-          <div class="flex items-center justify-between">
+        <!-- Header -->
+        <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
+          <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+          <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
+          <div class="flex items-center justify-between" style="position: relative; z-index: 1;">
             <div>
-              <h1 class="text-4xl font-bold" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <i class="fas fa-clipboard-list mr-3"></i>Mes Fiches de Suivi
-              </h1>
-              <p class="mt-2" style="color: rgba(255,255,255,0.9); font-size: 1.1rem;">
-                <i class="fas fa-chart-line mr-2"></i>Gérez et consultez vos rapports de suivi de projet
-              </p>
+              <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 1rem;">
+                <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
+                <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">FICHES DE SUIVI</span>
+              </div>
+              <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">Mes Fiches de Suivi</h1>
+              <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0;">Gérez et consultez vos rapports de suivi de projet</p>
             </div>
-            <a routerLink="/fiche-suivi/new" 
-               style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); color: white; border: 2px solid rgba(255,255,255,0.3); padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-              <i class="fas fa-plus mr-2"></i>
-              Nouvelle Fiche de Suivi
-            </a>
+            <button (click)="createNewFiche()"
+               style="background: white; color: #09C82C; border: none; padding: 0.875rem 1.75rem; border-radius: 0.875rem; font-weight: 700; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 0.95rem; cursor: pointer;">
+              <i class="fas fa-plus"></i>
+              Créer une Fiche de Suivi
+            </button>
           </div>
         </div>
 
@@ -120,72 +122,92 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
             {{ filteredFiches().length }} fiche(s) de suivi trouvée(s)
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: stretch;">
             @for (fiche of paginatedFiches(); track fiche.id) {
-              <div style="background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; display: flex; flex-direction: column; height: 100%;"
-                   onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 12px 24px rgba(16, 185, 129, 0.15)'; this.style.borderColor='#10b981';"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'; this.style.borderColor='transparent';">
-                
-                <!-- Header -->
-                <div style="display: flex; align-items: start; justify-content: space-between; margin-bottom: 1rem;">
-                  <div style="flex: 1;">
-                    <h3 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">
-                      <i class="fas fa-file-alt mr-2" style="color: #10b981;"></i>
-                      {{ fiche.numeroRapport || 'Sans numéro' }}
-                    </h3>
-                    <p style="color: #6b7280; font-size: 0.875rem;">
-                      <i class="fas fa-calendar mr-1"></i>
-                      {{ formatDate(fiche.dateRapport) }}
-                    </p>
-                  </div>
-                  <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 0.5rem; border-radius: 0.5rem;">
-                    <i class="fas fa-clipboard-check" style="color: #10b981; font-size: 1.25rem;"></i>
-                  </div>
-                </div>
+              <div style="background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); border: 1px solid #eef1f4; cursor: pointer; display: flex; flex-direction: column;"
+                   (click)="viewFiche(fiche.id!)"
+                   onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 32px -12px rgba(15,23,42,0.16), 0 4px 10px rgba(15,23,42,0.06)'; this.style.borderColor='#e2e8f0';"
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03)'; this.style.borderColor='#eef1f4';">
 
-                <!-- Info -->
-                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f9fafb; border-radius: 0.75rem; min-height: 80px;">
-                  <div style="margin-bottom: 0.5rem;">
-                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Projet:</span>
-                    <span style="color: #10b981; font-size: 0.875rem; margin-left: 0.5rem; font-weight: 600;">{{ getProjetName(fiche.ficheProjetId) }}</span>
-                  </div>
-                  <div style="margin-bottom: 0.5rem;">
-                    <span style="color: #6b7280; font-size: 0.875rem; font-weight: 600;">Chef de projet:</span>
-                    <span style="color: #111827; font-size: 0.875rem; margin-left: 0.5rem;">{{ fiche.ficheSignaletique?.chefProjet?.nom || '-' }}</span>
-                  </div>
-                </div>
+                <!-- Card Body -->
+                <div style="padding: 1.25rem 1.25rem 1rem; flex: 1; display: flex; flex-direction: column;">
 
-                <!-- Stats -->
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                  <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #1e40af;">
-                      {{ fiche.tachesSuivi?.length || 0 }}
+                  <!-- Header -->
+                  <div style="display: flex; align-items: flex-start; gap: 0.65rem; margin-bottom: 0.9rem;">
+                    <div style="width: 2.3rem; height: 2.3rem; border-radius: 0.8rem; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                      <svg style="width: 1.05rem; height: 1.05rem; color: #475569;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                      </svg>
                     </div>
-                    <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600;">Tâches</div>
-                  </div>
-                  <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 0.75rem; border-radius: 0.5rem; text-align: center;">
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #065f46;">
-                      {{ fiche.planningActuel?.taches?.length || 0 }}
+                    <div style="min-width: 0;">
+                      <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;" [title]="fiche.numeroRapport || 'Sans numéro'">
+                        {{ fiche.numeroRapport || 'Sans numéro' }}
+                      </h3>
+                      <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.02em;">{{ fiche.dateRapport | date:'dd/MM/yyyy' }}</span>
                     </div>
-                    <div style="font-size: 0.75rem; color: #065f46; font-weight: 600;">Planning</div>
                   </div>
+
+                  <!-- Projet -->
+                  <div style="display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.25rem 0.55rem; border-radius: 0.5rem; margin-bottom: 0.6rem; align-self: flex-start;">
+                    <svg style="width: 0.68rem; height: 0.68rem; color: #059669; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                    <span style="font-size: 0.72rem; font-weight: 700; color: #059669; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 12rem;">{{ getProjetName(fiche.ficheProjetId) }}</span>
+                  </div>
+
+                  <!-- Chef de projet -->
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.9rem;">
+                    <div style="width: 1.6rem; height: 1.6rem; border-radius: 50%; background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                      <span style="color: white; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.02em;">{{ getInitials(fiche.ficheSignaletique?.chefProjet?.nom) }}</span>
+                    </div>
+                    <span style="font-size: 0.8rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ fiche.ficheSignaletique?.chefProjet?.nom || '—' }}</span>
+                  </div>
+
+                  <!-- Bento stat tiles: Tâches + Problèmes + Risques -->
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: auto;">
+                    <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
+                      <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; line-height: 1;">{{ (fiche.tachesSuivi || []).length }}</div>
+                      <div style="font-size: 0.55rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Tâches</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
+                      <div style="font-size: 1.2rem; font-weight: 800; color: #b45309; line-height: 1;">{{ (fiche.constatGlobal?.problemesRencontres || []).length }}</div>
+                      <div style="font-size: 0.55rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Problèmes</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border: 1px solid #fca5a5; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
+                      <div style="font-size: 1.2rem; font-weight: 800; color: #b91c1c; line-height: 1;">{{ (fiche.constatGlobal?.principauxRisques || []).length }}</div>
+                      <div style="font-size: 0.55rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Risques</div>
+                    </div>
+                  </div>
+
                 </div>
 
-                <!-- Actions -->
-                <div style="display: flex; gap: 0.75rem; margin-top: auto;">
-                  <a [routerLink]="['/fiche-suivi', fiche.id]" 
-                     style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-eye mr-2"></i>Voir
-                  </a>
-                  <a [routerLink]="['/fiche-suivi/edit', fiche.id]" 
-                     style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-edit mr-2"></i>Modifier
-                  </a>
-                  <button (click)="deleteFiche(fiche.id!)" 
-                          title="Supprimer"
-                          style="min-width: 50px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-trash" style="font-size: 1.1rem;"></i>
-                  </button>
+                <!-- Action Buttons Footer -->
+                <div style="padding: 0 1.25rem 1.25rem;">
+                  <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.75rem;"></div>
+
+                  <div style="display: grid; grid-template-columns: 2.4rem 2.4rem 1fr; gap: 0.45rem;">
+                    <a [routerLink]="['/fiche-suivi/edit', fiche.id]" (click)="$event.stopPropagation()" title="Modifier"
+                       style="height: 2.4rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.7rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; text-decoration: none;"
+                       onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#bfdbfe'; this.style.color='#2563eb';"
+                       onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
+                      <i class="fas fa-edit" style="font-size: 0.9rem;"></i>
+                    </a>
+
+                    <button (click)="deleteFiche(fiche.id!); $event.stopPropagation()" title="Supprimer"
+                            style="height: 2.4rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.7rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
+                            onmouseover="this.style.background='#fef2f2'; this.style.borderColor='#fecaca'; this.style.color='#dc2626';"
+                            onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
+                      <i class="fas fa-trash" style="font-size: 0.9rem;"></i>
+                    </button>
+
+                    <a [routerLink]="['/fiche-suivi', fiche.id]" (click)="$event.stopPropagation()"
+                       style="height: 2.4rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3); text-decoration: none;"
+                       onmouseover="this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'; this.style.transform='translateY(-1px)';"
+                       onmouseout="this.style.boxShadow='0 4px 10px rgba(16,185,129,0.3)'; this.style.transform='translateY(0)';">
+                      Voir
+                      <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
+                    </a>
+                  </div>
                 </div>
               </div>
             }
@@ -249,6 +271,8 @@ import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.servic
 })
 export class FichesSuiviListComponent implements OnInit {
   ficheSuiviService = inject(FicheSuiviService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   
   fichesSuivi = signal<FicheSuivi[]>([]);
   filteredFiches = signal<FicheSuivi[]>([]);
@@ -267,7 +291,20 @@ export class FichesSuiviListComponent implements OnInit {
   totalPages = signal(1);
 
   ngOnInit() {
+    const projetId = this.route.snapshot.queryParamMap.get('projetId');
+    if (projetId) {
+      this.selectedProjetId.set(projetId);
+    }
     this.loadFichesSuivi();
+  }
+
+  createNewFiche() {
+    const projetId = this.selectedProjetId();
+    if (projetId) {
+      this.router.navigate(['/fiche-suivi/new'], { queryParams: { projetId } });
+    } else {
+      this.router.navigate(['/fiche-suivi/new']);
+    }
   }
 
   loadFichesSuivi() {
@@ -276,9 +313,8 @@ export class FichesSuiviListComponent implements OnInit {
     this.ficheSuiviService.getAllFichesSuivi().subscribe({
       next: (data) => {
         this.fichesSuivi.set(data);
-        this.filteredFiches.set(data);
         this.loadProjetNames();
-        this.updatePagination();
+        this.applyFilters();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -328,6 +364,18 @@ export class FichesSuiviListComponent implements OnInit {
   getProjetName(projetId: string | undefined): string {
     if (!projetId) return 'Non assigné';
     return this.projetNames()[projetId] || 'Chargement...';
+  }
+
+  getInitials(name: string | undefined): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  viewFiche(id: string) {
+    this.router.navigate(['/fiche-suivi', id]);
   }
 
   applyFilters() {
@@ -424,15 +472,6 @@ export class FichesSuiviListComponent implements OnInit {
     }));
   }
 
-  formatDate(date: any): string {
-    if (!date) return 'Date non définie';
-    const d = new Date(date);
-    return d.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  }
 
   deleteFiche(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette fiche de suivi ?')) {

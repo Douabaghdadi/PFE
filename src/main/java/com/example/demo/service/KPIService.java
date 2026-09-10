@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.MembreEquipeDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.FicheSuivi;
@@ -161,20 +162,28 @@ public class KPIService {
         
         // KPI d'équipe
         int tailleEquipe = 0;
+        List<MembreEquipeDTO> membresEquipe = new ArrayList<>();
         if (projet.getEquipeProjet() != null) {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 List<Map<String, String>> equipe = mapper.readValue(
-                    projet.getEquipeProjet(), 
+                    projet.getEquipeProjet(),
                     new TypeReference<List<Map<String, String>>>(){}
                 );
                 tailleEquipe = equipe.size();
+                for (Map<String, String> membre : equipe) {
+                    String nom = membre.get("nom");
+                    if (nom != null && !nom.isBlank()) {
+                        membresEquipe.add(new MembreEquipeDTO(nom, membre.get("role")));
+                    }
+                }
             } catch (Exception e) {
                 // Ignorer les erreurs
             }
         }
         kpi.setTailleEquipe(tailleEquipe);
-        
+        kpi.setListeMembresEquipe(membresEquipe);
+
         return kpi;
     }
 }

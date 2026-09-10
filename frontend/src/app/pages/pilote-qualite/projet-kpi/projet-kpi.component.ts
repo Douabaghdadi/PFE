@@ -14,6 +14,11 @@ interface AIKPIReport {
   errorMessage?: string;
 }
 
+interface MembreEquipe {
+  nom: string;
+  role?: string;
+}
+
 interface ProjetKPI {
   projetId: string;
   nomProjet: string;
@@ -32,6 +37,7 @@ interface ProjetKPI {
   budgetLogiciel: number;
   budgetRessourcesHumaines: number;
   tailleEquipe: number;
+  listeMembresEquipe?: MembreEquipe[];
 }
 
 @Component({
@@ -58,6 +64,10 @@ export class ProjetKPIComponent implements OnInit {
   loadingAI = false;
   aiError: string | null = null;
 
+  budgetBreakdown: Array<{ label: string; color: string; amount: number; percent: number }> = [];
+  teamMembers: MembreEquipe[] = [];
+  teamOverflow = 0;
+
   ngOnInit() {
     const projetId = this.route.snapshot.paramMap.get('id');
     if (projetId) {
@@ -82,6 +92,10 @@ export class ProjetKPIComponent implements OnInit {
         if (!data.listeProblemes) data.listeProblemes = [];
         if (!data.listeRisques) data.listeRisques = [];
         this.kpiData = data;
+        this.budgetBreakdown = this.buildBudgetBreakdown(data);
+        const membres = data.listeMembresEquipe || [];
+        this.teamMembers = membres.slice(0, 6);
+        this.teamOverflow = Math.max(0, membres.length - 6);
         this.loading = false;
       },
       error: (err) => {
@@ -210,6 +224,25 @@ export class ProjetKPIComponent implements OnInit {
     return bg + ' color: white;';
   }
 
+  getInitials(nom: string): string {
+    if (!nom) return '?';
+    const parts = nom.trim().split(/\s+/);
+    const initials = parts.length > 1
+      ? parts[0][0] + parts[parts.length - 1][0]
+      : parts[0].slice(0, 2);
+    return initials.toUpperCase();
+  }
+
+  formatStatut(statut: string): string {
+    switch (statut?.toUpperCase()) {
+      case 'EN_COURS': return 'En cours';
+      case 'TERMINE': return 'Terminé';
+      case 'EN_ATTENTE': return 'En attente';
+      case 'ANNULE': return 'Annulé';
+      default: return statut || '-';
+    }
+  }
+
   getProgressStyle(percentage: number): string {
     let bg = '';
     if (percentage >= 75) bg = 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);';
@@ -281,7 +314,7 @@ export class ProjetKPIComponent implements OnInit {
       score += 5;
     }
     
-    return Math.max(0, Math.min(100, score));
+    return Math.round(Math.max(0, Math.min(100, score)));
   }
 
   getAvancementScore(): number {
@@ -308,12 +341,49 @@ export class ProjetKPIComponent implements OnInit {
     return 0;
   }
 
+  getHealthRingCircumference(): number {
+    return 2 * Math.PI * 42;
+  }
+
+  getHealthRingDashArray(): string {
+    const circumference = this.getHealthRingCircumference();
+    const filled = (this.calculateHealthScore() / 100) * circumference;
+    return `${filled} ${circumference}`;
+  }
+
   getHealthScoreColor(): string {
     const score = this.calculateHealthScore();
     if (score >= 80) return '#10b981';
     if (score >= 60) return '#3b82f6';
     if (score >= 40) return '#f59e0b';
     return '#ef4444';
+  }
+
+  private buildBudgetBreakdown(data: ProjetKPI) {
+    const parts = [
+      { label: 'Matériel', color: '#3b82f6', amount: data.budgetMateriel || 0 },
+      { label: 'Logiciel', color: '#7c3aed', amount: data.budgetLogiciel || 0 },
+      { label: 'Ressources humaines', color: '#09C82C', amount: data.budgetRessourcesHumaines || 0 }
+    ];
+    const total = parts.reduce((sum, p) => sum + p.amount, 0);
+    if (total <= 0) return [];
+    return parts.filter(p => p.amount > 0).map(p => ({ ...p, percent: (p.amount / total) * 100 }));
+  }
+
+  getDurationDays(): number | null {
+    if (!this.kpiData?.dateDebut || !this.kpiData?.dateFinPrevue) return null;
+    const start = new Date(this.kpiData.dateDebut).getTime();
+    const end = new Date(this.kpiData.dateFinPrevue).getTime();
+    if (isNaN(start) || isNaN(end) || end < start) return null;
+    return Math.round((end - start) / 86400000);
+  }
+
+  getTimelineProgress(): number {
+    if (!this.kpiData?.dateDebut || !this.kpiData?.dateFinPrevue) return 0;
+    const start = new Date(this.kpiData.dateDebut).getTime();
+    const end = new Date(this.kpiData.dateFinPrevue).getTime();
+    if (isNaN(start) || isNaN(end) || end <= start) return 0;
+    return Math.max(0, Math.min(100, ((Date.now() - start) / (end - start)) * 100));
   }
 
   formatDate(date: string | undefined): string {
