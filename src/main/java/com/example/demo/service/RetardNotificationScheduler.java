@@ -27,9 +27,6 @@ public class RetardNotificationScheduler {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private SmsService smsService;
-
     /**
      * Vérification au démarrage de l'application
      */
@@ -40,7 +37,7 @@ public class RetardNotificationScheduler {
     }
 
     /**
-     * Vérifie chaque jour à 8h00 les retards et envoie Email + SMS automatiquement
+     * Vérifie chaque jour à 8h00 les retards et envoie un email automatiquement
      */
     @Scheduled(cron = "0 0 8 * * *")
     public void checkRetardsEtNotifier() {
@@ -76,18 +73,6 @@ public class RetardNotificationScheduler {
                         System.out.println("[SCHEDULER] Email envoyé à " + chef.getEmail() + " pour le projet: " + nomProjet);
                     } catch (Exception e) {
                         System.err.println("[SCHEDULER] Échec email pour " + nomProjet + ": " + e.getMessage());
-                    }
-                }
-
-                // Envoi SMS
-                if (chef.getPhoneNumber() != null && !chef.getPhoneNumber().isBlank()) {
-                    try {
-                        smsService.sendFicheSuiviReminderSms(
-                            chef.getPhoneNumber(), nomChef, nomProjet, joursRetard
-                        );
-                        System.out.println("[SCHEDULER] SMS envoyé à " + chef.getPhoneNumber() + " pour le projet: " + nomProjet);
-                    } catch (Exception e) {
-                        System.err.println("[SCHEDULER] Échec SMS pour " + nomProjet + ": " + e.getMessage());
                     }
                 }
 

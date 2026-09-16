@@ -74,6 +74,8 @@ export interface TacheSuivi {
   pourcentageRealise?: number;
   statut?: string;
   remarque?: string;
+  /** true si cette ligne représente une action de la fiche de projet (grand titre), utilisée pour regrouper les sous-tâches détaillées en dessous. */
+  estTitre?: boolean;
 }
 
 export interface PlanningActuel {

@@ -6,6 +6,13 @@ import { FicheSuiviService, FicheSuivi, TacheSuivi, TacheGantt } from '../../ser
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 
+interface PlanningAction {
+  action: string;
+  profilIntervenants?: string;
+  chargeHM?: string;
+  mois?: { [key: string]: boolean };
+}
+
 interface FicheProjet {
   id: string;
   nomProjet: string;
@@ -19,6 +26,7 @@ interface FicheProjet {
   dateDebutRealisation?: string;
   dateFinRealisation?: string;
   ecartConventionnel?: number;
+  planning?: PlanningAction[];
 }
 
 @Component({
@@ -84,9 +92,10 @@ export class FicheSuiviFormComponent implements OnInit {
     } else {
       this.generateNumeroRapport();
       this.ficheSuivi.ficheSignaletique.chefProjet.nom = this.getCurrentUserName();
-      if (projetId) {
-        this.prefillFromLastFiche(projetId);
-      }
+      // Le pré-remplissage (reprise de la fiche précédente, ou import des actions
+      // du planning s'il s'agit de la 1ère fiche du projet) est déclenché par
+      // onProjetChange(), appelé automatiquement une fois la liste des projets
+      // chargée (cf. loadProjets()) dès que ficheProjetId est déjà renseigné.
     }
   }
 
@@ -115,7 +124,12 @@ export class FicheSuiviFormComponent implements OnInit {
   prefillFromLastFiche(projetId: string) {
     this.ficheSuiviService.getFichesSuiviByProjet(projetId).subscribe({
       next: (fiches) => {
-        if (!fiches || fiches.length === 0) return;
+        if (!fiches || fiches.length === 0) {
+          // Aucune fiche de suivi précédente pour ce projet : c'est la 1ère fiche,
+          // on importe les actions du planning de la fiche de projet comme titres.
+          this.importerActionsDuProjet();
+          return;
+        }
         // Prendre la fiche la plus récente
         const last = fiches.sort((a, b) =>
           new Date(b.dateCreation || 0).getTime() - new Date(a.dateCreation || 0).getTime()
@@ -133,6 +147,8 @@ export class FicheSuiviFormComponent implements OnInit {
           principauxRisques: [...(last.constatGlobal.principauxRisques || [])],
           recommandations: [...(last.constatGlobal.recommandations || [])]
         };
+        // Reprendre tel quel le contenu de la fiche précédente : titres (actions
+        // du projet) et sous-tâches détaillées, sans réimporter le planning.
         this.ficheSuivi.tachesSuivi = last.tachesSuivi.map(t => ({ ...t }));
         this.ficheSuivi.planningActuel = {
           taches: last.planningActuel.taches.map(t => ({ ...t, sousTaches: [...(t.sousTaches || [])] }))
@@ -204,6 +220,40 @@ export class FicheSuiviFormComponent implements OnInit {
       if (selected.dateFinRealisation) this.ficheSuivi.ficheSignaletique.delais.dateFinRealisation = selected.dateFinRealisation;
       if (selected.ecartConventionnel) this.ficheSuivi.ficheSignaletique.delais.ecartConventionnel = selected.ecartConventionnel;
     }
+
+    // Pour une nouvelle fiche : si c'est la 1ère fiche de suivi du projet, on importe
+    // les actions du planning comme titres ; sinon on reprend le contenu (titres +
+    // sous-tâches) de la fiche de suivi précédente, comme d'habitude.
+    if (!this.isEditMode() && this.ficheSuivi.ficheProjetId) {
+      this.prefillFromLastFiche(this.ficheSuivi.ficheProjetId);
+    }
+  }
+
+  /**
+   * Importe les actions du "Planning du projet" de la fiche de projet sélectionnée
+   * comme grands titres dans le tableau "Etat d'avancement global du projet".
+   * Chaque action déjà importée (même sujet marqué comme titre) n'est pas dupliquée.
+   */
+  importerActionsDuProjet() {
+    const selected = this.projets().find(p => p.id === this.ficheSuivi.ficheProjetId);
+    if (!selected || !selected.planning || selected.planning.length === 0) return;
+
+    const titresExistants = new Set(
+      this.ficheSuivi.tachesSuivi.filter(t => t.estTitre).map(t => t.sujet)
+    );
+
+    selected.planning.forEach(action => {
+      const nomAction = action.action?.trim();
+      if (!nomAction || titresExistants.has(nomAction)) return;
+
+      this.ficheSuivi.tachesSuivi.push({
+        sujet: nomAction,
+        estTitre: true,
+        statut: 'En cours',
+        pourcentageRealise: 0
+      });
+      titresExistants.add(nomAction);
+    });
   }
 
   loadFicheSuivi(id: string) {
@@ -370,6 +420,29 @@ export class FicheSuiviFormComponent implements OnInit {
 
   removeTache(index: number) {
     this.ficheSuivi.tachesSuivi.splice(index, 1);
+  }
+
+  /**
+   * Ajoute une sous-tâche détaillée (numérotée "1-", "2-", ...) sous le grand titre
+   * (action de la fiche de projet) situé à l'index titreIndex.
+   */
+  addSousTache(titreIndex: number) {
+    const taches = this.ficheSuivi.tachesSuivi;
+    let insertAt = titreIndex + 1;
+    let count = 0;
+    while (insertAt < taches.length && !taches[insertAt].estTitre) {
+      insertAt++;
+      count++;
+    }
+    taches.splice(insertAt, 0, {
+      code: '',
+      sujet: `${count + 1}- `,
+      livrable: '',
+      assigneA: '',
+      statut: 'En cours',
+      pourcentageRealise: 0,
+      estTitre: false
+    });
   }
 
   addTacheGantt() {

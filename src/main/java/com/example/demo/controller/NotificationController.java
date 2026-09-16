@@ -50,8 +50,7 @@ public class NotificationController {
     public ResponseEntity<?> sendNotification(@PathVariable String projetId) {
         try {
             NotificationService.NotificationResult result = notificationService.sendReminderForProjet(projetId);
-            String message = String.format("%d email(s) et %d SMS envoyé(s) avec succès", 
-                result.getEmailsSent(), result.getSmsSent());
+            String message = String.format("%d email(s) envoyé(s) avec succès", result.getEmailsSent());
             return ResponseEntity.ok(new MessageResponse(message));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -120,8 +119,7 @@ public class NotificationController {
     public ResponseEntity<?> sendAllNotifications() {
         try {
             NotificationService.NotificationResult result = notificationService.sendRemindersToAllLateChefs();
-            String message = String.format("%d email(s) et %d SMS envoyé(s) avec succès", 
-                result.getEmailsSent(), result.getSmsSent());
+            String message = String.format("%d email(s) envoyé(s) avec succès", result.getEmailsSent());
             return ResponseEntity.ok(new MessageResponse(message));
         } catch (Exception e) {
             return ResponseEntity.badRequest()

@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
-import { FicheSuivi } from '../../../services/fiche-suivi.service';
+import { FicheSuivi, TacheSuivi } from '../../../services/fiche-suivi.service';
 import { HistoriqueComponent } from '../../../components/historique/historique.component';
 
 @Component({
@@ -71,6 +71,15 @@ export class PiloteFicheSuiviDetailComponent implements OnInit {
       month: '2-digit',
       day: '2-digit'
     });
+  }
+
+  /**
+   * Une ligne est un "grand titre" (action de la fiche de projet) si elle est
+   * marquée estTitre, ou - pour les fiches enregistrées avant l'ajout de ce
+   * marqueur - si elle ne porte aucune des infos propres à une sous-tâche.
+   */
+  isTitre(t: TacheSuivi): boolean {
+    return !!t.estTitre || (!t.code && !t.livrable && !t.assigneA && !t.debut && !t.echeance);
   }
 
   getStatutStyle(statut: string | undefined): string {

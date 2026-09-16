@@ -1,0 +1,76 @@
+<div class="gantt-page" *ngIf="!loading && !error && ficheSuivi">
+  <!-- Back Button -->
+  <div class="back-btn-wrap">
+    <button (click)="goBack()" class="back-btn">← Retour à la fiche de suivi</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header-card">
+    <div class="header-badge">📊 DIAGRAMME DE GANTT</div>
+    <h1 class="header-title">{{ ficheSuivi.numeroRapport || 'Sans numéro' }}</h1>
+    <p class="header-date">État d'avancement global du projet</p>
+  </div>
+
+  <div class="section" *ngIf="ganttMonths.length > 0">
+    <div class="gantt-wrapper">
+      <div class="gantt-header-row" [style.min-width.px]="ganttTotalWidth + 200">
+        <div class="gantt-label-col">Action / Tâche</div>
+        <div class="gantt-timeline">
+          <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.px]="ganttDayWidth * m.days">{{ m.label }}</div>
+        </div>
+      </div>
+
+      <ng-container *ngFor="let t of ficheSuivi.tachesSuivi">
+        <!-- Ligne de titre (action de la fiche de projet) : pas de barre -->
+        <div class="gantt-row gantt-row-titre" *ngIf="isTitre(t)" [style.min-width.px]="ganttTotalWidth + 200">
+          <div class="gantt-label-col">
+            <span class="gantt-task-name gantt-titre-name">{{ t.sujet }}</span>
+          </div>
+          <div class="gantt-timeline gantt-timeline-row" [style.min-width.px]="ganttTotalWidth">
+            <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
+          </div>
+        </div>
+        <!-- Ligne de sous-tâche détaillée -->
+        <div class="gantt-row" *ngIf="!isTitre(t)" [style.min-width.px]="ganttTotalWidth + 200">
+          <div class="gantt-label-col">
+            <span class="gantt-task-name">{{ t.sujet || '-' }}</span>
+            <span class="gantt-pct">{{ t.pourcentageRealise || 0 }}%</span>
+          </div>
+          <div class="gantt-timeline gantt-timeline-row" [style.min-width.px]="ganttTotalWidth">
+            <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
+            <div class="gantt-bar-wrap"
+                 [style.left.px]="getBarLeft(t.debut)"
+                 [style.width.px]="getBarWidth(t.debut, t.echeance)">
+              <div class="gantt-bar" [style]="getBarStyle(t.statut)">
+                <div class="gantt-bar-progress" [style.width.%]="t.pourcentageRealise || 0"></div>
+              </div>
+              <span class="gantt-bar-label">{{ t.sujet }}</span>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="gantt-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> En cours</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Terminé</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> En retard</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Bloqué</span>
+      </div>
+    </div>
+  </div>
+  <div class="empty-state" *ngIf="ganttMonths.length === 0">
+    <p>Aucune date de début/échéance renseignée sur les sous-tâches pour générer le diagramme de Gantt.</p>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-state" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Chargement du diagramme de Gantt...</p>
+</div>
+
+<!-- Error -->
+<div class="error-state" *ngIf="error">
+  <p>⚠️ {{ error }}</p>
+  <button (click)="goBack()">Retour</button>
+</div>

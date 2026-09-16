@@ -1,217 +1,461 @@
-<div class="container mx-auto px-4 py-8">
-  <!-- En-tête -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">🎯 Tableau de Bord - Pilote Qualité</h1>
-    <p class="text-gray-600">Vue d'ensemble de tous les projets et fiches de suivi</p>
-  </div>
+<div class="dash-page">
+  <div class="dash-container">
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="text-center py-12">
-    <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    <p class="mt-4 text-gray-600">Chargement des données...</p>
-  </div>
+    <!-- ============ En-tête ============ -->
+    <header class="dash-hero">
+      <div class="hero-bubble hero-bubble-1"></div>
+      <div class="hero-bubble hero-bubble-2"></div>
 
-  <!-- Error -->
-  <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-    <p class="text-red-800">{{ error }}</p>
-  </div>
+      <div class="hero-content">
+        <div class="hero-left">
+          <span class="hero-badge"><i></i> PILOTE QUALITÉ</span>
+          <h1 class="hero-title">Supervision du processus qualité</h1>
+          <p class="hero-subtitle">
+            Respect du cycle de reporting sur {{ rowsAll.length }} projet(s) &bull; {{ fichesSuivi.length }} fiche(s) déposée(s)
+            &bull; mise à jour {{ generatedAt | date:'dd/MM à HH:mm' }}
+          </p>
+        </div>
 
-  <!-- Contenu -->
-  <div *ngIf="!loading && !error">
-    <!-- Alertes Retard Fiches de Suivi -->
-    <div *ngIf="projetsEnRetardSuivi.length > 0" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border: 2px solid #f97316; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);">
-      <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-        <svg style="width: 1.75rem; height: 1.75rem; color: #ea580c; margin-right: 0.75rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-        </svg>
-        <h2 style="font-size: 1.25rem; font-weight: 700; color: #9a3412; margin: 0;">
-          Alertes - Fiches de suivi en retard ({{ projetsEnRetardSuivi.length }})
-        </h2>
+        <div class="hero-actions">
+          <button class="hero-btn" (click)="refresh()" [disabled]="loading" title="Recharger les données">
+            <svg [class.spinning]="loading" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Actualiser
+          </button>
+          <button class="hero-btn" [class.active]="autoRefresh" (click)="toggleAutoRefresh()" title="Rafraîchir automatiquement toutes les minutes">
+            <span class="live-dot" [class.on]="autoRefresh"></span>
+            Auto {{ autoRefresh ? 'ON' : 'OFF' }}
+          </button>
+          <button class="hero-btn" (click)="exportCsv()" [disabled]="loading || !rows.length" title="Exporter l'audit de reporting">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-9-4l4 4m0 0l4-4m-4 4V4"/>
+            </svg>
+            Export CSV
+          </button>
+          <button class="hero-btn" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimer
+          </button>
+        </div>
       </div>
-      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        <div *ngFor="let alerte of projetsEnRetardSuivi"
-             style="background: white; border-left: 4px solid #ef4444; border-radius: 0.5rem; padding: 1rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-          <div>
-            <p style="font-weight: 700; color: #111827; margin: 0 0 0.25rem 0;">{{ alerte.nomProjet }}</p>
-            <p style="font-size: 0.875rem; color: #6b7280; margin: 0;">
-              Prochaine fiche attendue le : <strong>{{ alerte.dateProchaineFicheSuivi | date:'dd/MM/yyyy' }}</strong>
-              <span *ngIf="alerte.periodiciteSuiviMois"> &bull; Periodicite : {{ alerte.periodiciteSuiviMois }} mois</span>
-            </p>
-          </div>
-          <div style="text-align: right; flex-shrink: 0; margin-left: 1rem;">
-            <span style="background: #fee2e2; color: #991b1b; padding: 0.4rem 0.75rem; border-radius: 9999px; font-weight: 700; font-size: 0.875rem;">
-              {{ alerte.joursRetard }} jour(s) de retard
+    </header>
+
+    <!-- ============ Barre de filtres ============ -->
+    <section class="toolbar" *ngIf="!error">
+      <div class="toolbar-field toolbar-search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" placeholder="Rechercher un projet ou un chef de projet…"
+               [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
+        <button *ngIf="searchTerm" class="clear-input" (click)="searchTerm = ''; applyFilters()" aria-label="Effacer">&times;</button>
+      </div>
+
+      <select class="toolbar-select" [(ngModel)]="statutFilter" (ngModelChange)="applyFilters()">
+        <option value="">Tous les statuts</option>
+        <option value="EN_COURS">En cours</option>
+        <option value="TERMINE">Terminés</option>
+        <option value="EN_ATTENTE">En attente</option>
+        <option value="ANNULE">Annulés</option>
+      </select>
+
+      <select class="toolbar-select" [(ngModel)]="periode" (ngModelChange)="applyFilters()">
+        <option *ngFor="let o of periodeOptions" [value]="o.value">{{ o.label }}</option>
+      </select>
+
+      <button class="toolbar-reset" (click)="resetFilters()" [disabled]="!filtresActifs">Réinitialiser</button>
+    </section>
+
+    <div class="filter-chips" *ngIf="filtresActifs && !error">
+      <span class="chip-label">Filtres actifs :</span>
+      <span *ngIf="searchTerm" class="chip">« {{ searchTerm }} » <button (click)="searchTerm = ''; applyFilters()">&times;</button></span>
+      <span *ngIf="statutFilter" class="chip">{{ statutFilterLabel }} <button (click)="statutFilter = ''; applyFilters()">&times;</button></span>
+      <span *ngIf="periode !== 'all'" class="chip">{{ periodeLabel }} <button (click)="periode = 'all'; applyFilters()">&times;</button></span>
+      <span *ngIf="conformiteFilter" class="chip">{{ conformiteFilterLabel }} <button (click)="conformiteFilter = ''; applyFilters()">&times;</button></span>
+    </div>
+
+    <!-- ============ Chargement ============ -->
+    <div *ngIf="loading" class="skeleton-wrap">
+      <div class="stats-grid">
+        <div class="skeleton skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+      <div class="row-3col">
+        <div class="skeleton skeleton-panel"></div>
+        <div class="skeleton skeleton-panel"></div>
+        <div class="skeleton skeleton-panel"></div>
+      </div>
+    </div>
+
+    <!-- ============ Erreur ============ -->
+    <div *ngIf="error && !loading" class="error-banner">
+      <span>{{ error }}</span>
+      <button (click)="refresh()">Réessayer</button>
+    </div>
+
+    <!-- ============ Contenu ============ -->
+    <div *ngIf="!loading && !error">
+
+      <!-- Alertes retard -->
+      <section *ngIf="nbAlertes > 0" class="alert-banner">
+        <div class="alert-head">
+          <div class="alert-head-left">
+            <span class="alert-ico">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
             </span>
-            <div style="margin-top: 0.5rem;">
-              <button (click)="navigateTo('/pilote-qualite/fiches-projet')"
-                      style="font-size: 0.75rem; color: #2563eb; background: none; border: none; cursor: pointer; text-decoration: underline; font-weight: 600;">
-                Voir le projet
+            <div>
+              <h2 class="alert-title">Fiches de suivi en retard</h2>
+              <p class="alert-summary">
+                <strong>{{ nbAlertes }}</strong> projet(s) concerné(s)
+                &bull; <strong>{{ totalJoursRetard }}</strong> jours cumulés
+                &bull; pire cas <strong>{{ pireRetard }} j</strong>
+              </p>
+            </div>
+          </div>
+          <button *ngIf="nbAlertes > 2" class="alert-toggle" (click)="alertesOuvertes = !alertesOuvertes">
+            {{ alertesOuvertes ? 'Réduire' : 'Tout afficher (' + nbAlertes + ')' }}
+          </button>
+        </div>
+
+        <div class="alert-list">
+          <article *ngFor="let a of alertes" class="alert-item" [ngClass]="'sev-' + severite(a.joursRetard)"
+                   (click)="viewProjet(a.id)">
+            <span class="alert-rail"></span>
+
+            <div class="alert-body">
+              <div class="alert-identity">
+                <h3 class="alert-item-name">{{ a.nom }}</h3>
+                <span class="sev-tag">{{ severiteLabel(a.joursRetard) }}</span>
+              </div>
+
+              <div class="alert-chips">
+                <span class="alert-chip">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  Attendue le <strong>{{ a.prochaineFiche | date:'dd/MM/yyyy' }}</strong>
+                </span>
+                <span class="alert-chip" *ngIf="a.derniereFiche">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Dernière le <strong>{{ a.derniereFiche | date:'dd/MM/yyyy' }}</strong>
+                </span>
+                <span class="alert-chip alert-chip-warn" *ngIf="!a.derniereFiche">Aucun dépôt à ce jour</span>
+                <span class="alert-chip" *ngIf="a.periodicite">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Tous les <strong>{{ a.periodicite }} mois</strong>
+                </span>
+                <span class="alert-chip">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  {{ a.chefProjet }}
+                </span>
+              </div>
+
+              <div class="alert-gauge">
+                <div class="alert-gauge-track">
+                  <div class="alert-gauge-fill" [style.width.%]="remplissageRetard(a)"></div>
+                </div>
+                <span class="alert-gauge-text" *ngIf="cyclesManques(a) > 0">
+                  ≈ {{ cyclesManques(a) }} cycle(s) de reporting manqué(s)
+                </span>
+                <span class="alert-gauge-text" *ngIf="cyclesManques(a) === 0">Cycle en cours dépassé</span>
+              </div>
+            </div>
+
+            <div class="alert-side">
+              <div class="delay-meter">
+                <span class="delay-value">{{ a.joursRetard }}<small>j</small></span>
+                <span class="delay-caption">de retard</span>
+              </div>
+              <button class="alert-cta" (click)="$event.stopPropagation(); viewProjet(a.id)">
+                Relancer
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                </svg>
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- KPI processus -->
+      <section class="stats-grid">
+        <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
+                [class.selected]="kpi.action === 'conformite' && conformiteFilter === kpi.payload"
+                (click)="onKpiClick(kpi)">
+          <span class="stat-accent"></span>
+          <div class="stat-card-top">
+            <span class="stat-icon">{{ kpi.icon }}</span>
+            <span class="stat-value">{{ kpi.value }}</span>
+          </div>
+          <p class="stat-title">{{ kpi.title }}</p>
+          <p class="stat-hint">{{ kpi.hint }}</p>
+        </button>
+      </section>
+
+      <!-- Conformité / Échéancier / Complétude -->
+      <section class="row-3col">
+        <div class="panel">
+          <h2 class="panel-title">🎯 Conformité du reporting</h2>
+          <p class="panel-subtitle">Cliquez sur un segment pour filtrer</p>
+
+          <div *ngIf="!rows.length" class="panel-empty">Aucun projet ne correspond aux filtres.</div>
+
+          <div *ngIf="rows.length" class="donut-wrap">
+            <div class="donut-holder">
+              <svg viewBox="0 0 120 120" class="donut-svg">
+                <circle cx="60" cy="60" r="54" class="donut-track"/>
+                <circle *ngFor="let s of conformiteSegments" cx="60" cy="60" r="54" class="donut-seg"
+                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset"
+                        [class.dimmed]="conformiteFilter && conformiteFilter !== s.key"
+                        (click)="setConformiteFilter(s.key)">
+                  <title>{{ s.label }} : {{ s.count }} ({{ s.percent }}%)</title>
+                </circle>
+              </svg>
+              <div class="donut-center">
+                <strong>{{ tauxConformite }}<small>%</small></strong>
+                <span>à jour</span>
+              </div>
+            </div>
+
+            <div class="donut-legend">
+              <button *ngFor="let s of conformiteSegments" class="legend-row"
+                      [class.active]="conformiteFilter === s.key" (click)="setConformiteFilter(s.key)">
+                <span class="legend-dot" [style.background]="s.color"></span>
+                <span class="legend-label">{{ s.label }}</span>
+                <span class="legend-value">{{ s.count }}</span>
+                <span class="legend-pct">{{ s.percent }}%</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Statistiques -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      <div
-        *ngFor="let stat of stats"
-        class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-        (click)="navigateTo(stat.link)"
-      >
-        <div class="p-6">
-          <div class="flex items-center justify-between mb-4">
-            <div class="text-4xl">{{ stat.icon }}</div>
-            <div
-              class="w-12 h-12 rounded-full flex items-center justify-center"
-              [ngClass]="stat.color"
-            >
-              <span class="text-white text-xl font-bold">{{ stat.value }}</span>
+        <div class="panel">
+          <h2 class="panel-title">📅 Échéancier des dépôts</h2>
+          <p class="panel-subtitle">Prochaines fiches attendues</p>
+
+          <div class="echeance-buckets">
+            <div *ngFor="let b of echeanceBuckets" class="echeance-bucket" [style.border-color]="b.color">
+              <strong [style.color]="b.color">{{ b.count }}</strong>
+              <span>{{ b.label }}</span>
             </div>
           </div>
-          <h3 class="text-lg font-semibold text-gray-900">{{ stat.title }}</h3>
-          <p class="text-sm text-gray-600 mt-1">Cliquez pour voir les détails</p>
-        </div>
-      </div>
-    </div>
 
-    <!-- Actions rapides -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <h2 class="text-xl font-semibold mb-4">🚀 Actions Rapides</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button
-          (click)="navigateTo('/pilote-qualite/fiches-projet')"
-          class="flex items-center p-4 border-2 border-blue-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all"
-        >
-          <span class="text-3xl mr-4">📋</span>
-          <div class="text-left">
-            <p class="font-semibold text-gray-900">Consulter les Fiches Projet</p>
-            <p class="text-sm text-gray-600">Voir toutes les fiches projet</p>
+          <div *ngIf="!prochainesEcheances.length" class="panel-empty">Aucune échéance planifiée à venir.</div>
+
+          <div *ngFor="let e of prochainesEcheances" class="echeance-item" (click)="viewProjet(e.projetId)">
+            <div class="echeance-date">
+              <strong>{{ e.date | date:'dd/MM' }}</strong>
+              <span>{{ formatEcheance(e.jours) }}</span>
+            </div>
+            <div class="echeance-main">
+              <p class="echeance-nom">{{ e.projetNom }}</p>
+              <p class="echeance-meta" *ngIf="e.periodicite">Périodicité {{ e.periodicite }} mois</p>
+            </div>
           </div>
-        </button>
+        </div>
 
-        <button
-          (click)="navigateTo('/pilote-qualite/fiches-suivi')"
-          class="flex items-center p-4 border-2 border-purple-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all"
-        >
-          <span class="text-3xl mr-4">📊</span>
-          <div class="text-left">
-            <p class="font-semibold text-gray-900">Consulter les Fiches de Suivi</p>
-            <p class="text-sm text-gray-600">Voir toutes les fiches de suivi</p>
+        <div class="panel">
+          <h2 class="panel-title">📝 Complétude documentaire</h2>
+          <p class="panel-subtitle">Rubriques renseignées sur {{ nbFichesPeriode }} fiche(s)</p>
+
+          <div *ngIf="!nbFichesPeriode" class="panel-empty">Aucune fiche déposée sur la période.</div>
+
+          <div *ngIf="nbFichesPeriode">
+            <div class="completude-global">
+              <span>Taux global de remplissage</span>
+              <strong [style.color]="completudeColor(completudeMoyenne)">{{ completudeMoyenne }}%</strong>
+            </div>
+
+            <div *ngFor="let r of rubriques" class="rubrique-row">
+              <div class="rubrique-head">
+                <span class="rubrique-label">{{ r.label }}</span>
+                <span class="rubrique-count">{{ r.renseignees }}/{{ nbFichesPeriode }}</span>
+              </div>
+              <div class="progress-track slim">
+                <div class="progress-fill" [style.width.%]="r.percent" [style.background]="completudeColor(r.percent)"></div>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Carte de chaleur -->
+      <section class="panel section-gap">
+        <div class="panel-head-row">
+          <div>
+            <h2 class="panel-title">🗓️ Carte de chaleur du reporting</h2>
+            <p class="panel-subtitle">Dépôts par projet et par mois sur 6 mois</p>
+          </div>
+          <div class="heat-legend">
+            <span>Moins</span>
+            <i *ngFor="let n of [0,1,2,3]" [style.background]="caseColor(n)"></i>
+            <span>Plus</span>
+          </div>
+        </div>
+
+        <div *ngIf="!rows.length" class="panel-empty">Aucun projet ne correspond aux filtres.</div>
+
+        <div *ngIf="rows.length" class="heatmap-scroll">
+          <table class="heatmap">
+            <thead>
+              <tr>
+                <th class="heat-projet">Projet</th>
+                <th *ngFor="let m of moisLabels">{{ m }}</th>
+                <th class="heat-total">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of heatmapRows" (click)="viewProjet(r.id)">
+                <td class="heat-projet">
+                  <span class="heat-dot" [style.background]="conformiteColor(r.conformite)" [title]="conformiteLabel(r.conformite)"></span>
+                  {{ r.nom }}
+                </td>
+                <td *ngFor="let c of r.cases">
+                  <span class="heat-case" [style.background]="caseColor(c.niveau)" [title]="c.count + ' fiche(s) — ' + c.label"></span>
+                </td>
+                <td class="heat-total">{{ r.nbFiches }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button *ngIf="rows.length > 8" class="panel-more" (click)="heatmapComplete = !heatmapComplete">
+          {{ heatmapComplete ? 'Réduire' : 'Voir les ' + rows.length + ' projets' }}
         </button>
-      </div>
-    </div>
+      </section>
 
-    <!-- Section Power BI -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-      <div class="flex items-center mb-4">
-        <span class="text-2xl mr-2">📊</span>
-        <div>
-          <h2 class="text-xl font-semibold text-gray-900">Rapport Power BI</h2>
-          <p class="text-sm text-gray-600">Analyse interactive des projets et indicateurs qualité</p>
+      <!-- Défauts de reporting / Derniers dépôts -->
+      <section class="row-2col">
+        <div class="panel">
+          <div class="panel-head-row">
+            <div>
+              <h2 class="panel-title">🚩 Défauts de reporting</h2>
+              <p class="panel-subtitle">{{ nbNonConformes }} projet(s) en retard ou à fiche incomplète</p>
+            </div>
+            <div class="sort-group">
+              <button [class.active]="sortKey === 'retard'" (click)="sortBy('retard')">Retard</button>
+              <button [class.active]="sortKey === 'completude'" (click)="sortBy('completude')">Complétude</button>
+              <button [class.active]="sortKey === 'anciennete'" (click)="sortBy('anciennete')">Ancienneté</button>
+              <button [class.active]="sortKey === 'nom'" (click)="sortBy('nom')">Nom</button>
+            </div>
+          </div>
+
+          <div *ngIf="!nbNonConformes" class="panel-empty">Le processus est respecté sur tout le portefeuille 🎉</div>
+
+          <div *ngFor="let p of projetsNonConformes" class="defaut-item" (click)="viewProjet(p.id)">
+            <span class="defaut-marker" [style.background]="conformiteColor(p.conformite)"></span>
+            <div class="defaut-main">
+              <p class="defaut-nom">{{ p.nom }}</p>
+              <p class="defaut-meta">
+                {{ p.chefProjet }}
+                <span *ngIf="p.derniereFiche"> &bull; dernier dépôt {{ p.derniereFiche | date:'dd/MM/yyyy' }}</span>
+                <span *ngIf="!p.derniereFiche"> &bull; aucun dépôt</span>
+                <span *ngIf="p.periodicite"> &bull; tous les {{ p.periodicite }} mois</span>
+              </p>
+              <div class="defaut-progress" *ngIf="p.nbFichesPeriode">
+                <div class="progress-track slim">
+                  <div class="progress-fill" [style.width.%]="p.completude" [style.background]="completudeColor(p.completude)"></div>
+                </div>
+                <span class="defaut-progress-val">{{ p.completude }}% rempli</span>
+              </div>
+            </div>
+            <div class="defaut-actions">
+              <span *ngIf="p.joursRetard > 0" class="badge badge-delay">{{ p.joursRetard }} j</span>
+              <span *ngIf="p.conformite === 'JAMAIS_SUIVI'" class="badge badge-neutral">Jamais suivi</span>
+              <button class="analyse-link" (click)="analyserProjet(p.id, $event)" title="Ouvrir l'analyse de performance du projet">
+                Analyser ↗
+              </button>
+            </div>
+          </div>
+
+          <button *ngIf="nbNonConformes > 6" class="panel-more" (click)="toutesLesLignes = !toutesLesLignes">
+            {{ toutesLesLignes ? 'Réduire la liste' : 'Voir les ' + nbNonConformes + ' projets' }}
+          </button>
         </div>
-      </div>
-      <iframe
-        [src]="powerBiUrl"
-        width="100%"
-        height="600"
-        frameborder="0"
-        allowfullscreen="true"
-        class="rounded-lg border border-gray-200">
-      </iframe>
-    </div>
 
-    <!-- Section Rapports KPI -->
-    <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow-md p-6 mb-8 border-2 border-green-200">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="text-xl font-semibold text-gray-900 flex items-center">
-            <span class="text-2xl mr-2">📈</span>
-            Rapports KPI
-          </h2>
-          <p class="text-sm text-gray-600 mt-1">Téléchargez des rapports détaillés sur les indicateurs de performance</p>
+        <div class="panel">
+          <h2 class="panel-title">📥 Derniers dépôts</h2>
+          <p class="panel-subtitle">Contrôle de remplissage à la réception</p>
+
+          <div *ngIf="!derniersDepots.length" class="panel-empty">Aucun dépôt sur la période sélectionnée.</div>
+
+          <div *ngFor="let d of derniersDepots" class="depot-item" (click)="viewFicheSuivi(d.id)">
+            <div class="depot-score" [style.borderColor]="completudeColor(d.completude)">
+              <strong [style.color]="completudeColor(d.completude)">{{ d.completude }}<small>%</small></strong>
+            </div>
+            <div class="depot-main">
+              <p class="depot-nom">{{ d.projetNom }}</p>
+              <p class="depot-meta">
+                {{ d.date | date:'dd/MM/yyyy' }}
+                <span *ngIf="d.numero"> &bull; rapport n°{{ d.numero }}</span>
+              </p>
+              <p class="depot-manquant" *ngIf="d.manquantes.length">
+                Manque : {{ d.manquantes.join(', ') }}
+              </p>
+              <p class="depot-complet" *ngIf="!d.manquantes.length">Fiche complète ✅</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
-      <!-- KPI Summary -->
-      <div *ngIf="kpiData" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <p class="text-sm text-gray-600 mb-1">Taux de Complétion</p>
-          <p class="text-2xl font-bold text-green-600">{{ kpiData.tauxCompletion | number:'1.1-1' }}%</p>
+      <!-- Discipline par chef de projet -->
+      <section class="panel section-gap">
+        <h2 class="panel-title">👥 Discipline de reporting par chef de projet</h2>
+        <p class="panel-subtitle">Classé du moins conforme au plus conforme</p>
+
+        <div *ngIf="!chefStats.length" class="panel-empty">Aucun chef de projet identifié.</div>
+
+        <div *ngIf="chefStats.length" class="table-scroll">
+          <table class="chef-table">
+            <thead>
+              <tr>
+                <th>Chef de projet</th>
+                <th>Projets</th>
+                <th>Dépôts</th>
+                <th>Non conformes</th>
+                <th>Conformité</th>
+                <th>Complétude</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of chefStats">
+                <td class="chef-nom">
+                  <span class="chef-avatar">{{ c.nom.charAt(0).toUpperCase() }}</span>
+                  {{ c.nom }}
+                </td>
+                <td>{{ c.projets }}</td>
+                <td>{{ c.fiches }}</td>
+                <td>
+                  <span class="badge" [ngClass]="c.retards ? 'badge-delay' : 'badge-ok'">{{ c.retards }}</span>
+                </td>
+                <td class="chef-bar-cell">
+                  <div class="progress-track slim">
+                    <div class="progress-fill" [style.width.%]="c.conformite" [style.background]="completudeColor(c.conformite)"></div>
+                  </div>
+                  <span>{{ c.conformite }}%</span>
+                </td>
+                <td class="chef-bar-cell">
+                  <div class="progress-track slim">
+                    <div class="progress-fill" [style.width.%]="c.completude" [style.background]="completudeColor(c.completude)"></div>
+                  </div>
+                  <span>{{ c.completude }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <p class="text-sm text-gray-600 mb-1">Projets en Retard</p>
-          <p class="text-2xl font-bold text-red-600">{{ kpiData.projetsEnRetard }}</p>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <p class="text-sm text-gray-600 mb-1">Total Problèmes</p>
-          <p class="text-2xl font-bold text-orange-600">{{ kpiData.totalProblemes }}</p>
-        </div>
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-          <p class="text-sm text-gray-600 mb-1">Budget Total</p>
-          <p class="text-2xl font-bold text-blue-600">{{ kpiData.budgetTotal | number:'1.2-2' }} MD</p>
-        </div>
-      </div>
+      </section>
 
-      <!-- Boutons de téléchargement -->
-      <div class="flex flex-wrap gap-3">
-        <button
-          (click)="downloadKPIReport('json')"
-          [disabled]="downloadingReport"
-          class="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg *ngIf="!downloadingReport" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <div *ngIf="downloadingReport" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          Télécharger JSON
-        </button>
-
-        <button
-          (click)="downloadKPIReport('csv')"
-          [disabled]="downloadingReport"
-          class="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg *ngIf="!downloadingReport" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <div *ngIf="downloadingReport" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          Télécharger CSV
-        </button>
-
-        <button
-          (click)="refreshKPIData()"
-          [disabled]="loadingKPI"
-          class="flex items-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg *ngIf="!loadingKPI" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          <div *ngIf="loadingKPI" class="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          Actualiser
-        </button>
-      </div>
-
-      <!-- Message de succès -->
-      <div *ngIf="downloadSuccess" class="mt-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-        <span class="block sm:inline">✅ Rapport téléchargé avec succès !</span>
-      </div>
-
-      <!-- Message d'erreur -->
-      <div *ngIf="downloadError" class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-        <span class="block sm:inline">❌ {{ downloadError }}</span>
-      </div>
-    </div>
-
-    <!-- Informations -->
-    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-blue-900 mb-2">ℹ️ Mode Consultation</h3>
-      <p class="text-blue-800">
-        En tant que Pilote Qualité, vous avez accès en <strong>lecture seule</strong> à toutes les fiches projet et de suivi.
-        Vous pouvez consulter, filtrer et analyser les données, mais vous ne pouvez pas les modifier.
-      </p>
     </div>
   </div>
 </div>

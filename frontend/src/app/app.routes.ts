@@ -20,6 +20,8 @@ import { PiloteFicheSuiviDetailComponent } from './pages/pilote-qualite/fiche-su
 import { ProjetKPIComponent } from './pages/pilote-qualite/projet-kpi/projet-kpi.component';
 import { NotificationsComponent } from './pages/pilote-qualite/notifications/notifications.component';
 import { FicheSuiviDetailComponent } from './pages/fiche-suivi-detail/fiche-suivi-detail.component';
+import { FicheSuiviGanttComponent } from './pages/fiche-suivi-gantt/fiche-suivi-gantt.component';
+import { PiloteFicheSuiviGanttComponent } from './pages/pilote-qualite/fiche-suivi-gantt/fiche-suivi-gantt.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { ChangePasswordComponent } from './pages/change-password/change-password.component';
 import { EditProfileComponent } from './pages/edit-profile/edit-profile.component';
@@ -41,6 +43,7 @@ export const routes: Routes = [
   { path: 'fiche-suivi/new', component: FicheSuiviFormComponent },
   { path: 'fiche-suivi/edit/:id', component: FicheSuiviFormComponent },
   { path: 'fiche-suivi/:id', component: FicheSuiviDetailComponent },
+  { path: 'fiche-suivi/:id/gantt', component: FicheSuiviGanttComponent },
   { path: 'fiches-suivi', component: FichesSuiviListComponent },
   { path: 'projets', component: ProjetsListComponent },
   { path: 'projets/:id', component: ProjetDetailComponent },
@@ -70,6 +73,7 @@ export const routes: Routes = [
       { path: 'fiches-projet/:id/historique', component: PiloteHistoriqueProjetComponent },
       { path: 'fiches-suivi', component: PiloteFichesSuiviListComponent },
       { path: 'fiches-suivi/:id', component: PiloteFicheSuiviDetailComponent },
+      { path: 'fiches-suivi/:id/gantt', component: PiloteFicheSuiviGanttComponent },
       { path: 'projet-kpi/:id', component: ProjetKPIComponent },
       { path: 'notifications', component: NotificationsComponent },
     ]

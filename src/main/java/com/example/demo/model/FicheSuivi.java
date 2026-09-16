@@ -237,6 +237,7 @@ public class FicheSuivi {
         private Integer pourcentageRealise;
         private String statut;
         private String remarque;
+        private Boolean estTitre;
 
         // Getters and Setters
         public String getCode() { return code; }
@@ -277,6 +278,9 @@ public class FicheSuivi {
 
         public String getRemarque() { return remarque; }
         public void setRemarque(String remarque) { this.remarque = remarque; }
+
+        public Boolean getEstTitre() { return estTitre; }
+        public void setEstTitre(Boolean estTitre) { this.estTitre = estTitre; }
     }
 
     public static class PlanningActuel {

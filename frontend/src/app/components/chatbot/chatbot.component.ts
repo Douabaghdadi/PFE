@@ -2,12 +2,14 @@ import { Component, Input, OnInit, ViewChild, ElementRef, AfterViewChecked } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChatbotService, ChatMessage } from '../../services/chatbot.service';
+import { ChatMarkdownPipe } from './chat-markdown.pipe';
 
 @Component({
   selector: 'app-chatbot',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChatMarkdownPipe],
   templateUrl: './chatbot.component.html',
+  styleUrls: ['./chatbot.component.css'],
 })
 export class ChatbotComponent implements OnInit, AfterViewChecked {
   @Input() context: 'chef_projet' | 'pilote_qualite' = 'chef_projet';
@@ -17,6 +19,21 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   isLoading = false;
   userInput = '';
   messages: ChatMessage[] = [];
+
+  readonly suggestedQuestionsByContext: Record<'chef_projet' | 'pilote_qualite', string[]> = {
+    chef_projet: [
+      'Quel est l\'avancement de mes projets ?',
+      'Y a-t-il des tâches en retard ?',
+      'Résume mes dernières fiches de suivi',
+      'Comment respecter mes délais ?'
+    ],
+    pilote_qualite: [
+      'Quels sont les risques majeurs actuellement ?',
+      'Résume les problèmes qualité en cours',
+      'Donne des recommandations qualité',
+      'Quel est l\'état d\'avancement global ?'
+    ]
+  };
 
   constructor(private chatbotService: ChatbotService) {}
 
@@ -32,6 +49,15 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     ];
   }
 
+  get suggestedQuestions(): string[] {
+    return this.suggestedQuestionsByContext[this.context];
+  }
+
+  askSuggestion(question: string) {
+    if (this.isLoading) return;
+    this.sendMessage(question);
+  }
+
   ngAfterViewChecked() {
     this.scrollToBottom();
   }
@@ -40,8 +66,8 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     this.isOpen = !this.isOpen;
   }
 
-  sendMessage() {
-    const message = this.userInput.trim();
+  sendMessage(text?: string) {
+    const message = (text ?? this.userInput).trim();
     if (!message || this.isLoading) return;
 
     this.messages.push({ role: 'user', content: message, timestamp: new Date() });

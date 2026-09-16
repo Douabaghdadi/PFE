@@ -26,6 +26,14 @@
             KPI du Projet
           </h1>
           <p *ngIf="kpiData" class="hero-sub">{{ kpiData.nomProjet }}</p>
+          <div *ngIf="kpiData" class="hero-tags">
+            <span class="stat-badge" [style]="getStatusStyle(kpiData.statut)">
+              {{ formatStatut(kpiData.statut) }}
+            </span>
+            <span class="hero-tag" *ngIf="kpiData.dateDerniereFiche">
+              Dernière fiche de suivi : {{ formatDate(kpiData.dateDerniereFiche) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -54,273 +62,578 @@
     <!-- KPI Content -->
     <div *ngIf="!loading && kpiData">
 
-      <!-- Main Stats -->
       <div *ngIf="activeTab === 'classique'">
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-head">
-            <span class="stat-icon blue">🏷️</span>
-            Statut
-          </div>
-          <div class="stat-badge" [style]="getStatusStyle(kpiData.statut)">
-            {{ formatStatut(kpiData.statut) }}
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-head">
-            <span class="stat-icon green">📈</span>
-            Avancement
-          </div>
-          <div class="stat-number">{{ kpiData.tauxAvancement | number:'1.0-0' }}%</div>
-          <div class="stat-bar-track">
-            <div class="stat-bar-fill" [style]="'width: ' + kpiData.tauxAvancement + '%; ' + getProgressStyle(kpiData.tauxAvancement)"></div>
-          </div>
-          <div class="stat-foot">{{ getProgressLabel(kpiData.tauxAvancement) }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-head">
-            <span class="stat-icon red">⚠️</span>
-            Problèmes
-          </div>
-          <div class="stat-number" style="color: #ef4444;">{{ kpiData.nombreProblemes }}</div>
-          <div class="stat-foot" [style.color]="kpiData.nombreProblemes > 5 ? '#ef4444' : '#10b981'">
-            {{ kpiData.nombreProblemes > 5 ? '⚠️ Attention requise' : '✅ Sous contrôle' }}
-          </div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-head">
-            <span class="stat-icon amber">🛡️</span>
-            Risques
-          </div>
-          <div class="stat-number" style="color: #f59e0b;">{{ kpiData.nombreRisques }}</div>
-          <div class="stat-foot" [style.color]="kpiData.nombreRisques > 3 ? '#f59e0b' : '#10b981'">
-            {{ kpiData.nombreRisques > 3 ? '🚨 Vigilance' : '✅ Acceptable' }}
-          </div>
-        </div>
-      </div>
 
-      <!-- Health Indicator -->
-      <div class="card health-card">
-        <h3 class="card-title">🎯 Santé du Projet</h3>
-        <div class="health-top">
-          <div class="health-ring">
-            <svg viewBox="0 0 100 100">
-              <circle class="health-ring-bg" cx="50" cy="50" r="42"></circle>
-              <circle class="health-ring-fill" cx="50" cy="50" r="42"
-                [style.stroke]="getHealthScoreColor()"
-                [style.stroke-dasharray]="getHealthRingDashArray()"></circle>
-            </svg>
-            <div class="health-ring-label">{{ getHealthIcon() }}</div>
+        <!-- Bandeau de pilotage -->
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon green">📈</span>
+              Avancement réel
+            </div>
+            <div class="stat-number">{{ kpiData.tauxAvancement | number:'1.0-0' }}%</div>
+            <div class="stat-bar-track">
+              <div class="stat-bar-fill"
+                   [style.width.%]="clampPercent(kpiData.tauxAvancement)"
+                   [style]="getProgressStyle(kpiData.tauxAvancement)"></div>
+            </div>
+            <div class="stat-foot" [style.color]="getEcartColor()">
+              <ng-container *ngIf="kpiData.tauxAvancementPlanifie > 0; else sansPlanning">
+                {{ kpiData.ecartPlanning > 0 ? '+' : '' }}{{ kpiData.ecartPlanning | number:'1.0-0' }} pts vs planning
+              </ng-container>
+              <ng-template #sansPlanning>{{ getProgressLabel(kpiData.tauxAvancement) }}</ng-template>
+            </div>
           </div>
-          <div class="health-info">
-            <div class="health-name">{{ getHealthLabel() }}<span class="score">{{ calculateHealthScore() }}/100</span></div>
-            <div class="health-desc">{{ getHealthDescription() }}</div>
+
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon blue">⏱️</span>
+              Indice de délai (SPI)
+            </div>
+            <div class="stat-number" [style.color]="getSpiColor()">
+              {{ kpiData.tauxAvancementPlanifie > 0 ? (kpiData.spi | number:'1.2-2') : '–' }}
+            </div>
+            <div class="stat-foot" [style.color]="getSpiColor()">{{ getSpiLabel() }}</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon green">🎯</span>
+              Santé du projet
+            </div>
+            <div class="stat-number" [style.color]="getHealthScoreColor()">
+              {{ kpiData.scoreSante | number:'1.0-0' }}<span class="stat-unit">/100</span>
+            </div>
+            <div class="stat-foot" [style.color]="getHealthScoreColor()">{{ getHealthLabel() }}</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon red">🔔</span>
+              Alertes
+            </div>
+            <div class="stat-number" [style.color]="alertesBloquantes() > 0 ? '#ef4444' : '#09C82C'">
+              {{ kpiData.alertes.length }}
+            </div>
+            <div class="stat-foot" [style.color]="alertesBloquantes() > 0 ? '#ef4444' : '#09C82C'">
+              {{ alertesBloquantes() > 0 ? alertesBloquantes() + ' à traiter en priorité' : 'Aucune alerte bloquante' }}
+            </div>
           </div>
         </div>
 
-        <!-- Score Breakdown -->
-        <div class="breakdown">
-          <div class="breakdown-title">📊 Détail du calcul</div>
-          <div class="breakdown-row">
-            <span class="breakdown-label">📈 Avancement (40 pts max)</span>
-            <span class="breakdown-value" style="color: #10b981;">+{{ getAvancementScore() }} pts</span>
+        <!-- Alertes de pilotage -->
+        <div class="card" *ngIf="kpiData.alertes.length > 0">
+          <div class="card-head">
+            <h3 class="card-title">🔔 Alertes de pilotage</h3>
+            <span class="chip muted">{{ kpiData.alertes.length }} détectée(s)</span>
           </div>
-          <div class="breakdown-row">
-            <span class="breakdown-label">⚠️ Problèmes (30 pts max)</span>
-            <span class="breakdown-value" [style.color]="getProblemsScore() > 15 ? '#10b981' : '#ef4444'">{{ getProblemsScore() > 0 ? '+' : '' }}{{ getProblemsScore() }} pts</span>
-          </div>
-          <div class="breakdown-row">
-            <span class="breakdown-label">🛡️ Risques (20 pts max)</span>
-            <span class="breakdown-value" [style.color]="getRisksScore() > 10 ? '#10b981' : '#f59e0b'">{{ getRisksScore() > 0 ? '+' : '' }}{{ getRisksScore() }} pts</span>
-          </div>
-          <div class="breakdown-row">
-            <span class="breakdown-label">⏰ Respect des délais (10 pts max)</span>
-            <span class="breakdown-value" [style.color]="getDelayScore() === 10 ? '#10b981' : '#f59e0b'">+{{ getDelayScore() }} pts</span>
-          </div>
-          <div class="breakdown-total">
-            <span>Score Total</span>
-            <span [style.color]="getHealthScoreColor()">{{ calculateHealthScore() }}/100</span>
+          <div class="alert-list">
+            <div class="alert-row" *ngFor="let alerte of kpiData.alertes" [ngClass]="alerte.niveau.toLowerCase()">
+              <span class="alert-icon">{{ getAlerteIcon(alerte.niveau) }}</span>
+              <div class="alert-body">
+                <div class="alert-meta">{{ alerte.niveau }} · {{ alerte.categorie }}</div>
+                <div class="alert-title">{{ alerte.titre }}</div>
+                <div class="alert-msg">{{ alerte.message }}</div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Calendrier & Équipe -->
-      <div class="grid-timeline">
+        <!-- Avancement vs planning -->
         <div class="card">
           <div class="card-head">
-            <h3 class="card-title">📅 Calendrier</h3>
-            <span class="chip" *ngIf="getDurationDays() !== null">{{ getDurationDays() }} jours</span>
+            <h3 class="card-title">📐 Avancement vs planning</h3>
+            <span class="chip muted" *ngIf="kpiData.nombreFichesSuivi > 0">
+              {{ kpiData.nombreFichesSuivi }} fiche(s) de suivi
+            </span>
           </div>
 
-          <div class="timeline">
-            <div class="timeline-track">
-              <div class="timeline-fill" [style.width.%]="getTimelineProgress()"></div>
-              <span class="timeline-node start"></span>
-              <span class="timeline-node end"></span>
-              <span class="timeline-today"
-                    *ngIf="getTimelineProgress() > 0 && getTimelineProgress() < 100"
-                    [style.left.%]="getTimelineProgress()"></span>
+          <div class="compare-row">
+            <div class="compare-label">Réalisé</div>
+            <div class="compare-track">
+              <div class="compare-fill"
+                   [style.width.%]="clampPercent(kpiData.tauxAvancement)"
+                   [style]="getProgressStyle(kpiData.tauxAvancement)"></div>
             </div>
-            <div class="timeline-labels">
-              <div class="timeline-point">
-                <span class="tp-label">Début</span>
-                <span class="tp-date">{{ kpiData.dateDebut ? formatDate(kpiData.dateDebut) : 'Non définie' }}</span>
-              </div>
-              <div class="timeline-point right">
-                <span class="tp-label">Fin prévue</span>
-                <span class="tp-date">{{ kpiData.dateFinPrevue ? formatDate(kpiData.dateFinPrevue) : 'Non définie' }}</span>
-              </div>
+            <div class="compare-value">{{ kpiData.tauxAvancement | number:'1.0-0' }}%</div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-label">Planifié à ce jour</div>
+            <div class="compare-track">
+              <div class="compare-fill planned" [style.width.%]="clampPercent(kpiData.tauxAvancementPlanifie)"></div>
+            </div>
+            <div class="compare-value">{{ kpiData.tauxAvancementPlanifie | number:'1.0-0' }}%</div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-stat">
+              <span class="mini-label">Écart au planning</span>
+              <span class="mini-value" [style.color]="getEcartColor()">
+                {{ kpiData.ecartPlanning > 0 ? '+' : '' }}{{ kpiData.ecartPlanning | number:'1.0-0' }} pts
+              </span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Depuis la fiche précédente</span>
+              <span class="mini-value" [style.color]="kpiData.deltaAvancement > 0 ? '#09C82C' : '#f59e0b'">
+                {{ kpiData.deltaAvancement > 0 ? '+' : '' }}{{ kpiData.deltaAvancement | number:'1.1-1' }} pts
+              </span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Jours de retard</span>
+              <span class="mini-value" [style.color]="kpiData.joursRetard > 0 ? '#ef4444' : '#09C82C'">
+                {{ kpiData.joursRetard }}
+              </span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Fin projetée</span>
+              <span class="mini-value">{{ kpiData.dateFinProjetee ? formatDate(kpiData.dateFinProjetee) : '–' }}</span>
             </div>
           </div>
 
-          <div class="timeline-chips">
-            <span class="status-chip done" *ngIf="kpiData.dateFinReelle">
-              🏁 Livré le {{ formatDate(kpiData.dateFinReelle) }}
-            </span>
-            <span class="status-chip late" *ngIf="kpiData.joursRetard > 0">
-              ⚠️ {{ kpiData.joursRetard }} jour(s) de retard
-            </span>
-            <span class="status-chip ontime" *ngIf="kpiData.joursRetard === 0">
-              ✅ Dans les délais
-            </span>
+          <p class="note" *ngIf="kpiData.dateFinProjetee"
+             [class.warn]="kpiData.joursDerapageProjete > 0">
+            <ng-container *ngIf="kpiData.joursDerapageProjete > 0; else dansLesTemps">
+              ⚠️ Au rythme actuel, la fin est projetée au {{ formatDate(kpiData.dateFinProjetee) }},
+              soit {{ kpiData.joursDerapageProjete }} jour(s) après la date prévue.
+            </ng-container>
+            <ng-template #dansLesTemps>
+              ✅ Au rythme actuel, le projet se termine dans les délais prévus.
+            </ng-template>
+          </p>
+        </div>
+
+        <!-- Santé du projet -->
+        <div class="card health-card">
+          <h3 class="card-title">🎯 Santé du Projet</h3>
+          <div class="health-top">
+            <div class="health-ring">
+              <svg viewBox="0 0 100 100">
+                <circle class="health-ring-bg" cx="50" cy="50" r="42"></circle>
+                <circle class="health-ring-fill" cx="50" cy="50" r="42"
+                  [style.stroke]="getHealthScoreColor()"
+                  [style.stroke-dasharray]="getHealthRingDashArray()"></circle>
+              </svg>
+              <div class="health-ring-label">{{ getHealthIcon() }}</div>
+            </div>
+            <div class="health-info">
+              <div class="health-name">
+                {{ getHealthLabel() }}<span class="score">{{ kpiData.scoreSante | number:'1.0-0' }}/100</span>
+              </div>
+              <div class="health-desc">{{ getHealthDescription() }}</div>
+            </div>
+          </div>
+
+          <div class="breakdown">
+            <div class="breakdown-title">📊 Détail du calcul</div>
+            <div class="breakdown-item" *ngFor="let composante of kpiData.detailScore">
+              <div class="breakdown-row">
+                <span class="breakdown-label">
+                  {{ composante.libelle }}
+                  <span class="breakdown-max">/ {{ composante.pointsMax | number:'1.0-0' }} pts</span>
+                </span>
+                <span class="breakdown-value" [style.color]="scoreColor(composante)">
+                  {{ composante.points | number:'1.1-1' }} pts
+                </span>
+              </div>
+              <div class="breakdown-track">
+                <div class="breakdown-fill"
+                     [style.width.%]="scoreRatio(composante)"
+                     [style.background]="scoreColor(composante)"></div>
+              </div>
+              <div class="breakdown-note">{{ composante.commentaire }}</div>
+            </div>
+            <div class="breakdown-total">
+              <span>Score Total</span>
+              <span [style.color]="getHealthScoreColor()">{{ kpiData.scoreSante | number:'1.0-0' }}/100</span>
+            </div>
           </div>
         </div>
 
-        <div class="card team-card">
+        <!-- Évolution de l'avancement -->
+        <div class="card" *ngIf="trendPoints.length >= 2">
           <div class="card-head">
-            <h3 class="card-title" style="margin: 0;">👥 Équipe</h3>
-            <span class="chip" *ngIf="kpiData.tailleEquipe > 0">
-              {{ kpiData.tailleEquipe }} {{ kpiData.tailleEquipe > 1 ? 'membres' : 'membre' }}
-            </span>
+            <h3 class="card-title">📉 Évolution de l'avancement</h3>
+            <span class="chip muted">{{ trendPoints.length }} relevé(s)</span>
           </div>
-
-          <div class="team-list" *ngIf="teamMembers.length > 0">
-            <div class="team-member" *ngFor="let membre of teamMembers">
-              <span class="member-avatar">{{ getInitials(membre.nom) }}</span>
-              <div class="member-info">
-                <div class="member-name">{{ membre.nom }}</div>
-                <div class="member-role" *ngIf="membre.role">{{ membre.role }}</div>
-              </div>
-            </div>
-            <div class="team-more" *ngIf="teamOverflow > 0">+{{ teamOverflow }} autre(s) membre(s)</div>
-          </div>
-
-          <div class="team-body" *ngIf="teamMembers.length === 0 && kpiData.tailleEquipe > 0">
-            <div class="team-count">{{ kpiData.tailleEquipe }}</div>
-            <div class="team-label">{{ kpiData.tailleEquipe > 1 ? 'membres affectés' : 'membre affecté' }}</div>
-          </div>
-
-          <div class="team-empty" *ngIf="kpiData.tailleEquipe === 0">
-            <span class="team-empty-icon">👤</span>
-            Aucun membre affecté à ce projet
+          <div class="chart-scroll">
+            <svg class="trend-chart" [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight"
+                 preserveAspectRatio="xMidYMid meet" role="img"
+                 aria-label="Courbe d'évolution du taux d'avancement par fiche de suivi">
+              <g class="grid">
+                <g *ngFor="let level of gridLevels">
+                  <line [attr.x1]="chartPadding.left" [attr.x2]="chartWidth - chartPadding.right"
+                        [attr.y1]="gridY(level)" [attr.y2]="gridY(level)"></line>
+                  <text [attr.x]="chartPadding.left - 8" [attr.y]="gridY(level) + 4"
+                        text-anchor="end">{{ level }}%</text>
+                </g>
+              </g>
+              <path class="trend-area" [attr.d]="trendArea"></path>
+              <polyline class="trend-line" [attr.points]="trendLine"></polyline>
+              <g *ngFor="let point of trendPoints">
+                <circle class="trend-dot" [attr.cx]="point.x" [attr.cy]="point.y" r="4"></circle>
+                <text class="trend-value" [attr.x]="point.x" [attr.y]="point.y - 12" text-anchor="middle">
+                  {{ point.value | number:'1.0-0' }}%
+                </text>
+                <text class="trend-axis" [attr.x]="point.x" [attr.y]="chartHeight - 10" text-anchor="middle">
+                  {{ point.label }}
+                </text>
+              </g>
+            </svg>
           </div>
         </div>
-      </div>
 
-      <!-- Budget -->
-      <div class="card budget-card">
-        <div class="card-head">
-          <h3 class="card-title">💰 Budget</h3>
-          <span class="chip muted">{{ kpiData.budgetTotal }} MDH</span>
-        </div>
-        <div class="budget-label">Budget total alloué</div>
-        <div class="budget-amount">{{ formatBudget(kpiData.budgetTotal) }} <span class="cur">DH</span></div>
-
-        <div class="budget-split" *ngIf="budgetBreakdown.length > 0">
-          <div class="budget-bar">
-            <span *ngFor="let p of budgetBreakdown"
-                  [style.width.%]="p.percent"
-                  [style.background]="p.color"
-                  [title]="p.label"></span>
+        <!-- Exécution des tâches -->
+        <div class="card" *ngIf="kpiData.totalTaches > 0">
+          <div class="card-head">
+            <h3 class="card-title">✅ Exécution des tâches</h3>
+            <span class="chip muted">{{ kpiData.totalTaches }} tâche(s)</span>
           </div>
-          <div class="budget-legend">
-            <div class="legend-item" *ngFor="let p of budgetBreakdown">
-              <span class="legend-dot" [style.background]="p.color"></span>
-              <div>
-                <div class="legend-label">{{ p.label }}</div>
-                <div class="legend-value">
-                  {{ formatBudget(p.amount) }} DH
-                  <span class="legend-pct">· {{ p.percent | number:'1.0-0' }}%</span>
+
+          <div class="tasks-layout">
+            <div class="donut-wrap">
+              <svg viewBox="0 0 140 140" class="donut" role="img" aria-label="Répartition des tâches par statut">
+                <g transform="rotate(-90 70 70)">
+                  <circle cx="70" cy="70" [attr.r]="donutRadius" class="donut-track"></circle>
+                  <circle *ngFor="let segment of donutSegments"
+                          cx="70" cy="70" [attr.r]="donutRadius"
+                          class="donut-seg"
+                          [attr.stroke]="segment.color"
+                          [attr.stroke-dasharray]="segment.dashArray"
+                          [attr.stroke-dashoffset]="segment.dashOffset"></circle>
+                </g>
+                <text x="70" y="66" text-anchor="middle" class="donut-value">
+                  {{ kpiData.tachesTerminees }}/{{ kpiData.totalTaches }}
+                </text>
+                <text x="70" y="84" text-anchor="middle" class="donut-label">terminées</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="legend-item" *ngFor="let segment of donutSegments">
+                  <span class="legend-dot" [style.background]="segment.color"></span>
+                  <div>
+                    <div class="legend-label">{{ segment.label }}</div>
+                    <div class="legend-value">{{ segment.value }} · {{ segment.percent | number:'1.0-0' }}%</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <p class="budget-note" *ngIf="budgetBreakdown.length === 0">
-          ℹ️ Aucune répartition détaillée (matériel, logiciel, ressources humaines) n'a été renseignée.
-        </p>
-      </div>
-
-      <!-- Recommendations -->
-      <div *ngIf="getRecommendations().length > 0" class="reco-card">
-        <h3 class="card-title">💡 Recommandations</h3>
-        <ul class="reco-list">
-          <li *ngFor="let rec of getRecommendations()" class="reco-item">
-            <span class="icon">{{ rec.icon }}</span>
-            <div>
-              <div class="title">{{ rec.title }}</div>
-              <div class="desc">{{ rec.description }}</div>
+            <div class="mini-grid tasks-stats">
+              <div class="mini-stat">
+                <span class="mini-label">Hors délai</span>
+                <span class="mini-value" [style.color]="kpiData.tachesEnRetard > 0 ? '#ef4444' : '#09C82C'">
+                  {{ kpiData.tachesEnRetard }}
+                </span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">Échéances imminentes</span>
+                <span class="mini-value" [style.color]="kpiData.tachesEcheanceProche > 0 ? '#f59e0b' : '#09C82C'">
+                  {{ kpiData.tachesEcheanceProche }}
+                </span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">Respect des échéances</span>
+                <span class="mini-value">
+                  {{ kpiData.tauxRespectEcheances >= 0 ? (kpiData.tauxRespectEcheances | number:'1.0-0') + '%' : '–' }}
+                </span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">En cours</span>
+                <span class="mini-value">{{ kpiData.tachesEnCours }}</span>
+              </div>
             </div>
-          </li>
-        </ul>
-      </div>
+          </div>
 
-      <!-- Problems & Risks -->
-      <div class="grid-2">
-        <div class="card">
-          <div class="issue-card-title">
-            <h3 class="card-title" style="margin: 0;">Problèmes</h3>
-            <span class="issue-count red">{{ (kpiData.listeProblemes || []).length }}</span>
+          <!-- Tâches hors délai -->
+          <div class="task-table-wrap" *ngIf="kpiData.listeTachesEnRetard.length > 0">
+            <h4 class="sub-title red">⏰ Tâches hors délai ({{ kpiData.listeTachesEnRetard.length }})</h4>
+            <div class="table-scroll">
+              <table class="task-table">
+                <thead>
+                  <tr>
+                    <th>Tâche</th>
+                    <th>Assignée à</th>
+                    <th>Échéance</th>
+                    <th class="right">Réalisé</th>
+                    <th class="right">Retard</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tache of kpiData.listeTachesEnRetard">
+                    <td class="strong">{{ tache.sujet }}</td>
+                    <td>{{ tache.assigneA || '–' }}</td>
+                    <td>{{ tache.echeance ? formatDate(tache.echeance) : '–' }}</td>
+                    <td class="right">{{ tache.pourcentageRealise }}%</td>
+                    <td class="right danger">{{ tache.joursEcart }} j</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div *ngIf="!kpiData.listeProblemes || kpiData.listeProblemes.length === 0" class="empty-state">Aucun problème</div>
-          <div *ngFor="let probleme of kpiData.listeProblemes" class="issue-item red">
-            {{ probleme }}
-          </div>
-        </div>
-        <div class="card">
-          <div class="issue-card-title">
-            <h3 class="card-title" style="margin: 0;">Risques</h3>
-            <span class="issue-count amber">{{ (kpiData.listeRisques || []).length }}</span>
-          </div>
-          <div *ngIf="!kpiData.listeRisques || kpiData.listeRisques.length === 0" class="empty-state">Aucun risque</div>
-          <div *ngFor="let risque of kpiData.listeRisques" class="issue-item amber">
-            {{ risque }}
-          </div>
-        </div>
-      </div>
 
-      <!-- Download Buttons -->
-      <div class="card">
-        <h3 class="card-title" style="margin-bottom: 0.25rem;">Télécharger le rapport</h3>
-        <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Exportez les indicateurs de ce projet dans le format de votre choix.</p>
-        <div class="download-grid">
-          <button (click)="downloadPDF()" [disabled]="downloading" class="download-btn pdf">
-            <span class="download-icon pdf">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-              </svg>
-            </span>
-            <span>
-              <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport PDF' }}</span>
-              <span class="download-sub">Document formaté prêt à imprimer</span>
-            </span>
-          </button>
-          <button (click)="downloadExcel()" [disabled]="downloading" class="download-btn excel">
-            <span class="download-icon excel">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h6v6M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2m-4 0h4"/>
-              </svg>
-            </span>
-            <span>
-              <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport Excel' }}</span>
-              <span class="download-sub">Tableur avec données détaillées</span>
-            </span>
-          </button>
+          <!-- Échéances imminentes -->
+          <div class="task-table-wrap" *ngIf="kpiData.listeTachesEcheanceProche.length > 0">
+            <h4 class="sub-title amber">📌 Échéances imminentes ({{ kpiData.listeTachesEcheanceProche.length }})</h4>
+            <div class="table-scroll">
+              <table class="task-table">
+                <thead>
+                  <tr>
+                    <th>Tâche</th>
+                    <th>Assignée à</th>
+                    <th>Échéance</th>
+                    <th class="right">Réalisé</th>
+                    <th class="right">Dans</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tache of kpiData.listeTachesEcheanceProche">
+                    <td class="strong">{{ tache.sujet }}</td>
+                    <td>{{ tache.assigneA || '–' }}</td>
+                    <td>{{ tache.echeance ? formatDate(tache.echeance) : '–' }}</td>
+                    <td class="right">{{ tache.pourcentageRealise }}%</td>
+                    <td class="right warn">{{ -tache.joursEcart }} j</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <p *ngIf="downloadSuccess" class="download-status ok">✓ Téléchargement réussi</p>
-        <p *ngIf="downloadError" class="download-status err">{{ downloadError }}</p>
-      </div>
+
+        <!-- Charge et efficacité -->
+        <div class="card" *ngIf="kpiData.chargeEstimee > 0 || kpiData.chargeConsommee > 0">
+          <div class="card-head">
+            <h3 class="card-title">⚙️ Charge et efficacité</h3>
+            <span class="chip muted">Indice CPI {{ kpiData.indiceEfficacite | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini-stat">
+              <span class="mini-label">Charge estimée</span>
+              <span class="mini-value">{{ kpiData.chargeEstimee | number:'1.0-0' }} j</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Charge consommée</span>
+              <span class="mini-value">{{ kpiData.chargeConsommee | number:'1.0-0' }} j</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Reste à faire</span>
+              <span class="mini-value">{{ kpiData.chargeRestanteEstimee | number:'1.0-0' }} j</span>
+            </div>
+            <div class="mini-stat">
+              <span class="mini-label">Efficacité (CPI)</span>
+              <span class="mini-value" [style.color]="getEfficaciteColor()">
+                {{ kpiData.chargeConsommee > 0 ? (kpiData.indiceEfficacite | number:'1.2-2') : '–' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="compare-row" *ngIf="kpiData.chargeEstimee > 0">
+            <div class="compare-label">Consommation</div>
+            <div class="compare-track">
+              <div class="compare-fill"
+                   [style.width.%]="clampPercent(kpiData.tauxConsommationCharge)"
+                   [style.background]="kpiData.tauxConsommationCharge > kpiData.tauxAvancement + 15 ? '#ef4444' : '#09C82C'"></div>
+            </div>
+            <div class="compare-value">{{ kpiData.tauxConsommationCharge | number:'1.0-0' }}%</div>
+          </div>
+          <p class="note">
+            {{ kpiData.tauxConsommationCharge | number:'1.0-0' }}% de la charge estimée consommée
+            pour {{ kpiData.tauxAvancement | number:'1.0-0' }}% d'avancement.
+          </p>
+        </div>
+
+        <!-- Calendrier & Équipe -->
+        <div class="grid-timeline">
+          <div class="card">
+            <div class="card-head">
+              <h3 class="card-title">📅 Calendrier</h3>
+              <span class="chip" *ngIf="getDurationDays() !== null">{{ getDurationDays() }} jours</span>
+            </div>
+
+            <div class="timeline">
+              <div class="timeline-track">
+                <div class="timeline-fill" [style.width.%]="getTimelineProgress()"></div>
+                <span class="timeline-node start"></span>
+                <span class="timeline-node end"></span>
+                <span class="timeline-today"
+                      *ngIf="getTimelineProgress() > 0 && getTimelineProgress() < 100"
+                      [style.left.%]="getTimelineProgress()"></span>
+              </div>
+              <div class="timeline-labels">
+                <div class="timeline-point">
+                  <span class="tp-label">Début</span>
+                  <span class="tp-date">{{ kpiData.dateDebut ? formatDate(kpiData.dateDebut) : 'Non définie' }}</span>
+                </div>
+                <div class="timeline-point right">
+                  <span class="tp-label">Fin prévue</span>
+                  <span class="tp-date">{{ kpiData.dateFinPrevue ? formatDate(kpiData.dateFinPrevue) : 'Non définie' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-chips">
+              <span class="status-chip done" *ngIf="kpiData.dateFinReelle">
+                🏁 Livré le {{ formatDate(kpiData.dateFinReelle) }}
+              </span>
+              <span class="status-chip late" *ngIf="kpiData.joursRetard > 0">
+                ⚠️ {{ kpiData.joursRetard }} jour(s) de retard
+              </span>
+              <span class="status-chip ontime" *ngIf="kpiData.joursRetard === 0">
+                ✅ Dans les délais
+              </span>
+              <span class="status-chip" [class.late]="kpiData.joursDerapageProjete > 0"
+                    [class.ontime]="kpiData.joursDerapageProjete <= 0"
+                    *ngIf="kpiData.dateFinProjetee">
+                🔮 Fin projetée : {{ formatDate(kpiData.dateFinProjetee) }}
+              </span>
+              <span class="status-chip" *ngIf="kpiData.dateDerniereFiche">
+                📄 Dernière fiche : {{ formatDate(kpiData.dateDerniereFiche) }}
+              </span>
+            </div>
+          </div>
+
+          <div class="card team-card">
+            <div class="card-head">
+              <h3 class="card-title" style="margin: 0;">👥 Équipe</h3>
+              <span class="chip" *ngIf="kpiData.tailleEquipe > 0">
+                {{ kpiData.tailleEquipe }} {{ kpiData.tailleEquipe > 1 ? 'membres' : 'membre' }}
+              </span>
+            </div>
+
+            <div class="team-list" *ngIf="teamMembers.length > 0">
+              <div class="team-member" *ngFor="let membre of teamMembers">
+                <span class="member-avatar">{{ getInitials(membre.nom) }}</span>
+                <div class="member-info">
+                  <div class="member-name">{{ membre.nom }}</div>
+                  <div class="member-role" *ngIf="membre.role">{{ membre.role }}</div>
+                </div>
+              </div>
+              <div class="team-more" *ngIf="teamOverflow > 0">+{{ teamOverflow }} autre(s) membre(s)</div>
+            </div>
+
+            <div class="team-empty" *ngIf="teamMembers.length === 0">
+              <span class="team-empty-icon">👤</span>
+              Aucun membre affecté à ce projet
+            </div>
+          </div>
+        </div>
+
+        <!-- Budget -->
+        <div class="card budget-card">
+          <div class="card-head">
+            <h3 class="card-title">💰 Budget</h3>
+            <span class="chip muted">{{ kpiData.budgetTotal | number:'1.0-2' }} MD</span>
+          </div>
+          <div class="budget-label">Budget cadré dans la fiche projet</div>
+          <div class="budget-amount">{{ formatBudget(kpiData.budgetTotal) }} <span class="cur">DT</span></div>
+
+          <div class="budget-split" *ngIf="kpiData.budgetPrevision > 0 || kpiData.budgetRealisation > 0">
+            <div class="compare-row">
+              <div class="compare-label">Prévu</div>
+              <div class="compare-track">
+                <div class="compare-fill planned" style="width: 100%"></div>
+              </div>
+              <div class="compare-value">{{ formatBudget(kpiData.budgetPrevision) }} DT</div>
+            </div>
+            <div class="compare-row">
+              <div class="compare-label">Consommé</div>
+              <div class="compare-track">
+                <div class="compare-fill"
+                     [style.width.%]="clampPercent(kpiData.tauxConsommationBudget)"
+                     [style.background]="kpiData.tauxConsommationBudget > kpiData.tauxAvancement + 15 ? '#ef4444' : '#09C82C'"></div>
+              </div>
+              <div class="compare-value">{{ formatBudget(kpiData.budgetRealisation) }} DT</div>
+            </div>
+
+            <div class="mini-grid">
+              <div class="mini-stat">
+                <span class="mini-label">Taux de consommation</span>
+                <span class="mini-value">{{ kpiData.tauxConsommationBudget | number:'1.0-0' }}%</span>
+              </div>
+              <div class="mini-stat">
+                <span class="mini-label">Écart disponible</span>
+                <span class="mini-value" [style.color]="kpiData.ecartBudget >= 0 ? '#09C82C' : '#ef4444'">
+                  {{ formatBudget(kpiData.ecartBudget) }} DT
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p class="budget-note" *ngIf="kpiData.budgetPrevision === 0 && kpiData.budgetRealisation === 0">
+            ℹ️ Aucun suivi budgétaire (prévision / réalisation) n'a été renseigné dans les fiches de suivi.
+          </p>
+        </div>
+
+        <!-- Recommandations du chef de projet -->
+        <div *ngIf="kpiData.listeRecommandations.length > 0" class="reco-card">
+          <h3 class="card-title">💡 Recommandations du chef de projet</h3>
+          <ul class="reco-list">
+            <li *ngFor="let reco of kpiData.listeRecommandations; let i = index" class="reco-item">
+              <span class="icon">{{ i + 1 }}</span>
+              <div>
+                <div class="desc">{{ reco }}</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Problèmes & Risques -->
+        <div class="grid-2">
+          <div class="card">
+            <div class="issue-card-title">
+              <h3 class="card-title" style="margin: 0;">Problèmes</h3>
+              <span class="issue-count red">{{ kpiData.listeProblemes.length }}</span>
+            </div>
+            <div *ngIf="kpiData.nombreProblemesPersistants > 0" class="issue-hint">
+              ⏳ {{ kpiData.nombreProblemesPersistants }} déjà signalé(s) dans la fiche précédente
+            </div>
+            <div *ngIf="kpiData.listeProblemes.length === 0" class="empty-state">Aucun problème</div>
+            <div *ngFor="let probleme of kpiData.listeProblemes" class="issue-item red">
+              {{ probleme }}
+            </div>
+          </div>
+          <div class="card">
+            <div class="issue-card-title">
+              <h3 class="card-title" style="margin: 0;">Risques</h3>
+              <span class="issue-count amber">{{ kpiData.listeRisques.length }}</span>
+            </div>
+            <div *ngIf="kpiData.listeRisques.length === 0" class="empty-state">Aucun risque</div>
+            <div *ngFor="let risque of kpiData.listeRisques" class="issue-item amber">
+              {{ risque }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="card">
+          <h3 class="card-title" style="margin-bottom: 0.25rem;">Télécharger le rapport</h3>
+          <p style="color: var(--muted); font-size: 0.875rem; margin-bottom: 1.25rem;">Exportez les indicateurs de ce projet dans le format de votre choix.</p>
+          <div class="download-grid">
+            <button (click)="downloadPDF()" [disabled]="downloading" class="download-btn pdf">
+              <span class="download-icon pdf">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </span>
+              <span>
+                <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport PDF' }}</span>
+                <span class="download-sub">Document formaté prêt à imprimer</span>
+              </span>
+            </button>
+            <button (click)="downloadExcel()" [disabled]="downloading" class="download-btn excel">
+              <span class="download-icon excel">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-6h6v6M9 17H7a2 2 0 01-2-2V5a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2m-4 0h4"/>
+                </svg>
+              </span>
+              <span>
+                <span class="download-title">{{ downloading ? 'Génération...' : 'Rapport Excel' }}</span>
+                <span class="download-sub">Tableur multi-onglets avec le détail</span>
+              </span>
+            </button>
+          </div>
+          <p *ngIf="downloadSuccess" class="download-status ok">✓ Téléchargement réussi</p>
+          <p *ngIf="downloadError" class="download-status err">{{ downloadError }}</p>
+        </div>
 
       </div>
       <!-- /classique tab -->
@@ -328,23 +641,27 @@
       <!-- IA Tab -->
       <div *ngIf="activeTab === 'ia'">
 
-        <!-- Bouton Analyser -->
+        <!-- Invitation -->
         <div *ngIf="!aiKpiData && !loadingAI" class="ia-hero">
           <div class="emoji">🤖</div>
-          <h3>Analyse IA du Projet</h3>
-          <p>Obtenez une analyse intelligente de vos KPI par Gemini AI : score de performance, niveau de risque, prédictions et recommandations.</p>
+          <h3>Analyse IA du projet</h3>
+          <p>
+            L'IA relit l'ensemble des indicateurs calculés — avancement vs planning, SPI, charge et CPI,
+            tâches hors délai, budget, historique des fiches de suivi — et en tire une lecture par axe
+            de pilotage assortie d'un plan d'action priorisé.
+          </p>
           <button (click)="analyzeWithAI()" class="ia-cta">
-            ✨ Analyser avec l'IA
+            ✨ Lancer l'analyse
           </button>
         </div>
 
-        <!-- Loading IA -->
+        <!-- Analyse en cours -->
         <div *ngIf="loadingAI" class="state-box card">
           <div class="spinner purple"></div>
-          <p class="state-text" style="color: #7c3aed;">Analyse en cours par Gemini AI...</p>
+          <p class="state-text" style="color: #7c3aed;">Analyse des indicateurs en cours...</p>
         </div>
 
-        <!-- Erreur IA -->
+        <!-- Erreur réseau -->
         <div *ngIf="aiError" class="alert-error" style="margin-bottom: 2rem;">
           <p>{{ aiError }}</p>
         </div>
@@ -352,62 +669,127 @@
         <!-- Résultats IA -->
         <div *ngIf="aiKpiData && aiKpiData.success">
 
-          <!-- Score + Risque -->
+          <!-- Score, risque, confiance -->
           <div class="ia-grid-top">
             <div class="ia-score-card">
-              <div class="label">🎯 Score Performance IA</div>
-              <div class="value">{{ aiKpiData.scorePerformanceIA }}<span>/100</span></div>
+              <div class="label">🎯 Score de performance IA</div>
+              <div class="value">{{ aiKpiData.scorePerformance }}<span>/100</span></div>
+              <div class="ia-score-compare" *ngIf="kpiData && getEcartAvecScoreCalcule() !== null">
+                Score calculé par les règles : {{ kpiData.scoreSante | number:'1.0-0' }}/100
+                <span class="ia-ecart">
+                  ({{ getEcartAvecScoreCalcule()! > 0 ? '+' : '' }}{{ getEcartAvecScoreCalcule() }} pts)
+                </span>
+              </div>
             </div>
             <div class="ia-risk-card">
-              <div class="label">⚠️ Niveau de Risque IA</div>
+              <div class="label">⚠️ Niveau de risque évalué</div>
               <div class="ia-risk-badge" [style]="getAIRiskStyle(aiKpiData.niveauRisque)">
-                {{ aiKpiData.niveauRisque }}
+                {{ getAIRiskLabel(aiKpiData.niveauRisque) }}
+              </div>
+              <div class="ia-confiance" [style.color]="getAIConfianceColor(aiKpiData.niveauConfiance)">
+                ● {{ getAIConfianceLabel(aiKpiData.niveauConfiance) }}
               </div>
             </div>
           </div>
 
-          <!-- Prédiction date fin -->
-          <div class="ia-block accent">
-            <div class="label">🔮 Prédiction Date de Fin</div>
+          <!-- Synthèse exécutive -->
+          <div class="ia-analysis" *ngIf="aiKpiData.syntheseExecutive">
+            <h3>🧠 Synthèse pour le comité de pilotage</h3>
+            <p>{{ aiKpiData.syntheseExecutive }}</p>
+          </div>
+
+          <!-- Prédiction de fin -->
+          <div class="ia-block accent" *ngIf="aiKpiData.predictionDateFin">
+            <div class="label">🔮 Prédiction de date de fin</div>
             <div class="val">{{ aiKpiData.predictionDateFin }}</div>
+            <p class="ia-justif" *ngIf="aiKpiData.justificationPrediction">
+              {{ aiKpiData.justificationPrediction }}
+            </p>
           </div>
 
-          <!-- Analyse globale -->
-          <div class="ia-analysis">
-            <h3>🧠 Analyse Globale IA</h3>
-            <p>{{ aiKpiData.analyseGlobale }}</p>
-          </div>
-
-          <!-- Recommandations IA -->
-          <div class="ia-block">
-            <h3 class="card-title">💡 Recommandations IA</h3>
-            <div *ngFor="let rec of getAIRecommandations(); let i = index" class="ia-reco-item">
-              <span class="ia-reco-num">{{ i + 1 }}</span>
-              <span class="ia-reco-text">{{ rec }}</span>
+          <!-- Lecture par axe -->
+          <div class="ia-block" *ngIf="aiKpiData.axes.length > 0">
+            <h3 class="card-title">🧭 Lecture par axe de pilotage</h3>
+            <div class="ia-axes">
+              <div class="ia-axe" *ngFor="let axe of aiKpiData.axes">
+                <div class="ia-axe-head">
+                  <span class="ia-axe-icon">{{ getAxeIcon(axe.axe) }}</span>
+                  <span class="ia-axe-nom">{{ axe.axe }}</span>
+                  <span class="ia-axe-tendance" [style.color]="getTendanceColor(axe.tendance)">
+                    {{ getTendanceIcon(axe.tendance) }}
+                  </span>
+                </div>
+                <p class="ia-axe-constat">{{ axe.constat }}</p>
+              </div>
             </div>
           </div>
 
-          <!-- Alertes -->
-          <div *ngIf="getAIAlertes().length > 0" class="ia-alert-card">
-            <h3>🚨 Alertes IA</h3>
-            <div *ngFor="let alerte of getAIAlertes()" class="ia-alert-item">
+          <!-- Forces et points de vigilance -->
+          <div class="ia-two-col"
+               *ngIf="aiKpiData.forces.length > 0 || aiKpiData.pointsDeVigilance.length > 0">
+            <div class="ia-list-card forces" *ngIf="aiKpiData.forces.length > 0">
+              <h3>✅ Points d'appui</h3>
+              <ul>
+                <li *ngFor="let force of aiKpiData.forces">{{ force }}</li>
+              </ul>
+            </div>
+            <div class="ia-list-card vigilance" *ngIf="aiKpiData.pointsDeVigilance.length > 0">
+              <h3>👀 Points de vigilance</h3>
+              <ul>
+                <li *ngFor="let point of aiKpiData.pointsDeVigilance">{{ point }}</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Plan d'action -->
+          <div class="ia-block" *ngIf="aiKpiData.actions.length > 0">
+            <h3 class="card-title">🎯 Plan d'action priorisé</h3>
+            <div class="ia-action" *ngFor="let action of aiKpiData.actions">
+              <span class="ia-prio">{{ action.priorite }}</span>
+              <div class="ia-action-body">
+                <div class="ia-action-titre">{{ action.titre }}</div>
+                <p class="ia-action-desc" *ngIf="action.description">{{ action.description }}</p>
+                <div class="ia-action-tags">
+                  <span class="ia-tag impact" *ngIf="action.impactAttendu">
+                    📈 {{ action.impactAttendu }}
+                  </span>
+                  <span class="ia-tag delai" *ngIf="action.delai">⏳ {{ action.delai }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alertes complémentaires -->
+          <div *ngIf="aiKpiData.alertes.length > 0" class="ia-alert-card">
+            <h3>🚨 Signaux complémentaires</h3>
+            <p class="ia-alert-intro">
+              Points relevés par l'IA en plus des alertes automatiques de l'onglet classique.
+            </p>
+            <div *ngFor="let alerte of aiKpiData.alertes" class="ia-alert-item">
               ⚠️ {{ alerte }}
             </div>
           </div>
 
-          <!-- Relancer analyse -->
-          <div class="ia-retry-wrap">
-            <button (click)="analyzeWithAI()" [disabled]="loadingAI" class="ia-retry-btn">
+          <!-- Traçabilité et relance -->
+          <div class="ia-footer">
+            <div class="ia-trace">
+              <span *ngIf="aiKpiData.genereLe">Analyse générée le {{ aiKpiData.genereLe }}</span>
+              <span *ngIf="aiKpiData.modele"> · modèle {{ aiKpiData.modele }}</span>
+              <span class="ia-cache" *ngIf="aiKpiData.depuisCache">
+                · réutilisée (les KPI n'ont pas changé)
+              </span>
+            </div>
+            <button (click)="analyzeWithAI(true)" [disabled]="loadingAI" class="ia-retry-btn">
               🔄 Relancer l'analyse
             </button>
           </div>
 
         </div>
 
-        <!-- Erreur success=false -->
+        <!-- Analyse impossible (quota, modèle saturé, projet sans suivi...) -->
         <div *ngIf="aiKpiData && !aiKpiData.success" class="ia-error-card">
           <p>{{ aiKpiData.errorMessage }}</p>
-          <button (click)="analyzeWithAI()" class="ia-retry-red">Réessayer</button>
+          <button (click)="analyzeWithAI(true)" class="ia-retry-red">Réessayer</button>
         </div>
 
       </div>

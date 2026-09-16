@@ -10,7 +10,6 @@ interface NotificationInfo {
   chefProjetId: string;
   chefProjetName: string;
   chefProjetEmail: string;
-  chefProjetPhone: string;
   joursRetard: number;
   dateProchaineFicheSuivi: string;
 }
@@ -228,10 +227,6 @@ interface Chef {
                     <i class="fas fa-envelope" style="color: #94a3b8; width: 0.8rem; flex-shrink: 0;"></i>
                     <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.chefProjetEmail || 'Non renseigné' }}</span>
                   </span>
-                  <span style="display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: #64748b; font-weight: 600;">
-                    <i class="fas fa-phone" style="color: #94a3b8; width: 0.8rem; flex-shrink: 0;"></i>
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.chefProjetPhone || 'Non renseigné' }}</span>
-                  </span>
                 </div>
 
               </div>
@@ -240,12 +235,12 @@ interface Chef {
               <div style="padding: 0 1.25rem 1.25rem;">
                 <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.75rem;"></div>
                 <button (click)="sendNotification(projet.projetId)"
-                        [disabled]="sendingProjetId === projet.projetId || (!projet.chefProjetEmail && !projet.chefProjetPhone)"
+                        [disabled]="sendingProjetId === projet.projetId || !projet.chefProjetEmail"
                         style="width: 100%; height: 2.4rem; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 0.7rem; font-weight: 700; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(37,99,235,0.3); transition: all 0.2s ease;"
-                        [style.opacity]="sendingProjetId === projet.projetId || (!projet.chefProjetEmail && !projet.chefProjetPhone) ? '0.5' : '1'"
-                        [style.cursor]="sendingProjetId === projet.projetId || (!projet.chefProjetEmail && !projet.chefProjetPhone) ? 'not-allowed' : 'pointer'">
+                        [style.opacity]="sendingProjetId === projet.projetId || !projet.chefProjetEmail ? '0.5' : '1'"
+                        [style.cursor]="sendingProjetId === projet.projetId || !projet.chefProjetEmail ? 'not-allowed' : 'pointer'">
                   <i class="fas fa-paper-plane"></i>
-                  {{ sendingProjetId === projet.projetId ? 'Envoi...' : 'Envoyer Email + SMS' }}
+                  {{ sendingProjetId === projet.projetId ? 'Envoi...' : 'Envoyer Email' }}
                 </button>
               </div>
             </div>

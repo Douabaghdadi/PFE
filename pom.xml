@@ -51,11 +51,6 @@
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.twilio.sdk</groupId>
-			<artifactId>twilio</artifactId>
-			<version>9.14.1</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
@@ -71,7 +66,15 @@
 			<artifactId>poi-ooxml</artifactId>
 			<version>5.2.5</version>
 		</dependency>
-		
+		<!-- Pin commons-io to a version compatible with POI 5.2.5 (needs >=2.13) :
+		     une version plus ancienne remontée transitivement casserait
+		     XSSFWorkbook au runtime (NoSuchMethodError). -->
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.17.0</version>
+		</dependency>
+
 		<!-- iText for PDF generation -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>

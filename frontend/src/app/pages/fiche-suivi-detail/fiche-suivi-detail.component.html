@@ -134,7 +134,12 @@
   <!-- Tab: Tâches -->
   <div class="tab-content" *ngIf="currentTab==='taches'">
     <div class="section" *ngIf="ficheSuivi.tachesSuivi && ficheSuivi.tachesSuivi.length > 0">
-      <h2 class="section-title"><span class="num blue">📋</span> Suivi des tâches ({{ ficheSuivi.tachesSuivi.length }})</h2>
+      <div class="section-title-row">
+        <h2 class="section-title"><span class="num blue">📋</span> Suivi des tâches ({{ ficheSuivi.tachesSuivi.length }})</h2>
+        <button type="button" class="gantt-toggle-btn" [routerLink]="['/fiche-suivi', ficheSuivi.id, 'gantt']">
+          📊 Voir le diagramme de Gantt
+        </button>
+      </div>
       <div class="table-wrap">
         <table class="data-table">
           <thead>
@@ -150,21 +155,26 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let t of ficheSuivi.tachesSuivi">
-              <td><strong>{{ t.code || '-' }}</strong></td>
-              <td>{{ t.sujet || '-' }}</td>
-              <td>{{ t.livrable || '-' }}</td>
-              <td>{{ t.assigneA || '-' }}</td>
-              <td>{{ formatShortDate(t.debut) }}</td>
-              <td>{{ formatShortDate(t.echeance) }}</td>
-              <td>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar" [style.width.%]="t.pourcentageRealise || 0"></div>
-                </div>
-                <span class="progress-text">{{ t.pourcentageRealise || 0 }}%</span>
-              </td>
-              <td><span [style]="getStatutStyle(t.statut)">{{ t.statut || '-' }}</span></td>
-            </tr>
+            <ng-container *ngFor="let t of ficheSuivi.tachesSuivi">
+              <tr *ngIf="isTitre(t)" class="tache-titre-row">
+                <td colspan="8"><span class="tache-titre">{{ t.sujet }}</span></td>
+              </tr>
+              <tr *ngIf="!isTitre(t)">
+                <td><strong>{{ t.code || '-' }}</strong></td>
+                <td>{{ t.sujet || '-' }}</td>
+                <td>{{ t.livrable || '-' }}</td>
+                <td>{{ t.assigneA || '-' }}</td>
+                <td>{{ formatShortDate(t.debut) }}</td>
+                <td>{{ formatShortDate(t.echeance) }}</td>
+                <td>
+                  <div class="progress-bar-wrap">
+                    <div class="progress-bar" [style.width.%]="t.pourcentageRealise || 0"></div>
+                  </div>
+                  <span class="progress-text">{{ t.pourcentageRealise || 0 }}%</span>
+                </td>
+                <td><span [style]="getStatutStyle(t.statut)">{{ t.statut || '-' }}</span></td>
+              </tr>
+            </ng-container>
           </tbody>
         </table>
       </div>
@@ -181,7 +191,7 @@
 
       <!-- Gantt Header: months -->
       <div class="gantt-wrapper">
-        <div class="gantt-header-row">
+        <div class="gantt-header-row" [style.min-width.px]="ganttTotalWidth + 200">
           <div class="gantt-label-col">Tâche</div>
           <div class="gantt-timeline">
             <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.px]="ganttDayWidth * m.days">{{ m.label }}</div>
@@ -189,12 +199,12 @@
         </div>
 
         <!-- Gantt Rows -->
-        <div class="gantt-row" *ngFor="let tg of ficheSuivi.planningActuel.taches">
+        <div class="gantt-row" *ngFor="let tg of ficheSuivi.planningActuel.taches" [style.min-width.px]="ganttTotalWidth + 200">
           <div class="gantt-label-col">
             <span class="gantt-task-name">{{ tg.nom || '-' }}</span>
             <span class="gantt-pct">{{ tg.tauxAvancement || 0 }}%</span>
           </div>
-          <div class="gantt-timeline gantt-timeline-row">
+          <div class="gantt-timeline gantt-timeline-row" [style.min-width.px]="ganttTotalWidth">
             <!-- background day lines -->
             <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
             <!-- bar -->

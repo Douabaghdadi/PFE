@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -145,41 +147,79 @@ public class ChatService {
         return base;
     }
 
+    private static final int MAX_ATTEMPTS = 3;
+
     public ChatResponse chat(ChatRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String fullPrompt = getSystemPrompt(request.getContext()) + "\n\nUtilisateur: " + request.getMessage();
+
+        ObjectNode body = objectMapper.createObjectNode();
+        ArrayNode contents = objectMapper.createArrayNode();
+        ObjectNode content = objectMapper.createObjectNode();
+        ArrayNode parts = objectMapper.createArrayNode();
+        ObjectNode part = objectMapper.createObjectNode();
+        part.put("text", fullPrompt);
+        parts.add(part);
+        content.set("parts", parts);
+        contents.add(content);
+        body.set("contents", contents);
+
+        ObjectNode generationConfig = objectMapper.createObjectNode();
+        generationConfig.put("maxOutputTokens", 2000);
+        generationConfig.put("temperature", 0.7);
+        body.set("generationConfig", generationConfig);
+
+        String requestJson;
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            String fullPrompt = getSystemPrompt(request.getContext()) + "\n\nUtilisateur: " + request.getMessage();
-
-            ObjectNode body = objectMapper.createObjectNode();
-            ArrayNode contents = objectMapper.createArrayNode();
-            ObjectNode content = objectMapper.createObjectNode();
-            ArrayNode parts = objectMapper.createArrayNode();
-            ObjectNode part = objectMapper.createObjectNode();
-            part.put("text", fullPrompt);
-            parts.add(part);
-            content.set("parts", parts);
-            contents.add(content);
-            body.set("contents", contents);
-
-            ObjectNode generationConfig = objectMapper.createObjectNode();
-            generationConfig.put("maxOutputTokens", 2000);
-            generationConfig.put("temperature", 0.7);
-            body.set("generationConfig", generationConfig);
-
-            HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(body), headers);
-            ResponseEntity<String> response = restTemplate.exchange(getGeminiUrl(), HttpMethod.POST, entity, String.class);
-
-            JsonNode root = objectMapper.readTree(response.getBody());
-            String reply = root.path("candidates").get(0)
-                    .path("content").path("parts").get(0)
-                    .path("text").asText();
-
-            return new ChatResponse(reply);
-
+            requestJson = objectMapper.writeValueAsString(body);
         } catch (Exception e) {
-            return new ChatResponse("Erreur lors de la communication avec l'IA : " + e.getMessage(), false);
+            return new ChatResponse("Erreur interne lors de la préparation de la requête.", false);
+        }
+        HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
+
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                ResponseEntity<String> response = restTemplate.exchange(getGeminiUrl(), HttpMethod.POST, entity, String.class);
+
+                JsonNode root = objectMapper.readTree(response.getBody());
+                String reply = root.path("candidates").get(0)
+                        .path("content").path("parts").get(0)
+                        .path("text").asText();
+
+                return new ChatResponse(reply);
+
+            } catch (HttpServerErrorException.ServiceUnavailable e) {
+                // Le modèle Gemini est temporairement surchargé côté Google : on retente avec un backoff court.
+                if (attempt == MAX_ATTEMPTS) {
+                    e.printStackTrace();
+                    return new ChatResponse(
+                        "🤖 L'assistant IA est momentanément surchargé (forte demande côté Google). Réessayez dans quelques instants.",
+                        false);
+                }
+                sleepQuietly(attempt * 1000L);
+
+            } catch (RestClientResponseException e) {
+                e.printStackTrace();
+                return new ChatResponse(
+                    "🤖 L'assistant IA est momentanément indisponible. Réessayez dans quelques instants.", false);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return new ChatResponse(
+                    "🤖 Impossible de contacter l'assistant IA pour le moment. Réessayez dans quelques instants.", false);
+            }
+        }
+
+        return new ChatResponse("🤖 L'assistant IA est momentanément indisponible. Réessayez dans quelques instants.", false);
+    }
+
+    private void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
         }
     }
 }

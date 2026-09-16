@@ -152,22 +152,21 @@ interface FicheProjet {
                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03)'; this.style.borderColor='#eef1f4';">
 
                 <!-- Card Body -->
-                <div style="padding: 1.25rem 1.25rem 1rem; flex: 1; display: flex; flex-direction: column;">
+                <div style="padding: 1.5rem 1.5rem 1.15rem; flex: 1; display: flex; flex-direction: column;">
 
                   <!-- Header -->
-                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; margin-bottom: 0.9rem;">
-                    <div style="display: flex; align-items: center; gap: 0.65rem; min-width: 0;">
-                      <div style="width: 2.3rem; height: 2.3rem; border-radius: 0.8rem; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <i class="fas fa-folder" style="color: #475569; font-size: 1rem;"></i>
+                  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.7rem; min-width: 0;">
+                      <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.85rem; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i class="fas fa-folder" style="color: #475569; font-size: 1.1rem;"></i>
                       </div>
                       <div style="min-width: 0;">
-                        <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;" [title]="projet.nomProjet || projet.designationProjet">
+                        <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;" [title]="projet.nomProjet || projet.designationProjet">
                           {{ projet.nomProjet || projet.designationProjet }}
                         </h3>
-                        <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.02em;">{{ getChefProjetName(projet.chefProjetId) }}</span>
                       </div>
                     </div>
-                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.28rem 0.6rem; border-radius: 999px; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; white-space: nowrap;"
+                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.32rem 0.7rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap;"
                           [style.background]="getStatutColor(projet.statut) + '1A'"
                           [style.color]="getStatutColor(projet.statut)">
                       <span style="width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;" [style.background]="getStatutColor(projet.statut)"></span>
@@ -175,66 +174,66 @@ interface FicheProjet {
                     </span>
                   </div>
 
-                  <!-- Bento stat tiles: Client + Créé le -->
-                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin-bottom: 0.9rem;">
-                    <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; padding: 0.65rem 0.75rem; min-width: 0;">
-                      <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                        <i class="fas fa-building" style="color: #1d4ed8; font-size: 0.65rem;"></i>
-                        <span style="font-size: 0.58rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.05em;">Client</span>
-                      </div>
-                      <div style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.designationClient || '—' }}</div>
+                  <!-- Chef de projet -->
+                  <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1rem;">
+                    <div style="width: 1.75rem; height: 1.75rem; border-radius: 50%; background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
+                      <span style="color: white; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em;">{{ getInitials(getChefProjetName(projet.chefProjetId)) }}</span>
                     </div>
-                    <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; padding: 0.65rem 0.75rem; min-width: 0;">
-                      <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                        <i class="fas fa-calendar" style="color: #b45309; font-size: 0.65rem;"></i>
-                        <span style="font-size: 0.58rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em;">Créé le</span>
-                      </div>
-                      <div style="font-size: 0.85rem; font-weight: 800; color: #92400e; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.dateCreation ? formatDate(projet.dateCreation) : '—' }}</div>
-                    </div>
+                    <span style="font-size: 0.85rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ getChefProjetName(projet.chefProjetId) }}</span>
                   </div>
 
-                  <!-- Chef de projet -->
-                  <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1;">
-                    <div style="width: 1.6rem; height: 1.6rem; border-radius: 50%; background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
-                      <span style="color: white; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.02em;">{{ getInitials(getChefProjetName(projet.chefProjetId)) }}</span>
+                  <!-- Bento stat tiles: Client + Créé le -->
+                  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; flex: 1;">
+                    <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; padding: 0.75rem 0.85rem; min-width: 0;">
+                      <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
+                        <i class="fas fa-building" style="color: #1d4ed8; font-size: 0.7rem;"></i>
+                        <span style="font-size: 0.62rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.05em;">Client</span>
+                      </div>
+                      <div style="font-size: 0.9rem; font-weight: 800; color: #1e3a8a; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.designationClient || '—' }}</div>
                     </div>
-                    <span style="font-size: 0.8rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ getChefProjetName(projet.chefProjetId) }}</span>
+                    <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; padding: 0.75rem 0.85rem; min-width: 0;">
+                      <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
+                        <i class="fas fa-calendar" style="color: #b45309; font-size: 0.7rem;"></i>
+                        <span style="font-size: 0.62rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em;">Créé le</span>
+                      </div>
+                      <div style="font-size: 0.9rem; font-weight: 800; color: #92400e; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ projet.dateCreation ? formatDate(projet.dateCreation) : '—' }}</div>
+                    </div>
                   </div>
 
                 </div>
 
                 <!-- Action Buttons Footer -->
-                <div style="padding: 0 1.25rem 1.25rem;">
-                  <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.75rem;"></div>
+                <div style="padding: 0 1.5rem 1.5rem;">
+                  <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.85rem;"></div>
 
-                  <div style="display: grid; grid-template-columns: 2.4rem 2.4rem 2.4rem 1fr; gap: 0.45rem;">
+                  <div style="display: grid; grid-template-columns: 2.6rem 2.6rem 2.6rem 1fr; gap: 0.5rem;">
                     <button (click)="viewFichesSuivi(projet.id); $event.stopPropagation()" title="Fiches de suivi"
-                            style="height: 2.4rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.7rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
+                            style="height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
                             onmouseover="this.style.background='#f5f3ff'; this.style.borderColor='#ddd6fe'; this.style.color='#7c3aed';"
                             onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                      <i class="fas fa-clipboard-list" style="font-size: 0.9rem;"></i>
+                      <i class="fas fa-clipboard-list" style="font-size: 1rem;"></i>
                     </button>
 
                     <button (click)="editProjet(projet.id); $event.stopPropagation()" title="Modifier"
-                            style="height: 2.4rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.7rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
+                            style="height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
                             onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#bfdbfe'; this.style.color='#2563eb';"
                             onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                      <i class="fas fa-edit" style="font-size: 0.9rem;"></i>
+                      <i class="fas fa-edit" style="font-size: 1rem;"></i>
                     </button>
 
                     <button (click)="deleteProjet(projet.id); $event.stopPropagation()" title="Supprimer"
-                            style="height: 2.4rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.7rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
+                            style="height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
                             onmouseover="this.style.background='#fef2f2'; this.style.borderColor='#fecaca'; this.style.color='#dc2626';"
                             onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                      <i class="fas fa-trash" style="font-size: 0.9rem;"></i>
+                      <i class="fas fa-trash" style="font-size: 1rem;"></i>
                     </button>
 
                     <button (click)="viewProjet(projet.id); $event.stopPropagation()"
-                            style="height: 2.4rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3);"
+                            style="height: 2.6rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3);"
                             onmouseover="this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'; this.style.transform='translateY(-1px)';"
                             onmouseout="this.style.boxShadow='0 4px 10px rgba(16,185,129,0.3)'; this.style.transform='translateY(0)';">
                       Voir
-                      <i class="fas fa-arrow-right" style="font-size: 0.75rem;"></i>
+                      <i class="fas fa-arrow-right" style="font-size: 0.8rem;"></i>
                     </button>
                   </div>
                 </div>

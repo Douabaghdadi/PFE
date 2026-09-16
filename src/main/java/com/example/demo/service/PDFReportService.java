@@ -1,7 +1,11 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.AlerteKPIDTO;
+import com.example.demo.dto.ComposanteScoreDTO;
 import com.example.demo.dto.MembreEquipeDTO;
+import com.example.demo.dto.PointHistoriqueKPIDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
+import com.example.demo.dto.TacheKPIDTO;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.DeviceRgb;
@@ -111,9 +115,13 @@ public class PDFReportService {
         addStatCards(document, kpi);
         addAvancement(document, kpi);
         addSante(document, kpi);
+        addAlertes(document, kpi);
         addSynthese(document, kpi);
+        addTaches(document, kpi);
+        addCharge(document, kpi);
         addBudget(document, kpi);
         addEquipe(document, kpi);
+        addHistorique(document, kpi);
         addRecommandations(document, kpi);
         addQualite(document, kpi);
 
@@ -226,26 +234,25 @@ public class PDFReportService {
 
         cards.addCell(statCard("AVANCEMENT",
             String.format(Locale.FRANCE, "%.0f%%", kpi.getTauxAvancement()),
-            progressLabel(kpi.getTauxAvancement()), progressColor(kpi.getTauxAvancement())));
+            ecartPlanningLabel(kpi), ecartColor(kpi.getEcartPlanning())));
         cards.addCell(spacer());
 
-        boolean late = kpi.getJoursRetard() > 0;
-        cards.addCell(statCard("RETARD",
-            kpi.getJoursRetard() + (kpi.getJoursRetard() > 1 ? " jours" : " jour"),
-            late ? "Planning à rattraper" : "Dans les délais",
-            late ? RED : BRAND));
+        cards.addCell(statCard("INDICE DE DÉLAI (SPI)",
+            kpi.getTauxAvancementPlanifie() > 0 ? String.format(Locale.FRANCE, "%.2f", kpi.getSpi()) : "–",
+            spiLabel(kpi), spiColor(kpi)));
         cards.addCell(spacer());
 
-        cards.addCell(statCard("PROBLÈMES",
-            String.valueOf(kpi.getNombreProblemes()),
-            kpi.getNombreProblemes() > 5 ? "Attention requise" : "Sous contrôle",
-            kpi.getNombreProblemes() > 5 ? RED : BRAND));
+        cards.addCell(statCard("SANTÉ DU PROJET",
+            String.format(Locale.FRANCE, "%.0f/100", kpi.getScoreSante()),
+            niveauSanteLabel(kpi.getNiveauSante()), healthColor(kpi.getScoreSante())));
         cards.addCell(spacer());
 
-        cards.addCell(statCard("RISQUES",
-            String.valueOf(kpi.getNombreRisques()),
-            kpi.getNombreRisques() > 3 ? "Vigilance" : "Acceptable",
-            kpi.getNombreRisques() > 3 ? AMBER : BRAND));
+        int alertes = kpi.getAlertes() == null ? 0 : kpi.getAlertes().size();
+        int bloquantes = compterAlertes(kpi, AlerteKPIDTO.CRITIQUE) + compterAlertes(kpi, AlerteKPIDTO.MAJEUR);
+        cards.addCell(statCard("ALERTES",
+            String.valueOf(alertes),
+            bloquantes > 0 ? bloquantes + " à traiter en priorité" : "Aucune alerte bloquante",
+            bloquantes > 0 ? RED : BRAND));
 
         document.add(cards);
     }
@@ -287,11 +294,48 @@ public class PDFReportService {
         legend.setMarginBottom(4);
         block.add(legend);
 
+        // Référence de comparaison : ce qui aurait dû être réalisé à la date du rapport.
+        if (kpi.getTauxAvancementPlanifie() > 0) {
+            block.add(new Paragraph(String.format(Locale.FRANCE,
+                    "Avancement planifié à ce jour : %.0f %%", kpi.getTauxAvancementPlanifie()))
+                .setFontSize(9).setFontColor(MUTED).setMarginTop(8).setMarginBottom(0));
+            block.add(progressBarColored(kpi.getTauxAvancementPlanifie(), MUTED));
+
+            Table synthese = new Table(UnitValue.createPercentArray(new float[]{34, 33, 33})).useAllAvailableWidth();
+            synthese.setMarginTop(6);
+            synthese.addCell(miniStat("Écart au planning",
+                String.format(Locale.FRANCE, "%+.0f pts", kpi.getEcartPlanning()),
+                ecartColor(kpi.getEcartPlanning())));
+            synthese.addCell(miniStat("SPI", String.format(Locale.FRANCE, "%.2f", kpi.getSpi()), spiColor(kpi)));
+            synthese.addCell(miniStat("Progression depuis la fiche précédente",
+                String.format(Locale.FRANCE, "%+.1f pts", kpi.getDeltaAvancement()),
+                kpi.getDeltaAvancement() > 0 ? BRAND : AMBER));
+            block.add(synthese);
+        }
+
+        if (kpi.getDateFinProjetee() != null) {
+            String tendance = kpi.getJoursDerapageProjete() > 0
+                ? String.format("soit %d jour(s) après la date prévue", kpi.getJoursDerapageProjete())
+                : "soit dans les délais prévus";
+            block.add(new Paragraph("Fin projetée au rythme actuel : "
+                    + formatDate(kpi.getDateFinProjetee()) + " · " + tendance)
+                .setFontSize(9).setFontColor(kpi.getJoursDerapageProjete() > 0 ? RED : BRAND)
+                .setBackgroundColor(kpi.getJoursDerapageProjete() > 0 ? RED_SOFT : SURFACE_ALT)
+                .setPadding(9).setMarginTop(10).setMarginBottom(0));
+        }
+
         document.add(block);
     }
 
+    private Cell miniStat(String label, String value, DeviceRgb color) {
+        return new Cell()
+            .add(new Paragraph(label).setFontSize(7.5f).setFontColor(MUTED).setMargin(0))
+            .add(new Paragraph(value).setFont(bold).setFontSize(12).setFontColor(color).setMarginTop(2).setMarginBottom(0))
+            .setBorder(Border.NO_BORDER).setPaddingTop(4).setPaddingBottom(4).setPaddingRight(8);
+    }
+
     private void addSante(Document document, ProjetKPIReportDTO kpi) {
-        double score = healthScore(kpi);
+        double score = kpi.getScoreSante();
         DeviceRgb color = healthColor(score);
 
         Div block = new Div().setKeepTogether(true);
@@ -311,17 +355,13 @@ public class PDFReportService {
         head.addCell(info);
         block.add(head);
 
-        int avancementPts = (int) Math.round((kpi.getTauxAvancement() / 100.0) * 40);
-        int problemsPts = 30 - Math.min(kpi.getNombreProblemes() * 5, 30);
-        int risksPts = 20 - Math.min(kpi.getNombreRisques() * 5, 20);
-        int delayPts = kpi.getJoursRetard() == 0 ? 10 : (kpi.getJoursRetard() <= 7 ? 5 : 0);
-
         Table breakdown = new Table(UnitValue.createPercentArray(new float[]{70, 30})).useAllAvailableWidth();
         breakdown.setMarginTop(14);
-        addScoreRow(breakdown, "Avancement (40 pts max)", avancementPts, BRAND);
-        addScoreRow(breakdown, "Problèmes (30 pts max)", problemsPts, problemsPts > 15 ? BRAND : RED);
-        addScoreRow(breakdown, "Risques (20 pts max)", risksPts, risksPts > 10 ? BRAND : AMBER);
-        addScoreRow(breakdown, "Respect des délais (10 pts max)", delayPts, delayPts == 10 ? BRAND : AMBER);
+        if (kpi.getDetailScore() != null) {
+            for (ComposanteScoreDTO composante : kpi.getDetailScore()) {
+                addScoreRow(breakdown, composante);
+            }
+        }
 
         breakdown.addCell(new Cell()
             .add(new Paragraph("Score total").setFont(bold).setFontSize(9.5f).setFontColor(INK).setMargin(0))
@@ -336,13 +376,174 @@ public class PDFReportService {
         document.add(block);
     }
 
-    private void addScoreRow(Table table, String label, int points, DeviceRgb color) {
+    private void addScoreRow(Table table, ComposanteScoreDTO composante) {
+        double ratio = composante.getPointsMax() > 0 ? composante.getPoints() / composante.getPointsMax() : 0;
+        DeviceRgb color = ratio >= 0.8 ? BRAND : (ratio >= 0.5 ? AMBER : RED);
+
+        Cell libelle = new Cell()
+            .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f)).setPadding(8);
+        libelle.add(new Paragraph(composante.getLibelle()
+                + String.format(Locale.FRANCE, " (%.0f pts max)", composante.getPointsMax()))
+            .setFontSize(9.5f).setFontColor(INK).setMargin(0));
+        if (composante.getCommentaire() != null && !composante.getCommentaire().isBlank()) {
+            libelle.add(new Paragraph(composante.getCommentaire())
+                .setFontSize(8).setFontColor(MUTED).setMarginTop(2).setMarginBottom(0));
+        }
+        table.addCell(libelle);
+
         table.addCell(new Cell()
-            .add(new Paragraph(label).setFontSize(9.5f).setFontColor(INK).setMargin(0))
-            .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f)).setPadding(8));
-        table.addCell(new Cell()
-            .add(new Paragraph((points >= 0 ? "+" : "") + points + " pts").setFont(bold).setFontSize(9.5f).setFontColor(color).setMargin(0))
-            .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f)).setPadding(8).setTextAlignment(TextAlignment.RIGHT));
+            .add(new Paragraph(String.format(Locale.FRANCE, "%.1f pts", composante.getPoints()))
+                .setFont(bold).setFontSize(9.5f).setFontColor(color).setMargin(0))
+            .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f))
+            .setPadding(8).setTextAlignment(TextAlignment.RIGHT).setVerticalAlignment(VerticalAlignment.MIDDLE));
+    }
+
+    /* ---------- Alertes issues des règles de pilotage ---------- */
+
+    private void addAlertes(Document document, ProjetKPIReportDTO kpi) {
+        List<AlerteKPIDTO> alertes = kpi.getAlertes();
+        if (alertes == null || alertes.isEmpty()) {
+            return;
+        }
+        addSectionTitle(document, "ALERTES DE PILOTAGE");
+
+        for (AlerteKPIDTO alerte : alertes) {
+            DeviceRgb accent = niveauColor(alerte.getNiveau());
+            DeviceRgb fond = niveauSoftColor(alerte.getNiveau());
+
+            Cell cell = new Cell()
+                .setBackgroundColor(fond).setBorder(Border.NO_BORDER)
+                .setBorderLeft(new SolidBorder(accent, 3)).setPadding(10);
+            cell.add(new Paragraph()
+                .add(new Text(alerte.getNiveau() + " · " + orDash(alerte.getCategorie()))
+                    .setFont(bold).setFontSize(7.5f).setFontColor(accent).setCharacterSpacing(0.8f))
+                .setMargin(0));
+            cell.add(new Paragraph(alerte.getTitre())
+                .setFont(bold).setFontSize(9.5f).setFontColor(INK).setMarginTop(3).setMarginBottom(2));
+            cell.add(new Paragraph(alerte.getMessage()).setFontSize(9).setFontColor(MUTED).setMargin(0));
+
+            Table wrapper = new Table(UnitValue.createPercentArray(new float[]{100})).useAllAvailableWidth();
+            wrapper.setMarginBottom(6);
+            wrapper.addCell(cell);
+            document.add(new Div().setKeepTogether(true).add(wrapper));
+        }
+    }
+
+    /* ---------- Exécution des tâches ---------- */
+
+    private void addTaches(Document document, ProjetKPIReportDTO kpi) {
+        if (kpi.getTotalTaches() == 0) {
+            return;
+        }
+        addSectionTitle(document, "EXÉCUTION DES TÂCHES");
+
+        Table repartition = new Table(UnitValue.createPercentArray(new float[]{25, 25, 25, 25})).useAllAvailableWidth();
+        repartition.setMarginBottom(10);
+        repartition.addCell(miniStat("Terminées",
+            kpi.getTachesTerminees() + " / " + kpi.getTotalTaches(), BRAND));
+        repartition.addCell(miniStat("En cours", String.valueOf(kpi.getTachesEnCours()), BLUE));
+        repartition.addCell(miniStat("Non démarrées", String.valueOf(kpi.getTachesNonDemarrees()), GRAY));
+        repartition.addCell(miniStat("Hors délai", String.valueOf(kpi.getTachesEnRetard()),
+            kpi.getTachesEnRetard() > 0 ? RED : BRAND));
+        document.add(repartition);
+
+        if (kpi.getTauxRespectEcheances() >= 0) {
+            document.add(new Paragraph(String.format(Locale.FRANCE,
+                    "Taux de respect des échéances : %.0f %%", kpi.getTauxRespectEcheances()))
+                .setFontSize(9).setFontColor(MUTED).setMarginBottom(8));
+        }
+
+        addTacheTable(document, "Tâches hors délai", kpi.getListeTachesEnRetard(), RED, true);
+        addTacheTable(document, "Échéances imminentes", kpi.getListeTachesEcheanceProche(), AMBER, false);
+    }
+
+    private void addTacheTable(Document document, String titre, List<TacheKPIDTO> taches,
+                               DeviceRgb accent, boolean retard) {
+        if (taches == null || taches.isEmpty()) {
+            return;
+        }
+        document.add(new Paragraph(titre + " (" + taches.size() + ")")
+            .setFont(bold).setFontSize(10).setFontColor(INK)
+            .setMarginTop(10).setMarginBottom(6).setKeepWithNext(true));
+
+        Table table = new Table(UnitValue.createPercentArray(new float[]{40, 22, 16, 10, 12})).useAllAvailableWidth();
+        table.addHeaderCell(headerCell("Tâche"));
+        table.addHeaderCell(headerCell("Assignée à"));
+        table.addHeaderCell(headerCell("Échéance"));
+        table.addHeaderCell(headerCell("Réalisé").setTextAlignment(TextAlignment.RIGHT));
+        table.addHeaderCell(headerCell(retard ? "Retard" : "Dans").setTextAlignment(TextAlignment.RIGHT));
+
+        for (TacheKPIDTO tache : taches) {
+            table.addCell(tacheCell(orDash(tache.getSujet()), INK, TextAlignment.LEFT));
+            table.addCell(tacheCell(orDash(tache.getAssigneA()), MUTED, TextAlignment.LEFT));
+            table.addCell(tacheCell(formatDate(tache.getEcheance()), MUTED, TextAlignment.LEFT));
+            table.addCell(tacheCell(tache.getPourcentageRealise() + " %", INK, TextAlignment.RIGHT));
+            table.addCell(tacheCell(Math.abs(tache.getJoursEcart()) + " j", accent, TextAlignment.RIGHT));
+        }
+        document.add(table);
+    }
+
+    private Cell tacheCell(String texte, DeviceRgb couleur, TextAlignment alignement) {
+        return new Cell()
+            .add(new Paragraph(texte).setFontSize(9).setFontColor(couleur).setMargin(0))
+            .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f))
+            .setPadding(7).setTextAlignment(alignement);
+    }
+
+    /* ---------- Charge ---------- */
+
+    private void addCharge(Document document, ProjetKPIReportDTO kpi) {
+        if (kpi.getChargeEstimee() <= 0 && kpi.getChargeConsommee() <= 0) {
+            return;
+        }
+        Div block = new Div().setKeepTogether(true);
+        block.add(sectionTitle("CHARGE ET EFFICACITÉ"));
+
+        Table stats = new Table(UnitValue.createPercentArray(new float[]{25, 25, 25, 25})).useAllAvailableWidth();
+        stats.addCell(miniStat("Charge estimée", String.format(Locale.FRANCE, "%.0f j", kpi.getChargeEstimee()), INK));
+        stats.addCell(miniStat("Charge consommée", String.format(Locale.FRANCE, "%.0f j", kpi.getChargeConsommee()), INK));
+        stats.addCell(miniStat("Reste à faire", String.format(Locale.FRANCE, "%.0f j", kpi.getChargeRestanteEstimee()), BLUE));
+        stats.addCell(miniStat("Efficacité (CPI)",
+            kpi.getChargeConsommee() > 0 ? String.format(Locale.FRANCE, "%.2f", kpi.getIndiceEfficacite()) : "–",
+            kpi.getIndiceEfficacite() >= 1 ? BRAND : (kpi.getIndiceEfficacite() >= 0.8 ? AMBER : RED)));
+        block.add(stats);
+
+        if (kpi.getChargeEstimee() > 0) {
+            block.add(new Paragraph(String.format(Locale.FRANCE,
+                    "Consommation : %.0f %% de la charge estimée pour %.0f %% d'avancement",
+                    kpi.getTauxConsommationCharge(), kpi.getTauxAvancement()))
+                .setFontSize(9).setFontColor(MUTED).setMarginTop(8).setMarginBottom(0));
+            block.add(progressBarColored(kpi.getTauxConsommationCharge(),
+                kpi.getTauxConsommationCharge() > kpi.getTauxAvancement() + 15 ? RED : BRAND));
+        }
+        document.add(block);
+    }
+
+    /* ---------- Historique des fiches de suivi ---------- */
+
+    private void addHistorique(Document document, ProjetKPIReportDTO kpi) {
+        List<PointHistoriqueKPIDTO> historique = kpi.getHistorique();
+        if (historique == null || historique.size() < 2) {
+            return;
+        }
+        addSectionTitle(document, "ÉVOLUTION DU PROJET");
+
+        Table table = new Table(UnitValue.createPercentArray(new float[]{22, 26, 20, 16, 16})).useAllAvailableWidth();
+        table.addHeaderCell(headerCell("Date"));
+        table.addHeaderCell(headerCell("Rapport"));
+        table.addHeaderCell(headerCell("Avancement").setTextAlignment(TextAlignment.RIGHT));
+        table.addHeaderCell(headerCell("Problèmes").setTextAlignment(TextAlignment.RIGHT));
+        table.addHeaderCell(headerCell("Risques").setTextAlignment(TextAlignment.RIGHT));
+
+        for (PointHistoriqueKPIDTO point : historique) {
+            table.addCell(tacheCell(formatDate(point.getDate()), INK, TextAlignment.LEFT));
+            table.addCell(tacheCell(orDash(point.getNumeroRapport()), MUTED, TextAlignment.LEFT));
+            table.addCell(tacheCell(String.format(Locale.FRANCE, "%.0f %%", point.getTauxAvancement()),
+                progressColor(point.getTauxAvancement()), TextAlignment.RIGHT));
+            table.addCell(tacheCell(String.valueOf(point.getNombreProblemes()), MUTED, TextAlignment.RIGHT));
+            table.addCell(tacheCell(String.valueOf(point.getNombreRisques()), MUTED, TextAlignment.RIGHT));
+        }
+        document.add(table);
     }
 
     private void addSynthese(Document document, ProjetKPIReportDTO kpi) {
@@ -357,47 +558,60 @@ public class PDFReportService {
             addInfoRow(table, "Date de fin réelle", formatDate(kpi.getDateFinReelle()));
         }
         addInfoRow(table, "Jours de retard", String.valueOf(kpi.getJoursRetard()));
+        if (kpi.getDateFinProjetee() != null) {
+            addInfoRow(table, "Fin projetée (vélocité actuelle)", formatDate(kpi.getDateFinProjetee()));
+        }
+        addInfoRow(table, "Fiches de suivi exploitées", String.valueOf(kpi.getNombreFichesSuivi()));
+        if (kpi.getDateDerniereFiche() != null) {
+            String reference = kpi.getNumeroDerniereFiche() != null && !kpi.getNumeroDerniereFiche().isBlank()
+                ? formatDate(kpi.getDateDerniereFiche()) + " (rapport " + kpi.getNumeroDerniereFiche() + ")"
+                : formatDate(kpi.getDateDerniereFiche());
+            addInfoRow(table, "Dernière fiche de suivi", reference);
+        }
+        addInfoRow(table, "Problèmes / risques déclarés",
+            kpi.getNombreProblemes() + " / " + kpi.getNombreRisques());
         document.add(table);
     }
 
     private void addBudget(Document document, ProjetKPIReportDTO kpi) {
         Div block = new Div().setKeepTogether(true);
         block.add(sectionTitle("BUDGET"));
-        block.add(new Paragraph(money(kpi.getBudgetTotal()) + " DH")
+        block.add(new Paragraph(money(kpi.getBudgetTotal()) + " DT")
             .setFont(bold).setFontSize(22).setFontColor(INK).setMarginBottom(1));
-        block.add(new Paragraph(String.format(Locale.FRANCE, "Budget total alloué · %.2f MDH", kpi.getBudgetTotal()))
+        block.add(new Paragraph(String.format(Locale.FRANCE, "Budget total alloué · %.2f MD (millions de dinars)", kpi.getBudgetTotal()))
             .setFontSize(9).setFontColor(MUTED).setMarginBottom(10));
 
-        double breakdownTotal = kpi.getBudgetMateriel() + kpi.getBudgetLogiciel() + kpi.getBudgetRessourcesHumaines();
-        if (breakdownTotal <= 0) {
+        // Suivi de la consommation : seule la fiche de suivi porte le réalisé.
+        if (kpi.getBudgetRealisation() <= 0 && kpi.getBudgetPrevision() <= 0) {
+            block.add(new Paragraph("Aucun suivi budgétaire (prévision / réalisation) n'a été renseigné "
+                    + "dans les fiches de suivi.")
+                .setFontSize(9).setFontColor(MUTED).setBackgroundColor(SURFACE_ALT).setPadding(10));
             document.add(block);
             return;
         }
 
-        Table table = new Table(UnitValue.createPercentArray(new float[]{44, 34, 22})).useAllAvailableWidth();
-        table.setMarginBottom(4);
+        Table table = new Table(UnitValue.createPercentArray(new float[]{46, 32, 22})).useAllAvailableWidth();
+        table.setMarginBottom(6);
         table.addHeaderCell(headerCell("Poste"));
-        table.addHeaderCell(headerCell("Montant (DH)").setTextAlignment(TextAlignment.RIGHT));
-        table.addHeaderCell(headerCell("Part").setTextAlignment(TextAlignment.RIGHT));
+        table.addHeaderCell(headerCell("Montant (DT)").setTextAlignment(TextAlignment.RIGHT));
+        table.addHeaderCell(headerCell("Part du prévu").setTextAlignment(TextAlignment.RIGHT));
 
-        addBudgetRow(table, "Matériel", kpi.getBudgetMateriel(), breakdownTotal, BLUE);
-        addBudgetRow(table, "Logiciel", kpi.getBudgetLogiciel(), breakdownTotal, new DeviceRgb(124, 58, 237));
-        addBudgetRow(table, "Ressources humaines", kpi.getBudgetRessourcesHumaines(), breakdownTotal, BRAND);
-
-        table.addCell(new Cell()
-            .add(new Paragraph("Total réparti").setFont(bold).setFontSize(9.5f).setFontColor(INK).setMargin(0))
-            .setBackgroundColor(SURFACE_ALT).setBorder(Border.NO_BORDER)
-            .setBorderTop(new SolidBorder(LINE, 1)).setPadding(8));
-        table.addCell(new Cell()
-            .add(new Paragraph(money(breakdownTotal)).setFont(bold).setFontSize(9.5f).setFontColor(INK).setMargin(0))
-            .setBackgroundColor(SURFACE_ALT).setBorder(Border.NO_BORDER)
-            .setBorderTop(new SolidBorder(LINE, 1)).setPadding(8).setTextAlignment(TextAlignment.RIGHT));
-        table.addCell(new Cell()
-            .add(new Paragraph("100 %").setFont(bold).setFontSize(9.5f).setFontColor(INK).setMargin(0))
-            .setBackgroundColor(SURFACE_ALT).setBorder(Border.NO_BORDER)
-            .setBorderTop(new SolidBorder(LINE, 1)).setPadding(8).setTextAlignment(TextAlignment.RIGHT));
+        addBudgetRow(table, "Budget prévu", kpi.getBudgetPrevision(), kpi.getBudgetPrevision(), BLUE);
+        addBudgetRow(table, "Budget consommé", kpi.getBudgetRealisation(), kpi.getBudgetPrevision(), BRAND);
+        addBudgetRow(table, "Écart disponible", kpi.getEcartBudget(), kpi.getBudgetPrevision(),
+            kpi.getEcartBudget() >= 0 ? BRAND : RED);
 
         block.add(table);
+
+        if (kpi.getBudgetPrevision() > 0) {
+            block.add(new Paragraph(String.format(Locale.FRANCE,
+                    "Consommation budgétaire : %.0f %% pour %.0f %% d'avancement",
+                    kpi.getTauxConsommationBudget(), kpi.getTauxAvancement()))
+                .setFontSize(9).setFontColor(MUTED).setMarginTop(4).setMarginBottom(0));
+            block.add(progressBarColored(kpi.getTauxConsommationBudget(),
+                kpi.getTauxConsommationBudget() > kpi.getTauxAvancement() + 15 ? RED : BRAND));
+        }
+
         document.add(block);
     }
 
@@ -456,13 +670,36 @@ public class PDFReportService {
     private List<String[]> buildRecommandations(ProjetKPIReportDTO kpi) {
         List<String[]> recos = new ArrayList<>();
 
-        if (kpi.getTauxAvancement() < 30) {
-            recos.add(new String[]{"Accélérer l'avancement",
-                "Le projet avance lentement. Considérez d'augmenter les ressources ou de revoir les priorités."});
+        // Les recommandations formulées par le chef de projet dans la fiche de suivi priment.
+        if (kpi.getListeRecommandations() != null) {
+            int index = 1;
+            for (String recommandation : kpi.getListeRecommandations()) {
+                recos.add(new String[]{"Recommandation du chef de projet n°" + index++, recommandation});
+            }
+        }
+
+        if (kpi.getTauxAvancementPlanifie() > 0 && kpi.getSpi() < 0.9) {
+            recos.add(new String[]{"Réaligner le projet sur son planning",
+                String.format(Locale.FRANCE,
+                    "L'avancement (%.0f %%) est en retrait de %.0f points sur le planifié (%.0f %%). "
+                        + "Repriorisez les tâches du chemin critique ou renégociez le jalon de fin.",
+                    kpi.getTauxAvancement(), Math.abs(kpi.getEcartPlanning()), kpi.getTauxAvancementPlanifie())});
+        }
+        if (kpi.getTachesEnRetard() > 0) {
+            recos.add(new String[]{"Traiter les tâches hors délai",
+                kpi.getTachesEnRetard() + " tâche(s) ont dépassé leur échéance sans être terminées. "
+                    + "Statuez sur chacune : replanification, renfort ou abandon."});
+        }
+        if (kpi.getChargeConsommee() > 0 && kpi.getIndiceEfficacite() < 0.9) {
+            recos.add(new String[]{"Maîtriser la dérive de charge",
+                String.format(Locale.FRANCE,
+                    "Indice d'efficacité de %.2f : %.0f jours consommés pour %.0f jours estimés. "
+                        + "Revoyez les estimations restantes avant qu'elles ne dérivent à leur tour.",
+                    kpi.getIndiceEfficacite(), kpi.getChargeConsommee(), kpi.getChargeEstimee())});
         }
         if (kpi.getNombreProblemes() > 5) {
             recos.add(new String[]{"Résoudre les problèmes",
-                kpi.getNombreProblemes() + " problèmes identifiés. Organisez une réunion pour les traiter en priorité."});
+                kpi.getNombreProblemes() + " problèmes identifiés. Organisez une revue dédiée pour les traiter en priorité."});
         }
         if (kpi.getNombreRisques() > 3) {
             recos.add(new String[]{"Mitiger les risques",
@@ -472,13 +709,18 @@ public class PDFReportService {
             recos.add(new String[]{"Rattraper le retard",
                 "Le projet a " + kpi.getJoursRetard() + " jour(s) de retard. Revoyez le planning et les dépendances."});
         }
-        if (kpi.getBudgetTotal() == 0) {
-            recos.add(new String[]{"Définir le budget",
-                "Aucun budget défini. Ajoutez les informations budgétaires pour un meilleur suivi."});
+        if (kpi.getBudgetPrevision() <= 0) {
+            recos.add(new String[]{"Instrumenter le suivi budgétaire",
+                "Aucune prévision ni consommation budgétaire n'est saisie : la maîtrise des coûts "
+                    + "ne peut pas être mesurée."});
         }
-        if (recos.isEmpty() && kpi.getTauxAvancement() > 50) {
-            recos.add(new String[]{"Continuez ainsi !",
-                "Le projet progresse bien. Maintenez le rythme et la qualité du travail."});
+        if (kpi.getNombreFichesSuivi() < 2) {
+            recos.add(new String[]{"Établir un rythme de suivi",
+                "Une seule fiche de suivi au plus est disponible : aucune tendance ne peut être dégagée."});
+        }
+        if (recos.isEmpty()) {
+            recos.add(new String[]{"Maintenir le pilotage en place",
+                "Les indicateurs sont au vert. Maintenez le rythme de suivi et la qualité des livrables."});
         }
         return recos;
     }
@@ -551,7 +793,7 @@ public class PDFReportService {
             .setPadding(9));
     }
 
-    private void addBudgetRow(Table table, String label, double amountMDH, double totalMDH, DeviceRgb dotColor) {
+    private void addBudgetRow(Table table, String label, double amountMD, double totalMD, DeviceRgb dotColor) {
         Paragraph poste = new Paragraph()
             .add(new Text("•  ").setFont(bold).setFontSize(13).setFontColor(dotColor))
             .add(new Text(label).setFontSize(9.5f).setFontColor(INK))
@@ -560,11 +802,11 @@ public class PDFReportService {
         table.addCell(new Cell().add(poste)
             .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f)).setPadding(8));
         table.addCell(new Cell()
-            .add(new Paragraph(money(amountMDH)).setFontSize(9.5f).setFontColor(INK).setMargin(0))
+            .add(new Paragraph(money(amountMD)).setFontSize(9.5f).setFontColor(INK).setMargin(0))
             .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f))
             .setPadding(8).setTextAlignment(TextAlignment.RIGHT));
         table.addCell(new Cell()
-            .add(new Paragraph(String.format(Locale.FRANCE, "%.0f %%", totalMDH > 0 ? amountMDH / totalMDH * 100 : 0))
+            .add(new Paragraph(String.format(Locale.FRANCE, "%.0f %%", totalMD > 0 ? amountMD / totalMD * 100 : 0))
                 .setFont(bold).setFontSize(9.5f).setFontColor(MUTED).setMargin(0))
             .setBorder(Border.NO_BORDER).setBorderBottom(new SolidBorder(LINE, 0.75f))
             .setPadding(8).setTextAlignment(TextAlignment.RIGHT));
@@ -584,6 +826,10 @@ public class PDFReportService {
     }
 
     private Table progressBar(double percentage) {
+        return progressBarColored(percentage, progressColor(percentage));
+    }
+
+    private Table progressBarColored(double percentage, DeviceRgb color) {
         float pct = (float) Math.max(0, Math.min(100, percentage));
         Table bar;
         if (pct < 1f) {
@@ -591,10 +837,10 @@ public class PDFReportService {
             bar.addCell(barCell(TRACK));
         } else if (pct > 99f) {
             bar = new Table(UnitValue.createPercentArray(new float[]{100})).useAllAvailableWidth();
-            bar.addCell(barCell(progressColor(percentage)));
+            bar.addCell(barCell(color));
         } else {
             bar = new Table(UnitValue.createPercentArray(new float[]{pct, 100 - pct})).useAllAvailableWidth();
-            bar.addCell(barCell(progressColor(percentage)));
+            bar.addCell(barCell(color));
             bar.addCell(barCell(TRACK));
         }
         return bar.setMarginTop(4).setMarginBottom(6);
@@ -652,16 +898,67 @@ public class PDFReportService {
         }
     }
 
-    private double healthScore(ProjetKPIReportDTO kpi) {
-        double score = (kpi.getTauxAvancement() / 100.0) * 40;
-        score += 30 - Math.min(kpi.getNombreProblemes() * 5, 30);
-        score += 20 - Math.min(kpi.getNombreRisques() * 5, 20);
-        if (kpi.getJoursRetard() == 0) {
-            score += 10;
-        } else if (kpi.getJoursRetard() <= 7) {
-            score += 5;
+    private String ecartPlanningLabel(ProjetKPIReportDTO kpi) {
+        if (kpi.getTauxAvancementPlanifie() <= 0) {
+            return progressLabel(kpi.getTauxAvancement());
         }
-        return Math.round(Math.max(0, Math.min(100, score)));
+        double ecart = kpi.getEcartPlanning();
+        if (ecart >= 5) return String.format(Locale.FRANCE, "%+.0f pts vs planning", ecart);
+        if (ecart > -5) return "Conforme au planning";
+        return String.format(Locale.FRANCE, "%.0f pts vs planning", ecart);
+    }
+
+    private DeviceRgb ecartColor(double ecart) {
+        if (ecart >= 0) return BRAND;
+        if (ecart >= -10) return AMBER;
+        return RED;
+    }
+
+    private String spiLabel(ProjetKPIReportDTO kpi) {
+        if (kpi.getTauxAvancementPlanifie() <= 0) return "Planning non exploitable";
+        if (kpi.getSpi() >= 1) return "En avance sur le planning";
+        if (kpi.getSpi() >= 0.9) return "Conforme au planning";
+        if (kpi.getSpi() >= 0.8) return "Léger retrait";
+        return "Retard significatif";
+    }
+
+    private DeviceRgb spiColor(ProjetKPIReportDTO kpi) {
+        if (kpi.getTauxAvancementPlanifie() <= 0) return GRAY;
+        if (kpi.getSpi() >= 0.9) return BRAND;
+        if (kpi.getSpi() >= 0.8) return AMBER;
+        return RED;
+    }
+
+    private String niveauSanteLabel(String niveau) {
+        if (niveau == null) return "-";
+        switch (niveau) {
+            case "EXCELLENT": return "Excellent";
+            case "BON": return "Bon";
+            case "ATTENTION": return "Attention requise";
+            case "CRITIQUE": return "Situation critique";
+            default: return niveau;
+        }
+    }
+
+    private int compterAlertes(ProjetKPIReportDTO kpi, String niveau) {
+        if (kpi.getAlertes() == null) return 0;
+        int total = 0;
+        for (AlerteKPIDTO alerte : kpi.getAlertes()) {
+            if (niveau.equals(alerte.getNiveau())) total++;
+        }
+        return total;
+    }
+
+    private DeviceRgb niveauColor(String niveau) {
+        if (AlerteKPIDTO.CRITIQUE.equals(niveau)) return RED;
+        if (AlerteKPIDTO.MAJEUR.equals(niveau)) return AMBER;
+        return BLUE;
+    }
+
+    private DeviceRgb niveauSoftColor(String niveau) {
+        if (AlerteKPIDTO.CRITIQUE.equals(niveau)) return RED_SOFT;
+        if (AlerteKPIDTO.MAJEUR.equals(niveau)) return AMBER_SOFT;
+        return BLUE_SOFT;
     }
 
     private DeviceRgb healthColor(double score) {
@@ -712,9 +1009,9 @@ public class PDFReportService {
         return "Démarrage";
     }
 
-    private String money(double valueMDH) {
+    private String money(double valueMD) {
         // le separateur de milliers francais est un espace insecable : iText le rend comme un blanc
-        return String.format(Locale.FRANCE, "%,.0f", valueMDH * 1_000_000)
+        return String.format(Locale.FRANCE, "%,.0f", valueMD * 1_000_000)
             .replace(' ', ' ')
             .replace(' ', ' ');
     }

@@ -57,16 +57,23 @@ public class KPIReportController {
     }
 
     /**
-     * Analyse IA des KPI d'un projet via Gemini
+     * Analyse IA des KPI d'un projet via Gemini.
+     *
+     * @param refresh à vrai, ignore l'analyse mise en cache et réinterroge le modèle.
      */
     @GetMapping("/projet/{projetId}/kpi/ai")
-    public ResponseEntity<AIKPIReportDTO> getProjetKPIsAI(@PathVariable String projetId) {
+    public ResponseEntity<AIKPIReportDTO> getProjetKPIsAI(
+            @PathVariable String projetId,
+            @RequestParam(name = "refresh", defaultValue = "false") boolean refresh) {
         try {
-            AIKPIReportDTO aiKpi = aiKpiService.analyzeKPIsWithAI(projetId);
+            AIKPIReportDTO aiKpi = aiKpiService.analyzeKPIsWithAI(projetId, refresh);
+            // Les échecs métier (quota, modèle saturé, projet sans suivi) sont portés par le DTO :
+            // le client les affiche tels quels plutôt que de recevoir une erreur HTTP opaque.
             return ResponseEntity.ok(aiKpi);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new AIKPIReportDTO("Erreur : " + e.getMessage()));
+                    .body(new AIKPIReportDTO("Erreur interne lors de l'analyse IA."));
         }
     }
 

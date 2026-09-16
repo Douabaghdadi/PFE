@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FicheSuiviService, FicheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
+import { FicheSuiviService, FicheSuivi, TacheGantt, TacheSuivi } from '../../services/fiche-suivi.service';
 
 @Component({
   selector: 'app-fiche-suivi-detail',
@@ -20,7 +20,7 @@ export class FicheSuiviDetailComponent implements OnInit {
   error: string | null = null;
   currentTab = 'signaletique';
 
-  // Gantt
+  // Gantt (onglet Planning)
   ganttDayWidth = 28;
   ganttStart: Date = new Date();
   ganttEnd: Date = new Date();
@@ -78,6 +78,15 @@ export class FicheSuiviDetailComponent implements OnInit {
       month: '2-digit',
       day: '2-digit'
     });
+  }
+
+  /**
+   * Une ligne est un "grand titre" (action de la fiche de projet) si elle est
+   * marquée estTitre, ou - pour les fiches enregistrées avant l'ajout de ce
+   * marqueur - si elle ne porte aucune des infos propres à une sous-tâche.
+   */
+  isTitre(t: TacheSuivi): boolean {
+    return !!t.estTitre || (!t.code && !t.livrable && !t.assigneA && !t.debut && !t.echeance);
   }
 
   getStatutStyle(statut: string | undefined): string {

@@ -26,33 +26,28 @@ public class NotificationService {
     @Autowired
     private EmailService emailService;
 
-    @Autowired
-    private SmsService smsService;
-
     /**
-     * Envoie des notifications (Email + SMS) à tous les chefs de projet en retard
+     * Envoie des notifications par email à tous les chefs de projet en retard
      */
     public NotificationResult sendRemindersToAllLateChefs() {
         List<ProjetSuiviStatusDTO> lateProjects = ficheProjetService.getProjetsSuiviStatus();
         int emailsSent = 0;
-        int smsSent = 0;
 
         for (ProjetSuiviStatusDTO status : lateProjects) {
             try {
                 NotificationResult result = sendReminderForProjet(status.getProjetId());
                 emailsSent += result.getEmailsSent();
-                smsSent += result.getSmsSent();
             } catch (Exception e) {
                 System.err.println("Erreur lors de l'envoi de la notification pour le projet " + 
                     status.getProjetId() + ": " + e.getMessage());
             }
         }
 
-        return new NotificationResult(emailsSent, smsSent);
+        return new NotificationResult(emailsSent);
     }
 
     /**
-     * Envoie une notification (Email + SMS) pour un projet spécifique
+     * Envoie une notification par email pour un projet spécifique
      */
     public NotificationResult sendReminderForProjet(String projetId) {
         FicheProjet projet = ficheProjetRepository.findById(projetId)
@@ -69,52 +64,28 @@ public class NotificationService {
             .orElseThrow(() -> new RuntimeException("Statut du projet non trouvé"));
 
         int emailsSent = 0;
-        int smsSent = 0;
-        boolean hasContactInfo = false;
 
-        // Vérifier qu'au moins un moyen de contact existe
-        if ((chefProjet.getEmail() == null || chefProjet.getEmail().isEmpty()) && 
-            (chefProjet.getPhoneNumber() == null || chefProjet.getPhoneNumber().isEmpty())) {
-            throw new RuntimeException("Le chef de projet n'a ni email ni numéro de téléphone");
+        // Vérifier qu'un moyen de contact existe
+        if (chefProjet.getEmail() == null || chefProjet.getEmail().isEmpty()) {
+            throw new RuntimeException("Le chef de projet n'a pas d'adresse email");
         }
 
         // Envoyer l'email
-        if (chefProjet.getEmail() != null && !chefProjet.getEmail().isEmpty()) {
-            hasContactInfo = true;
-            try {
-                emailService.sendFicheSuiviReminderEmail(
-                    chefProjet.getEmail(),
-                    chefProjet.getUsername(),
-                    projet.getNomProjet(),
-                    status.getJoursRetard()
-                );
-                emailsSent = 1;
-                System.out.println("Email envoyé avec succès pour le projet: " + projet.getNomProjet());
-            } catch (Exception e) {
-                System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage());
-                // Ne pas lancer d'exception, continuer avec le SMS
-            }
+        try {
+            emailService.sendFicheSuiviReminderEmail(
+                chefProjet.getEmail(),
+                chefProjet.getUsername(),
+                projet.getNomProjet(),
+                status.getJoursRetard()
+            );
+            emailsSent = 1;
+            System.out.println("Email envoyé avec succès pour le projet: " + projet.getNomProjet());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage());
+            // Ne pas lancer d'exception
         }
 
-        // Envoyer le SMS
-        if (chefProjet.getPhoneNumber() != null && !chefProjet.getPhoneNumber().isEmpty()) {
-            hasContactInfo = true;
-            try {
-                smsService.sendFicheSuiviReminderSms(
-                    chefProjet.getPhoneNumber(),
-                    chefProjet.getUsername(),
-                    projet.getNomProjet(),
-                    status.getJoursRetard()
-                );
-                smsSent = 1;
-                System.out.println("SMS envoyé avec succès pour le projet: " + projet.getNomProjet());
-            } catch (Exception e) {
-                System.err.println("Erreur lors de l'envoi du SMS: " + e.getMessage());
-                // Ne pas lancer d'exception
-            }
-        }
-
-        return new NotificationResult(emailsSent, smsSent);
+        return new NotificationResult(emailsSent);
     }
 
     /**
@@ -138,7 +109,6 @@ public class NotificationService {
                 info.setChefProjetId(chefProjet.getId());
                 info.setChefProjetName(chefProjet.getUsername());
                 info.setChefProjetEmail(chefProjet.getEmail());
-                info.setChefProjetPhone(chefProjet.getPhoneNumber());
                 info.setJoursRetard(status.getJoursRetard());
                 info.setDateProchaineFicheSuivi(status.getDateProchaineFicheSuivi());
 
@@ -158,7 +128,6 @@ public class NotificationService {
         private String chefProjetId;
         private String chefProjetName;
         private String chefProjetEmail;
-        private String chefProjetPhone;
         private int joursRetard;
         private java.time.LocalDate dateProchaineFicheSuivi;
 
@@ -178,9 +147,6 @@ public class NotificationService {
         public String getChefProjetEmail() { return chefProjetEmail; }
         public void setChefProjetEmail(String chefProjetEmail) { this.chefProjetEmail = chefProjetEmail; }
 
-        public String getChefProjetPhone() { return chefProjetPhone; }
-        public void setChefProjetPhone(String chefProjetPhone) { this.chefProjetPhone = chefProjetPhone; }
-
         public int getJoursRetard() { return joursRetard; }
         public void setJoursRetard(int joursRetard) { this.joursRetard = joursRetard; }
 
@@ -192,17 +158,12 @@ public class NotificationService {
 
     public static class NotificationResult {
         private int emailsSent;
-        private int smsSent;
 
-        public NotificationResult(int emailsSent, int smsSent) {
+        public NotificationResult(int emailsSent) {
             this.emailsSent = emailsSent;
-            this.smsSent = smsSent;
         }
 
         public int getEmailsSent() { return emailsSent; }
         public void setEmailsSent(int emailsSent) { this.emailsSent = emailsSent; }
-
-        public int getSmsSent() { return smsSent; }
-        public void setSmsSent(int smsSent) { this.smsSent = smsSent; }
     }
 }

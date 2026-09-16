@@ -1,0 +1,224 @@
+\chapter{Cadre général du projet}
+\label{chap:cadre-general}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Avant d'entrer dans le détail de l'étude et de la réalisation du projet, il est utile de poser le cadre dans lequel celui-ci a pris forme. Ce premier chapitre a pour rôle de situer notre travail~: nous y présentons l'organisme qui nous a accueillis durant ce stage de fin d'études, le Centre National de l'Informatique (CNI), avant de décrire la problématique à l'origine du projet et la solution que nous proposons pour y répondre. Nous revenons ensuite sur la manière dont le suivi des projets informatiques est assuré actuellement au sein de l'organisme, ce qui nous permet d'en dégager les limites et de justifier l'intérêt de la solution développée. Enfin, nous présentons la démarche méthodologique adoptée pour conduire le projet ainsi que le planning prévisionnel qui a structuré notre travail tout au long du stage.
+
+\section{Présentation de l'organisme d'accueil}
+\label{sec:organisme-accueil}
+
+\subsection{Présentation générale}
+\label{subsec:presentation-generale}
+
+Le Centre National de l'Informatique (CNI) est un établissement public tunisien placé sous la tutelle du ministère chargé des Technologies de la Communication. Il a été créé dans le but d'accompagner l'administration tunisienne dans son informatisation et, plus largement, dans sa transformation numérique. Depuis, son rôle s'est étendu à mesure que les besoins des administrations publiques en matière de systèmes d'information se sont diversifiés~: le CNI intervient aujourd'hui aussi bien en tant que maître d'œuvre pour la réalisation de projets informatiques que comme organisme de conseil, de formation et d'hébergement pour le compte des structures publiques tunisiennes.
+
+\todo{Compléter/ajuster ce paragraphe avec les informations officielles exactes du CNI (année de création, texte réglementaire, effectif, adresse du siège) disponibles dans le livret d'accueil ou sur le site institutionnel.}
+
+Concrètement, le CNI travaille avec un grand nombre d'administrations clientes (ministères, établissements publics, collectivités) dans le cadre de conventions qui définissent, pour chaque projet, un maître d'ouvrage (l'administration bénéficiaire) et un maître d'œuvre (le CNI ou l'un de ses partenaires). Cette organisation en portefeuille de projets, menés en parallèle pour des clients différents, est un élément important pour comprendre la problématique qui a motivé notre projet, comme nous le verrons dans la section~\ref{sec:problematique}.
+
+\subsection{Domaines d'activité}
+\label{subsec:domaines-activite}
+
+Les activités du CNI couvrent plusieurs domaines complémentaires, parmi lesquels~:
+
+\begin{itemize}[label=--]
+    \item la conception et la réalisation de systèmes d'information pour le compte des administrations publiques, dans le cadre de conventions de maîtrise d'œuvre~;
+    \item l'hébergement et l'exploitation de sites web et de plateformes gouvernementales~;
+    \item l'assistance et le conseil aux administrations en matière de choix technologiques et de gouvernance des systèmes d'information~;
+    \item la contribution aux projets d'administration électronique portés par l'État tunisien~;
+    \item la formation continue dans les métiers de l'informatique.
+\end{itemize}
+
+C'est essentiellement dans le premier de ces domaines, la réalisation et le pilotage de projets informatiques pour des tiers, que s'inscrit notre stage.
+
+\subsection{Organisation de l'entreprise}
+\label{subsec:organisation-entreprise}
+
+Comme la plupart des établissements publics de cette taille, le CNI est structuré autour d'une direction générale, elle-même appuyée par plusieurs directions et divisions spécialisées~: développement et réalisation de projets, exploitation et infrastructures, sécurité informatique, formation, ainsi que des fonctions support (administrative, financière, ressources humaines). Cette organisation en directions permet de répartir les projets entre différentes équipes tout en conservant, en principe, une vision globale au niveau de la direction générale.
+
+\todo{Insérer ici l'organigramme réel du CNI (ou de la direction dans laquelle vous avez travaillé) fourni par votre encadrante professionnelle, et ajuster la description ci-dessus en conséquence.}
+
+Cette organisation en silos, bien qu'efficace pour l'exécution technique des projets, pose en pratique une difficulté~: chaque chef de projet suit l'avancement de ses propres dossiers, souvent avec ses propres outils, ce qui complique la consolidation d'une vision d'ensemble au niveau de la direction. C'est précisément ce constat qui a motivé la création d'une fonction de pilotage qualité transversale, et qui est au cœur du projet que nous décrivons dans ce rapport.
+
+\subsection{Département d'accueil}
+\label{subsec:departement-accueil}
+
+Notre stage s'est déroulé au sein de \todo{intitulé exact de la direction/du service d'accueil, par exemple : Direction du Développement des Systèmes d'Information}, sous l'encadrement professionnel de Mme Imen Ghrissi. Cette entité est notamment chargée du pilotage qualité des projets informatiques menés par le CNI~: elle veille au respect des délais et des engagements contractuels pris avec les administrations clientes, centralise les comptes rendus d'avancement transmis par les différents chefs de projet, et rend compte périodiquement de l'état du portefeuille de projets à la direction générale.
+
+C'est dans ce contexte, au contact direct des personnes chargées de ce suivi qualité, que nous avons pu identifier les difficultés concrètes détaillées dans la section suivante.
+
+\section{Problématique}
+\label{sec:problematique}
+
+Le CNI mène simultanément un nombre important de projets informatiques, chacun rattaché à une administration cliente distincte et encadré par une convention qui en fixe le périmètre, les délais et les modalités de réalisation. Chaque projet est confié à un chef de projet, responsable de son avancement, tandis qu'un pilote qualité est chargé d'assurer, au niveau de la direction, un suivi transversal de l'ensemble du portefeuille.
+
+Ce suivi repose sur deux documents de référence dans la méthodologie de gestion de projet du CNI~: la \emph{fiche projet}, établie en début de projet, qui formalise son identification, son périmètre, ses charges, son budget et ses délais prévisionnels~; et la \emph{fiche de suivi}, remplie périodiquement par le chef de projet, qui rend compte de l'avancement réel des tâches, des écarts par rapport à la planification initiale et des risques rencontrés.
+
+Or, la manière dont ces fiches sont aujourd'hui produites et échangées pose plusieurs difficultés que nous détaillons dans la section~\ref{sec:contexte-projet}. En résumé, l'absence d'un outil centralisé pour la saisie, l'archivage et la consultation de ces documents oblige le pilote qualité à solliciter individuellement chaque chef de projet, à consolider manuellement les informations reçues sous des formats parfois hétérogènes, et à assurer lui-même le suivi des échéances de reporting, sans disposer d'une vision consolidée et actualisée en temps réel de l'état du portefeuille de projets.
+
+La problématique à laquelle répond ce projet peut donc être formulée ainsi~: \emph{comment permettre au CNI de centraliser, standardiser et automatiser le suivi qualité de ses projets informatiques, afin de donner à ses pilotes qualité une visibilité fiable et à jour sur l'ensemble du portefeuille, tout en simplifiant le travail de reporting des chefs de projet~?}
+
+\section{Présentation du projet et solution proposée}
+\label{sec:presentation-projet}
+
+Pour répondre à cette problématique, le CNI nous a confié la conception et le développement d'une plateforme web de gestion et de suivi qualité des projets informatiques, \todo{ajuster ce titre si l'intitulé officiel de votre sujet de stage diffère}.
+
+L'idée directrice de la solution est de reproduire, sous forme numérique et structurée, les documents de référence utilisés par le CNI (fiche projet et fiche de suivi), tout en apportant ce qu'un support papier ou bureautique ne peut pas offrir~: un accès centralisé, des droits différenciés selon le rôle de chaque utilisateur, des rappels automatiques et une vue consolidée sur l'ensemble des projets. Trois profils d'utilisateurs ont été identifiés~:
+
+\begin{itemize}[label=--]
+    \item l'\textbf{administrateur}, qui gère les comptes utilisateurs, les rôles et les paramètres de nomenclature de la plateforme~;
+    \item le \textbf{chef de projet}, qui saisit et met à jour la fiche projet dont il a la charge, et qui remplit périodiquement les fiches de suivi correspondantes~;
+    \item le \textbf{pilote qualité}, qui supervise l'ensemble du portefeuille, valide les fiches de suivi transmises, et suit les indicateurs d'avancement de chaque projet.
+\end{itemize}
+
+Autour de ce noyau fonctionnel, plusieurs briques viennent enrichir la plateforme~: une représentation de l'avancement des tâches sous forme de diagramme de Gantt directement issue des fiches de suivi, un système de notifications qui alerte automatiquement le chef de projet concerné à l'approche de l'échéance d'une prochaine fiche de suivi, un module de suggestion d'équipe basé sur l'intelligence artificielle destiné à aider à la constitution des équipes projet, ainsi qu'un assistant conversationnel intégré pour guider les utilisateurs dans leurs démarches courantes. À terme, la plateforme doit également alimenter des tableaux de bord Power BI destinés à la direction, afin de restituer sous forme d'indicateurs synthétiques l'état du portefeuille de projets~; cette dernière partie, de même que le déploiement en production de la solution, reste à finaliser au moment de la rédaction de ce rapport et fera l'objet d'un développement dédié dans la suite du document.
+
+\section{Contexte du projet}
+\label{sec:contexte-projet}
+
+\subsection{Étude de l'existant}
+\label{subsec:etude-existant}
+
+Avant la mise en place de ce projet, le suivi qualité des projets informatiques au CNI reposait essentiellement sur des documents bureautiques (fiches projet et fiches de suivi au format Word ou Excel), remplis par chaque chef de projet puis transmis au pilote qualité par messagerie électronique, souvent à l'approche d'échéances fixées de manière informelle. \todo{Confirmer/ajuster cette description avec la réalité observée au CNI (outil réellement utilisé, fréquence de transmission, éventuel usage d'un tableur partagé, etc.).}
+
+Le pilote qualité devait ensuite consolider manuellement ces documents pour produire une synthèse de l'état d'avancement du portefeuille, généralement à l'occasion de points de gestion périodiques avec la direction. Le déclenchement de la prochaine fiche de suivi pour chaque projet dépendait, en l'absence de mécanisme de rappel automatique, de la vigilance du chef de projet ou de relances ponctuelles du pilote qualité.
+
+\subsection{Critique de l'existant}
+\label{subsec:critique-existant}
+
+Cette organisation, bien qu'elle ait permis de fonctionner jusqu'ici, présente plusieurs limites qui se sont accentuées avec l'augmentation du nombre de projets suivis simultanément~:
+
+\begin{itemize}[label=--]
+    \item \textbf{Dispersion de l'information.} Les fiches projet et fiches de suivi sont réparties entre les boîtes de messagerie et les postes de travail individuels, sans dépôt central ni historique consultable pour l'ensemble des parties prenantes.
+    \item \textbf{Absence de vision consolidée en temps réel.} Le pilote qualité ne dispose d'un état global du portefeuille qu'au moment où il en réalise la synthèse manuelle, et non de manière continue.
+    \item \textbf{Suivi des échéances peu fiable.} Rien ne garantit qu'une fiche de suivi soit transmise à la date attendue~; en pratique, le rappel repose sur la mémoire des personnes plutôt que sur un mécanisme automatisé.
+    \item \textbf{Risque d'hétérogénéité des documents.} En l'absence d'un formulaire commun imposé par un outil, la structure et le niveau de détail des fiches peuvent varier d'un chef de projet à l'autre, rendant leur exploitation comparative plus difficile.
+    \item \textbf{Absence de contrôle d'accès différencié.} Un document bureautique partagé par messagerie ne permet pas de distinguer simplement ce qu'un chef de projet peut modifier de ce qui relève de la validation du pilote qualité.
+\end{itemize}
+
+C'est l'ensemble de ces constats qui justifie le développement d'une plateforme dédiée, capable de structurer la saisie des fiches, d'automatiser les rappels d'échéance et d'offrir au pilote qualité une vue consolidée et actualisée du portefeuille de projets, comme décrit en section~\ref{sec:presentation-projet}.
+
+\section{Méthodologie de travail}
+\label{sec:methodologie}
+
+\subsection{La méthode Agile}
+\label{subsec:methode-agile}
+
+Les méthodes agiles regroupent un ensemble d'approches de gestion de projet apparues en réaction aux limites des cycles de développement classiques, tels que le cycle en cascade ou le cycle en V, jugés trop rigides face à des besoins susceptibles d'évoluer en cours de projet. Formalisées en 2001 dans le Manifeste Agile\footnote{Beck, K. et al., \emph{Manifesto for Agile Software Development}, 2001.}, elles reposent sur quatre valeurs fondatrices~: privilégier les individus et leurs interactions plutôt que les processus et les outils, un logiciel fonctionnel plutôt qu'une documentation exhaustive, la collaboration avec le client plutôt que la négociation contractuelle, et l'adaptation au changement plutôt que le suivi rigide d'un plan.
+
+En pratique, les méthodes agiles découpent le développement en cycles courts et itératifs, à l'issue desquels une version fonctionnelle du produit est livrée et peut être évaluée par le client ou son représentant. Cette manière de procéder est particulièrement adaptée à un projet comme le nôtre, où certaines fonctionnalités (notamment les modules d'intelligence artificielle et les tableaux de bord Power BI) ont été précisées progressivement au fil des échanges avec notre encadrante professionnelle, plutôt que figées dès le cahier des charges initial.
+
+\subsection{La méthodologie choisie~: SCRUM}
+\label{subsec:scrum}
+
+Parmi les méthodes agiles, nous avons retenu Scrum, qui est probablement la plus répandue dans les projets de développement logiciel et qui présentait l'avantage d'être déjà connue de notre encadrante professionnelle, facilitant ainsi son adoption pour le suivi du projet.
+
+\subsubsection{Les principes de Scrum}
+\label{subsubsec:principes-scrum}
+
+Scrum organise le travail autour de trois rôles, de plusieurs artefacts et d'événements récurrents\footnote{Schwaber, K. et Sutherland, J., \emph{The Scrum Guide}, 2020.}~:
+
+\begin{itemize}[label=--]
+    \item le \textbf{Product Owner}, responsable de la définition et de la priorisation du backlog produit en fonction de la valeur métier attendue~;
+    \item le \textbf{Scrum Master}, garant du respect du cadre Scrum et facilitateur pour l'équipe~;
+    \item l'\textbf{équipe de développement}, chargée de la réalisation des éléments du backlog sélectionnés pour chaque sprint.
+\end{itemize}
+
+Les artefacts principaux sont le \emph{backlog produit} (liste priorisée des fonctionnalités attendues), le \emph{backlog de sprint} (sous-ensemble du backlog produit sélectionné pour un sprint donné) et l'\emph{incrément}, c'est-à-dire la version fonctionnelle du produit obtenue à la fin de chaque sprint.
+
+\subsubsection{Cycle de Sprint}
+\label{subsubsec:cycle-sprint}
+
+Un sprint est une itération de durée fixe, généralement comprise entre deux et quatre semaines, au cours de laquelle l'équipe réalise un ensemble de fonctionnalités définies lors du \emph{sprint planning}. Pendant le sprint, de courtes réunions de synchronisation (\emph{daily scrum}) permettent de suivre l'avancement et de lever rapidement les blocages. Le sprint se termine par une \emph{sprint review}, au cours de laquelle l'incrément est présenté au Product Owner, puis par une \emph{rétrospective} destinée à identifier les points d'amélioration pour le sprint suivant.
+
+\subsubsection{Application de la méthode Scrum au projet}
+\label{subsubsec:scrum-projet}
+
+Le stage de fin d'études étant réalisé de manière individuelle, l'application de Scrum a nécessité quelques adaptations par rapport à un contexte d'équipe classique. Mme Imen Ghrissi a assuré le rôle de Product Owner~: elle a défini et priorisé les besoins fonctionnels tout au long du stage, en fonction des attentes du CNI. Les rôles de Scrum Master et d'équipe de développement ont, quant à eux, été assurés directement dans le cadre du travail de stage, les réunions habituellement quotidiennes étant remplacées par des points de suivi réguliers avec l'encadrante professionnelle, servant à la fois de \emph{daily scrum} allégé, de \emph{sprint review} et de moment d'échange pour ajuster le backlog du sprint suivant.
+
+Le projet a été découpé en \textbf{huit sprints}, chacun correspondant à un ensemble cohérent de fonctionnalités du backlog produit~: mise en place de l'authentification et des rôles, gestion des fiches projet, gestion des fiches de suivi, visualisation Gantt, notifications automatiques, suggestion d'équipe par intelligence artificielle, assistant conversationnel, puis tableaux de bord Power BI et déploiement. Cette dernière étape correspond à la phase du projet en cours au moment de la rédaction de ce rapport.
+
+\section{Planning du projet}
+\label{sec:planning}
+
+\subsection{Division en tâches (WBS)}
+\label{subsec:wbs}
+
+Le tableau~\ref{tab:wbs} présente la structure de découpage du projet en lots de travail (\emph{Work Breakdown Structure}), qui a servi de base à la constitution du backlog produit et à la planification des sprints présentée en section~\ref{subsec:gantt}.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{|c|p{10cm}|}
+\hline
+\textbf{Lot} & \textbf{Description} \\
+\hline
+1 & Cadrage et spécification des besoins (étude de l'existant, recueil et spécification des exigences) \\
+\hline
+2 & Conception (architecture globale, modélisation UML, conception de la base de données) \\
+\hline
+3.1 & Authentification et gestion des rôles (Administrateur, Chef de projet, Pilote qualité) \\
+\hline
+3.2 & Gestion des fiches projet \\
+\hline
+3.3 & Gestion des fiches de suivi et workflow de validation \\
+\hline
+3.4 & Visualisation de l'avancement sous forme de diagramme de Gantt \\
+\hline
+3.5 & Système de notifications et de rappels automatiques \\
+\hline
+3.6 & Module de suggestion d'équipe basé sur l'intelligence artificielle \\
+\hline
+3.7 & Assistant conversationnel (chatbot) \\
+\hline
+3.8 & Tableaux de bord Power BI et déploiement de la solution \\
+\hline
+4 & Tests globaux, rédaction du rapport et préparation de la soutenance \\
+\hline
+\end{tabular}
+\caption{Structure de découpage du projet en lots de travail (WBS)}
+\label{tab:wbs}
+\end{table}
+
+\subsection{Enchaînement des tâches (Gantt)}
+\label{subsec:gantt}
+
+La figure~\ref{fig:gantt} illustre la répartition prévisionnelle de ces lots de travail sur la durée du stage, du 27~janvier au 9~octobre~2026. \todo{Ajuster les dates de début/fin de chaque sprint pour qu'elles correspondent exactement à votre planning réel.}
+
+\begin{figure}[h!]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{ganttchart}[
+    hgrid,
+    vgrid,
+    x unit=0.42cm,
+    y unit title=0.7cm,
+    y unit chart=0.6cm,
+    bar/.append style={fill=cyan!60},
+    bar height=0.6,
+    title label font=\scriptsize,
+    bar label font=\scriptsize\raggedleft,
+    ]{1}{37}
+    \gantttitle{Semaines de stage (27 janvier -- 9 octobre 2026)}{37} \\
+    \ganttbar{Cadrage et spécification}{1}{3} \\
+    \ganttbar{Conception}{4}{6} \\
+    \ganttbar{Sprint 1 -- Authentification}{7}{9} \\
+    \ganttbar{Sprint 2 -- Fiches projet}{10}{12} \\
+    \ganttbar{Sprint 3 -- Fiches de suivi}{13}{16} \\
+    \ganttbar{Sprint 4 -- Diagramme de Gantt}{17}{19} \\
+    \ganttbar{Sprint 5 -- Notifications}{20}{22} \\
+    \ganttbar{Sprint 6 -- Suggestion d'équipe IA}{23}{25} \\
+    \ganttbar{Sprint 7 -- Chatbot}{26}{28} \\
+    \ganttbar{Sprint 8 -- Power BI \& déploiement}{29}{33} \\
+    \ganttbar{Tests \& rédaction du rapport}{34}{37}
+\end{ganttchart}%
+}
+\caption{Diagramme de Gantt prévisionnel du projet}
+\label{fig:gantt}
+\end{figure}
+
+\section{Conclusion}
+\label{sec:conclusion-chap1}
+
+Ce premier chapitre nous a permis de poser le cadre général de notre projet de fin d'études~: nous avons présenté le CNI, l'organisme au sein duquel il a été réalisé, ainsi que la problématique de suivi qualité des projets informatiques à laquelle nous avons été confrontés sur le terrain. Nous avons ensuite justifié, à travers l'étude et la critique de l'existant, l'intérêt de développer une plateforme dédiée, et présenté la démarche Scrum adoptée pour conduire ce développement en huit sprints. Le chapitre suivant est consacré à l'étude préalable du projet, avec une analyse plus détaillée des besoins fonctionnels et non fonctionnels qui ont guidé la conception de la solution.
