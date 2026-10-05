@@ -34,3 +34,6 @@ build/
 
 ### Environment Variables ###
 .env
+
+### Rapport PFE et guides (gardés en local, jamais poussés) ###
+/rapport/
