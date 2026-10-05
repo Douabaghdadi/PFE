@@ -18,6 +18,9 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      # Render bloque le SMTP sur le plan gratuit : les emails passent par l'API Brevo
+      - key: BREVO_API_KEY
+        sync: false
       # Généré automatiquement par Render (valeur aléatoire en base64)
       - key: JWT_SECRET
         generateValue: true

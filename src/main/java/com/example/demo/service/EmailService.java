@@ -5,10 +5,20 @@ import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class EmailService {
@@ -22,7 +32,37 @@ public class EmailService {
     @Value("${app.email.from}")
     private String fromEmail;
 
+    // Render (plan gratuit) bloque le SMTP : avec une clé Brevo, les emails partent par son API HTTPS
+    @Value("${app.email.brevo.api-key:}")
+    private String brevoApiKey;
+
+    @Value("${app.email.brevo.sender:}")
+    private String brevoSender;
+
+    @Value("${app.email.brevo.url:https://api.brevo.com/v3/smtp/email}")
+    private String brevoUrl;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
+
+    private final RestClient restClient = creerClientHttp();
+
+    private static RestClient creerClientHttp() {
+        HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(client);
+        factory.setReadTimeout(Duration.ofSeconds(10));
+        return RestClient.builder().requestFactory(factory).build();
+    }
+
+    private boolean brevoActif() {
+        return brevoApiKey != null && !brevoApiKey.isBlank();
+    }
+
     public void sendSimpleEmail(String to, String subject, String text) {
+        if (brevoActif()) {
+            envoyerViaBrevo(to, subject, Map.of("textContent", text));
+            return;
+        }
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(fromEmail);
@@ -39,6 +79,13 @@ public class EmailService {
     }
 
     public void sendEmail(String to, String subject, String htmlContent) {
+        if (brevoActif()) {
+            // Pas d'image intégrée (cid) via l'API : le logo est chargé depuis le frontend public
+            String html = htmlContent.replace("cid:" + LOGO_CID,
+                    frontendUrl + "/assets/images/branding/qualinet-logo.png");
+            envoyerViaBrevo(to, subject, Map.of("htmlContent", html));
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -57,6 +104,31 @@ public class EmailService {
         } catch (MessagingException e) {
             System.err.println("Erreur lors de l'envoi de l'email HTML à " + to + ": " + e.getMessage());
             throw new RuntimeException("Erreur lors de l'envoi de l'email HTML", e);
+        }
+    }
+
+    private void envoyerViaBrevo(String to, String subject, Map<String, String> contenu) {
+        Map<String, Object> body = new HashMap<>(contenu);
+        body.put("sender", Map.of("name", "Qualinet", "email", brevoSender));
+        body.put("to", List.of(Map.of("email", to)));
+        body.put("subject", subject);
+        try {
+            restClient.post()
+                    .uri(brevoUrl)
+                    .header("api-key", brevoApiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(body)
+                    .retrieve()
+                    .toBodilessEntity();
+            System.out.println("Email envoyé avec succès (Brevo) à: " + to);
+        } catch (RestClientResponseException e) {
+            // La réponse de Brevo donne la cause : clé invalide, expéditeur non validé, etc.
+            System.err.println("Erreur Brevo lors de l'envoi de l'email à " + to + ": "
+                    + e.getStatusCode() + " " + e.getResponseBodyAsString());
+            throw new RuntimeException("Erreur lors de l'envoi de l'email", e);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'envoi de l'email à " + to + " (Brevo): " + e.getMessage());
+            throw new RuntimeException("Erreur lors de l'envoi de l'email", e);
         }
     }
 
