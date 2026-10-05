@@ -3,8 +3,11 @@ package com.example.demo.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.Set;
 
+/**
+ * Inscription publique. Pas de champ "roles" : le rôle est imposé côté serveur
+ * (Chef de projet) ; un éventuel "roles" envoyé par le client est ignoré.
+ */
 public class SignupRequest {
     @NotBlank
     @Size(min = 3, max = 50)
@@ -16,8 +19,6 @@ public class SignupRequest {
     private String email;
 
     private String phoneNumber;
-
-    private Set<String> roles;
 
     @NotBlank
     @Size(min = 6, max = 40)
@@ -53,13 +54,5 @@ public class SignupRequest {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Set<String> getRoles() {
-        return this.roles;
-    }
-
-    public void setRoles(Set<String> roles) {
-        this.roles = roles;
     }
 }

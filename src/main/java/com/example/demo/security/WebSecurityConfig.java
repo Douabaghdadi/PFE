@@ -81,8 +81,10 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/api/auth/**").permitAll()
+                                // Données Power BI (projets, utilisateurs, stats) : pilote qualité et admin uniquement.
+                                // Doit rester AVANT "/api/public/**" : c'est la première règle qui correspond qui s'applique.
+                                .requestMatchers("/api/public/powerbi/**").hasAnyRole("PILOTE_QUALITE", "ADMIN")
                                 .requestMatchers("/api/public/**").permitAll()
-                                .requestMatchers("/api/public/powerbi/**").permitAll()
                                 .requestMatchers("/api/test/all").permitAll()
                                 .requestMatchers("/api/gemini/**").permitAll()
                                 .requestMatchers("/api/chat").authenticated()

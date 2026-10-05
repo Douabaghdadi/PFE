@@ -105,33 +105,12 @@ public class AuthController {
 
         user.setPhoneNumber(signUpRequest.getPhoneNumber());
 
-        Set<String> strRoles = signUpRequest.getRoles();
+        // Inscription publique : toujours Chef de projet. Les rôles Admin et Pilote qualité
+        // ne peuvent être attribués que par un admin (/api/admin/users, réservé au rôle ADMIN).
+        Role chefRole = roleRepository.findByName(ERole.ROLE_CHEF_PROJET)
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
         Set<Role> roles = new HashSet<>();
-
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_CHEF_PROJET)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-            roles.add(userRole);
-        } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(adminRole);
-                        break;
-                    case "pilote":
-                        Role piloteRole = roleRepository.findByName(ERole.ROLE_PILOTE_QUALITE)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(piloteRole);
-                        break;
-                    default:
-                        Role chefRole = roleRepository.findByName(ERole.ROLE_CHEF_PROJET)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
-                        roles.add(chefRole);
-                }
-            });
-        }
+        roles.add(chefRole);
 
         user.setRoles(roles);
         userRepository.save(user);
@@ -184,9 +163,9 @@ public class AuthController {
             System.out.println("✅ Utilisateur trouvé: " + user.getUsername());
 
             // Générer un token unique
+            // Ne jamais écrire ce token dans les logs : il suffit pour réinitialiser le mot de passe
             String token = UUID.randomUUID().toString();
-            System.out.println("🔑 Token généré: " + token);
-            
+
             // Créer le token avec une expiration de 1 heure
             PasswordResetToken resetToken = new PasswordResetToken(
                 token,
