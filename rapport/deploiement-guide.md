@@ -6,7 +6,7 @@ Tout est gratuit et sans carte bancaire. Chaque `git push` sur la branche `PFE` 
 git push (branche PFE)
    ├─► GitHub Actions ─► build Angular ─► GitHub Pages     https://douabaghdadi.github.io/PFE/
    └─► Render ─► build Docker ─► Spring Boot (API)         https://qualinet-api.onrender.com
-                                      └─► MongoDB Atlas (cluster M0, Francfort)
+                                      └─► MongoDB Atlas (pfe-cluster M0, Paris, base « test »)
 ```
 
 Fichiers de déploiement dans le dépôt :
@@ -22,34 +22,33 @@ Fichiers de déploiement dans le dépôt :
 
 ---
 
-## Étape 1 — Base de données MongoDB Atlas (≈ 10 min)
+## Étape 1 — Base de données MongoDB Atlas (≈ 5 min)
 
-1. Créer un compte sur <https://www.mongodb.com/cloud/atlas/register>.
-2. **Create a cluster** → offre **M0 (Free)** → fournisseur **AWS** → région **Frankfurt (eu-central-1)**, la même que Render.
-3. **Database Access** → *Add New Database User* :
-   - utilisateur : `qualinet` ;
-   - mot de passe : bouton *Autogenerate* (lettres et chiffres uniquement, sinon il faut encoder les caractères spéciaux dans l'URI) → **le noter** ;
+On réutilise le cluster **`pfe-cluster`** (projet *PFE*, offre M0 gratuite, région AWS Paris `eu-west-3`), déjà créé pour Power BI.
+Sa base **`test`** contient déjà toutes les collections de l'application (`users`, `roles`, `fiches_projet`, `fiches_suivi`, `notifications`…). L'application et Power BI partagent donc les mêmes données.
+
+1. **Database & Network Access → Database Users** → *Add New Database User*, un utilisateur réservé à l'application :
+   - utilisateur : `qualinet-app` ;
+   - mot de passe : bouton *Autogenerate* (lettres et chiffres uniquement) → **le noter** ;
    - rôle : *Read and write to any database*.
-4. **Network Access** → *Add IP Address* → **Allow access from anywhere** (`0.0.0.0/0`).
+
+   Ne pas réutiliser `douabaghdadi89_db_user` : il est `atlasAdmin`, c'est-à-dire qu'il a tous les droits sur le cluster.
+2. **Database & Network Access → IP Access List** → *Add IP Address* → **Allow access from anywhere** (`0.0.0.0/0`).
    Obligatoire : le plan gratuit de Render n'a pas d'adresse IP fixe.
-5. **Connect** → *Drivers* → copier l'URI et y remplacer `<db_password>` :
+3. **Clusters → pfe-cluster → Connect → Drivers** → copier l'URI et y remplacer `<db_password>` :
    ```
-   mongodb+srv://qualinet:MOT_DE_PASSE@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+   mongodb+srv://qualinet-app:MOT_DE_PASSE@pfe-cluster.xxxxx.mongodb.net/?retryWrites=true&w=majority&appName=pfe-cluster
    ```
-   C'est la valeur de `MONGODB_URI`.
+   C'est la valeur de `MONGODB_URI`. La base `test` est indiquée séparément, par `MONGODB_DATABASE=test` (déjà dans `render.yaml`).
 
-### Données
-
-Au premier démarrage sur une base vide, le backend crée tout seul : les rôles, les nomenclatures, les comptes `admin` et `chefprojet`, et des projets de démonstration.
-
-**Optionnel — reprendre tes données locales.** À faire **avant** le premier démarrage sur Render. Il faut installer les [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools), puis :
+**Optionnel — remettre les données locales à jour sur Atlas** (si ta base locale est plus récente que la copie faite pour Power BI). Il faut installer les [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools), puis :
 
 ```bash
 mongodump --uri="mongodb://localhost:27017" --db=test --out=dump
-mongorestore --uri="URI_ATLAS" --nsFrom="test.*" --nsTo="qualinet.*" --drop dump/
+mongorestore --uri="URI_ATLAS" --drop dump/
 ```
 
-(La base locale s'appelle `test` ; en production elle s'appelle `qualinet`.)
+`--drop` remplace les collections Atlas par celles de ta machine.
 
 ---
 
@@ -102,7 +101,7 @@ Ajouter les variables d'environnement : les 4 secrets ci-dessus, plus :
 
 ```
 JWT_SECRET=<chaîne aléatoire en base64 d'au moins 32 octets>
-MONGODB_DATABASE=qualinet
+MONGODB_DATABASE=test
 FRONTEND_URL=https://douabaghdadi.github.io/PFE
 CORS_ALLOWED_ORIGINS=https://douabaghdadi.github.io
 ```

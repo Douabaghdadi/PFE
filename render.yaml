@@ -4,7 +4,7 @@ services:
     name: qualinet-api
     runtime: docker
     plan: free
-    region: frankfurt
+    region: frankfurt  # le plus proche du cluster Atlas (Paris, eu-west-3)
     branch: PFE
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/test/all
@@ -23,7 +23,7 @@ services:
         generateValue: true
       # Valeurs publiques
       - key: MONGODB_DATABASE
-        value: qualinet
+        value: test
       - key: FRONTEND_URL
         value: https://douabaghdadi.github.io/PFE
       - key: CORS_ALLOWED_ORIGINS
