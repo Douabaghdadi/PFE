@@ -6,6 +6,7 @@ import com.example.demo.model.User;
 import com.example.demo.repository.FicheProjetRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
@@ -27,11 +28,20 @@ public class RetardNotificationScheduler {
     @Autowired
     private EmailService emailService;
 
+    @Value("${app.retards.verification-au-demarrage}")
+    private boolean verificationAuDemarrage;
+
     /**
-     * Vérification au démarrage de l'application
+     * Vérification au démarrage de l'application.
+     * Désactivée en production (Render) : le plan gratuit redémarre l'application
+     * à chaque réveil, ce qui renverrait les mêmes emails de rappel à chaque fois.
      */
     @PostConstruct
     public void checkRetardsAuDemarrage() {
+        if (!verificationAuDemarrage) {
+            System.out.println("=== [SCHEDULER] Vérification au démarrage désactivée (rappel quotidien à 8h uniquement) ===");
+            return;
+        }
         System.out.println("=== [SCHEDULER] Vérification des retards au démarrage ===");
         checkRetardsEtNotifier();
     }
