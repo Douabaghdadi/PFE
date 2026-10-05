@@ -5,6 +5,7 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { UserService, UserResponse } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface EstimationCharge {
   prestations: string;
@@ -483,7 +484,7 @@ export class FicheProjetFormComponent implements OnInit {
     this.isLoading.set(true);
     const token = localStorage.getItem('token');
     
-    this.http.get<any>(`http://localhost:8081/api/chef-projet/fiches-projet/${id}`, {
+    this.http.get<any>(`${environment.apiUrl}/api/chef-projet/fiches-projet/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -725,7 +726,7 @@ export class FicheProjetFormComponent implements OnInit {
     if (!token) return;
 
     // Charger les statuts depuis l'endpoint public
-    this.http.get<any[]>('http://localhost:8081/api/nomenclatures', {
+    this.http.get<any[]>(`${environment.apiUrl}/api/nomenclatures`, {
       headers: { 'Authorization': `Bearer ${token}` }
     }).subscribe({
       next: (data) => {
@@ -795,8 +796,8 @@ export class FicheProjetFormComponent implements OnInit {
     
     // Choisir entre POST (création) et PUT (mise à jour)
     const request = this.isEditMode() && this.projetId
-      ? this.http.put(`http://localhost:8081/api/chef-projet/fiches-projet/${this.projetId}`, dataToSend)
-      : this.http.post('http://localhost:8081/api/chef-projet/fiches-projet', dataToSend);
+      ? this.http.put(`${environment.apiUrl}/api/chef-projet/fiches-projet/${this.projetId}`, dataToSend)
+      : this.http.post(`${environment.apiUrl}/api/chef-projet/fiches-projet`, dataToSend);
     
     request.subscribe({
       next: (response) => {

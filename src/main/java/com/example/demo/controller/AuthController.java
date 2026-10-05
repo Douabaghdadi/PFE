@@ -19,6 +19,7 @@ import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.EmailService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -58,6 +60,9 @@ public class AuthController {
     
     @Autowired
     EmailService emailService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -192,14 +197,14 @@ public class AuthController {
             System.out.println("💾 Token sauvegardé dans la base de données");
 
             // Créer le lien de réinitialisation
-            String resetLink = "http://localhost:4200/reset-password?token=" + token;
+            String resetLink = frontendUrl + "/reset-password?token=" + token;
 
             // Envoyer l'email
-            String subject = "Réinitialisation de votre mot de passe - QualityHub";
+            String subject = "Réinitialisation de votre mot de passe - Qualinet";
             String body = "<html><body style='font-family: Arial, sans-serif;'>" +
                     "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
-                    "<div style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;'>" +
-                    "<h1 style='color: white; margin: 0;'>QualityHub</h1>" +
+                    "<div style='background: #ffffff; padding: 26px 30px 20px; border: 1px solid #e5e7eb; border-bottom: 4px solid #2dbb72; border-radius: 10px 10px 0 0; text-align: center;'>" +
+                    "<img src='cid:" + EmailService.LOGO_CID + "' alt='Qualinet' width='190' style='display: inline-block; width: 190px; height: auto; border: 0;'>" +
                     "</div>" +
                     "<div style='background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;'>" +
                     "<h2 style='color: #111827; margin-top: 0;'>Réinitialisation de mot de passe</h2>" +
@@ -211,7 +216,7 @@ public class AuthController {
                     "<p style='color: #6b7280; line-height: 1.6; font-size: 14px;'>Ce lien expirera dans 1 heure.</p>" +
                     "<p style='color: #6b7280; line-height: 1.6; font-size: 14px;'>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.</p>" +
                     "<hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>" +
-                    "<p style='color: #9ca3af; font-size: 12px; text-align: center;'>© 2024 QualityHub. Tous droits réservés.</p>" +
+                    "<p style='color: #9ca3af; font-size: 12px; text-align: center;'>© " + Year.now().getValue() + " Qualinet. Tous droits réservés.</p>" +
                     "</div>" +
                     "</div>" +
                     "</body></html>";

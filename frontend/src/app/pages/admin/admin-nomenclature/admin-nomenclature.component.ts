@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 
 interface Nomenclature {
   id: string;
@@ -154,7 +155,7 @@ export class AdminNomenclatureComponent implements OnInit {
       return;
     }
 
-    this.http.get<Nomenclature[]>('http://localhost:8081/api/admin/nomenclatures', {
+    this.http.get<Nomenclature[]>(`${environment.apiUrl}/api/admin/nomenclatures`, {
       headers: { 'Authorization': `Bearer ${token}` }
     }).subscribe({
       next: (data) => {
@@ -233,7 +234,7 @@ export class AdminNomenclatureComponent implements OnInit {
   deleteNomenclature(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cette nomenclature ?')) {
       const token = localStorage.getItem('token');
-      this.http.delete(`http://localhost:8081/api/admin/nomenclatures/${id}`, {
+      this.http.delete(`${environment.apiUrl}/api/admin/nomenclatures/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {
@@ -262,7 +263,7 @@ export class AdminNomenclatureComponent implements OnInit {
     
     if (this.isEditMode()) {
       // Mode modification
-      this.http.put(`http://localhost:8081/api/admin/nomenclatures/${this.editingNomenclatureId()}`, this.newNomenclature, {
+      this.http.put(`${environment.apiUrl}/api/admin/nomenclatures/${this.editingNomenclatureId()}`, this.newNomenclature, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {
@@ -284,7 +285,7 @@ export class AdminNomenclatureComponent implements OnInit {
       });
     } else {
       // Mode création
-      this.http.post('http://localhost:8081/api/admin/nomenclatures', this.newNomenclature, {
+      this.http.post(`${environment.apiUrl}/api/admin/nomenclatures`, this.newNomenclature, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {

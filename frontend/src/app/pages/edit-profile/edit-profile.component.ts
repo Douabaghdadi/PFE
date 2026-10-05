@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-edit-profile',
@@ -155,7 +156,7 @@ export class EditProfileComponent implements OnInit {
         ...this.editProfileForm.value
       };
 
-      this.http.put('http://localhost:8081/api/users/profile', payload)
+      this.http.put(`${environment.apiUrl}/api/users/profile`, payload)
         .subscribe({
           next: (response: any) => {
             this.isLoading = false;

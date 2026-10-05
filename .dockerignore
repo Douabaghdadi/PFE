@@ -1,0 +1,13 @@
+# Seuls pom.xml et src/ sont nécessaires pour construire le backend
+.git
+.github
+.claude
+.kiro
+.vscode
+.mvn
+frontend
+rapport
+target
+.env
+*.md
+*.html

@@ -33,7 +33,7 @@ public class AdminUserInitializer implements CommandLineRunner {
         if (!userRepository.existsByUsername("admin")) {
             User admin = new User();
             admin.setUsername("admin");
-            admin.setEmail("admin@qualityhub.com");
+            admin.setEmail("admin@qualinet.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
 
             Set<Role> roles = new HashSet<>();
@@ -46,14 +46,14 @@ public class AdminUserInitializer implements CommandLineRunner {
             System.out.println("✓ Utilisateur admin créé avec succès!");
             System.out.println("  Username: admin");
             System.out.println("  Password: admin123");
-            System.out.println("  Email: admin@qualityhub.com");
+            System.out.println("  Email: admin@qualinet.com");
         }
 
         // Créer un utilisateur chef de projet par défaut s'il n'existe pas
         if (!userRepository.existsByUsername("chefprojet")) {
             User chefProjet = new User();
             chefProjet.setUsername("chefprojet");
-            chefProjet.setEmail("chefprojet@qualityhub.com");
+            chefProjet.setEmail("chefprojet@qualinet.com");
             chefProjet.setPassword(passwordEncoder.encode("chef123"));
 
             Set<Role> roles = new HashSet<>();
@@ -66,14 +66,14 @@ public class AdminUserInitializer implements CommandLineRunner {
             System.out.println("✓ Utilisateur chef de projet créé avec succès!");
             System.out.println("  Username: chefprojet");
             System.out.println("  Password: chef123");
-            System.out.println("  Email: chefprojet@qualityhub.com");
+            System.out.println("  Email: chefprojet@qualinet.com");
         }
 
         // Créer un utilisateur pilote qualité par défaut s'il n'existe pas
         if (!userRepository.existsByUsername("pilote")) {
             User pilote = new User();
             pilote.setUsername("pilote");
-            pilote.setEmail("pilote@qualityhub.com");
+            pilote.setEmail("pilote@qualinet.com");
             pilote.setPassword(passwordEncoder.encode("pilote123"));
 
             Set<Role> roles = new HashSet<>();
@@ -86,7 +86,12 @@ public class AdminUserInitializer implements CommandLineRunner {
             System.out.println("✓ Utilisateur pilote qualité créé avec succès!");
             System.out.println("  Username: pilote");
             System.out.println("  Password: pilote123");
-            System.out.println("  Email: pilote@qualityhub.com");
+            System.out.println("  Email: pilote@qualinet.com");
+        }
+
+        // Les comptes par défaut créés avant le passage de QualityHub à Qualinet gardent l'ancien domaine
+        for (String username : new String[]{"admin", "chefprojet", "pilote"}) {
+            migrerEmailQualinet(username);
         }
 
         // Vérifier et corriger le rôle de l'utilisateur dcuabagh s'il existe
@@ -103,6 +108,23 @@ public class AdminUserInitializer implements CommandLineRunner {
                 userRepository.save(user);
                 System.out.println("✓ Rôle CHEF_PROJET ajouté à l'utilisateur dcuabagh!");
             }
+        });
+    }
+
+    private void migrerEmailQualinet(String username) {
+        userRepository.findByUsername(username).ifPresent(user -> {
+            String ancienEmail = user.getEmail();
+            if (ancienEmail == null || !ancienEmail.endsWith("@qualityhub.com")) {
+                return;
+            }
+            String nouvelEmail = ancienEmail.replace("@qualityhub.com", "@qualinet.com");
+            if (userRepository.existsByEmail(nouvelEmail)) {
+                System.out.println("⚠ Email " + nouvelEmail + " déjà utilisé : " + username + " garde " + ancienEmail);
+                return;
+            }
+            user.setEmail(nouvelEmail);
+            userRepository.save(user);
+            System.out.println("✓ Email de " + username + " mis à jour : " + ancienEmail + " → " + nouvelEmail);
         });
     }
 }

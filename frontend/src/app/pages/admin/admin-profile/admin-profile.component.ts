@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-profile',
@@ -330,7 +331,7 @@ export class AdminProfileComponent {
       updateData.newPassword = this.formData.newPassword;
     }
 
-    this.http.put(`http://localhost:8081/api/users/profile`, updateData, {
+    this.http.put(`${environment.apiUrl}/api/users/profile`, updateData, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'

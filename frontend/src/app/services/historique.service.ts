@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface HistoriqueModification {
   id: string;
@@ -22,7 +23,7 @@ export interface HistoriqueModification {
 })
 export class HistoriqueService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/historique';
+  private apiUrl = `${environment.apiUrl}/api/historique`;
 
   getHistoriqueByEntity(entityType: string, entityId: string): Observable<HistoriqueModification[]> {
     return this.http.get<HistoriqueModification[]>(`${this.apiUrl}/${entityType}/${entityId}`);

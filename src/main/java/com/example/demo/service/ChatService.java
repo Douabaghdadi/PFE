@@ -132,7 +132,7 @@ public class ChatService {
     }
 
     private String getSystemPrompt(String context) {
-        String base = "Tu es un assistant IA intégré dans une application de gestion de projets qualité (QualityHub). "
+        String base = "Tu es un assistant IA intégré dans une application de gestion de projets qualité (Qualinet). "
                 + "Tu réponds toujours en français, de manière concise et professionnelle. "
                 + "Tu analyses UNIQUEMENT les données réelles fournies ci-dessous. "
                 + "Ne génère JAMAIS de données fictives. Si une information n'est pas disponible, dis-le clairement. "

@@ -19,10 +19,13 @@ import { AuthService } from '../../services/auth.service';
           
           <a class="relative block px-6 py-6 m-0 text-sm whitespace-nowrap" routerLink="/admin/dashboard">
             <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                <i class="fas fa-shield-alt text-white text-lg"></i>
+              <div class="w-11 h-11 rounded-xl bg-white shadow-md flex items-center justify-center p-1.5">
+                <img src="assets/images/branding/qualinet-icon.png" alt="Qualinet" class="w-full h-auto" />
               </div>
-              <span class="font-bold text-white text-xl">Admin Panel</span>
+              <div class="flex flex-col leading-tight">
+                <span class="font-bold text-white text-xl tracking-wide">Qualinet</span>
+                <span class="text-white/80 text-xs font-semibold uppercase tracking-wider">Administration</span>
+              </div>
             </div>
           </a>
         </div>
@@ -108,7 +111,7 @@ import { AuthService } from '../../services/auth.service';
             </nav>
 
             <div class="flex items-center mt-2 grow sm:mt-0 sm:mr-6 md:mr-0 lg:flex lg:basis-auto">
-              <div class="flex items-center md:ml-auto md:pr-4">
+              <div class="flex items-center md:ml-auto md:pr-4 no-print">
                 <div class="relative flex flex-wrap items-stretch w-full transition-all rounded-lg ease">
                   <span class="text-sm ease leading-5.6 absolute z-50 -ml-px flex h-full items-center whitespace-nowrap rounded-lg rounded-tr-none rounded-br-none border border-r-0 border-transparent bg-transparent py-2 px-2.5 text-center font-normal text-slate-500 transition-all">
                     <i class="fas fa-search"></i>
@@ -124,7 +127,7 @@ import { AuthService } from '../../services/auth.service';
                     <span class="hidden sm:inline">{{ currentUser() }}</span>
                   </a>
                 </li>
-                <li class="flex items-center pl-4 xl:hidden">
+                <li class="flex items-center pl-4 xl:hidden no-print">
                   <a (click)="toggleSidebar()" class="block p-0 text-sm transition-all ease-nav-brand text-slate-500 dark:text-white cursor-pointer">
                     <div class="w-4.5 overflow-hidden">
                       <i class="ease mb-0.75 relative block h-0.5 rounded-sm bg-slate-500 transition-all"></i>
@@ -158,6 +161,28 @@ import { AuthService } from '../../services/auth.service';
     
     .z-990 {
       z-index: 990;
+    }
+
+    /* ============ Impression ============ */
+    /* La sidebar est en position fixe et sa marge de 17rem ampute la largeur
+       utile du PDF : on les neutralise pour que le contenu occupe toute la page. */
+    @media print {
+      aside, .no-print { display: none !important; }
+
+      main {
+        margin-left: 0 !important;
+        max-height: none !important;
+        height: auto !important;
+      }
+
+      .min-h-screen {
+        background: #fff !important;
+        min-height: 0 !important;
+      }
+
+      /* Fil d'Ariane, titre de page et compte connecte : le tableau de bord
+         porte deja son propre en-tete, ce bandeau ferait doublon dans le PDF. */
+      main > nav { display: none !important; }
     }
   `]
 })

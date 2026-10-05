@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { FicheProjet } from './pilote-qualite-fiche-projet.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FicheProjetService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/chef-projet/fiches-projet';
+  private apiUrl = `${environment.apiUrl}/api/chef-projet/fiches-projet`;
 
   getMyFichesProjet(): Observable<FicheProjet[]> {
     return this.http.get<FicheProjet[]>(this.apiUrl);

@@ -71,11 +71,11 @@
 .hero-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .hero-btn.active { background: #fff; color: var(--brand-dark); border-color: #fff; }
 .hero-btn svg { width: 0.95rem; height: 0.95rem; }
-.hero-btn svg.spinning { animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.live-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.55); }
-.live-dot.on { background: var(--brand); box-shadow: 0 0 0 3px rgba(9, 200, 44, 0.22); animation: pulse 1.4s ease-in-out infinite; }
+/* Lien vers le rapport Power BI : action principale du bandeau, en blanc plein.
+   Le sélecteur a.hero-btn neutralise le soulignement et la couleur de survol des liens Bootstrap. */
+a.hero-btn, a.hero-btn:hover { text-decoration: none; }
+.hero-btn-bi, .hero-btn-bi:hover { background: #fff; color: var(--brand-dark); border-color: #fff; }
+.hero-btn-bi:hover { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); }
 
 /* ============ Toolbar ============ */
 
@@ -505,6 +505,18 @@
 }
 
 /* ============ Impression ============ */
+
+/* Marges de page déclarées vides : le navigateur n'y imprime plus son en-tête
+   ni son pied de page (date, titre, URL localhost, numéro de page). */
+@page {
+  margin: 10mm;
+  @top-left { content: ""; }
+  @top-center { content: ""; }
+  @top-right { content: ""; }
+  @bottom-left { content: ""; }
+  @bottom-center { content: ""; }
+  @bottom-right { content: ""; }
+}
 
 @media print {
   .dash-page { background: #fff; padding: 0; }

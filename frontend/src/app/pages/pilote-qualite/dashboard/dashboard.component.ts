@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -137,7 +137,6 @@ const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 const JOUR_MS = 24 * 60 * 60 * 1000;
 const MOIS_JOURS = 30.44;
 const NB_MOIS_HEATMAP = 6;
-const AUTO_REFRESH_MS = 60000;
 
 @Component({
   selector: 'app-pilote-dashboard',
@@ -146,7 +145,7 @@ const AUTO_REFRESH_MS = 60000;
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class PiloteDashboardComponent implements OnInit, OnDestroy {
+export class PiloteDashboardComponent implements OnInit {
   private ficheProjetService = inject(PiloteQualiteFicheProjetService);
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
   private router = inject(Router);
@@ -174,13 +173,11 @@ export class PiloteDashboardComponent implements OnInit, OnDestroy {
   ];
 
   // --- Options d'affichage ---
-  autoRefresh = false;
   alertesOuvertes = true;
   toutesLesLignes = false;
   heatmapComplete = false;
   sortKey: 'retard' | 'completude' | 'anciennete' | 'nom' = 'retard';
   sortAsc = false;
-  private refreshHandle: any = null;
 
   // --- Données calculées ---
   rowsAll: ProjetRow[] = [];
@@ -210,10 +207,6 @@ export class PiloteDashboardComponent implements OnInit, OnDestroy {
     this.loadData();
   }
 
-  ngOnDestroy() {
-    this.stopAutoRefresh();
-  }
-
   // ==================== Chargement ====================
 
   loadData() {
@@ -241,22 +234,6 @@ export class PiloteDashboardComponent implements OnInit, OnDestroy {
 
   refresh() {
     this.loadData();
-  }
-
-  toggleAutoRefresh() {
-    this.autoRefresh = !this.autoRefresh;
-    if (this.autoRefresh) {
-      this.refreshHandle = setInterval(() => this.loadData(), AUTO_REFRESH_MS);
-    } else {
-      this.stopAutoRefresh();
-    }
-  }
-
-  private stopAutoRefresh() {
-    if (this.refreshHandle) {
-      clearInterval(this.refreshHandle);
-      this.refreshHandle = null;
-    }
   }
 
   // ==================== Audit de complétude ====================

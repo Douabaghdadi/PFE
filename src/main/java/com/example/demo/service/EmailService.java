@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
+
+    /** Identifiant du logo Qualinet dans les emails HTML : utiliser {@code <img src='cid:qualinet-logo'>}. */
+    public static final String LOGO_CID = "qualinet-logo";
 
     @Autowired
     private JavaMailSender mailSender;
@@ -43,7 +47,11 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = HTML
-            
+            // Logo joint en pièce intégrée : les images hébergées sur localhost ne s'affichent pas chez le destinataire
+            if (htmlContent.contains("cid:" + LOGO_CID)) {
+                helper.addInline(LOGO_CID, new ClassPathResource("branding/qualinet-logo.png"), "image/png");
+            }
+
             mailSender.send(message);
             System.out.println("Email HTML envoyé avec succès à: " + to);
         } catch (MessagingException e) {
@@ -58,13 +66,13 @@ public class EmailService {
         String text = String.format(
             "Bonjour %s,\n\n" +
             "Nous vous informons que la fiche de suivi mensuelle pour le projet \"%s\" est en retard de %d jour(s).\n\n" +
-            "Veuillez remplir la fiche de suivi dans les plus brefs délais via la plateforme QualityHub.\n\n" +
+            "Veuillez remplir la fiche de suivi dans les plus brefs délais via la plateforme Qualinet.\n\n" +
             "Détails:\n" +
             "- Projet: %s\n" +
             "- Retard: %d jour(s)\n\n" +
-            "Pour remplir votre fiche de suivi, connectez-vous à QualityHub et accédez à la section \"Mes Fiches de Suivi\".\n\n" +
+            "Pour remplir votre fiche de suivi, connectez-vous à Qualinet et accédez à la section \"Mes Fiches de Suivi\".\n\n" +
             "Cordialement,\n" +
-            "L'équipe QualityHub",
+            "L'équipe Qualinet",
             chefProjetName,
             projetName,
             joursRetard,

@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { UserService } from '../../services/user.service';
+import { environment } from '../../../environments/environment';
 
 interface FicheProjet {
   id: string;
@@ -335,7 +336,7 @@ export class ProjetsListComponent implements OnInit {
       return;
     }
 
-    this.http.get<FicheProjet[]>('http://localhost:8081/api/chef-projet/fiches-projet', {
+    this.http.get<FicheProjet[]>(`${environment.apiUrl}/api/chef-projet/fiches-projet`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -544,7 +545,7 @@ export class ProjetsListComponent implements OnInit {
   deleteProjet(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
       const token = localStorage.getItem('token');
-      this.http.delete(`http://localhost:8081/api/chef-projet/fiches-projet/${id}`, {
+      this.http.delete(`${environment.apiUrl}/api/chef-projet/fiches-projet/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

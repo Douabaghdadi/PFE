@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface UserResponse {
   id: string;
@@ -15,7 +16,7 @@ export interface UserResponse {
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://localhost:8081/api/admin/users';
+  private apiUrl = `${environment.apiUrl}/api/admin/users`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -63,7 +64,7 @@ export class UserService {
       }
 
       // Utiliser l'endpoint public pour récupérer le nom
-      this.http.get(`http://localhost:8081/api/public/users/${id}/name`, { responseType: 'text' }).subscribe({
+      this.http.get(`${environment.apiUrl}/api/public/users/${id}/name`, { responseType: 'text' }).subscribe({
         next: (username) => {
           observer.next(username);
           observer.complete();

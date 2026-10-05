@@ -19,6 +19,7 @@ import { PiloteFichesSuiviListComponent } from './pages/pilote-qualite/fiches-su
 import { PiloteFicheSuiviDetailComponent } from './pages/pilote-qualite/fiche-suivi-detail/fiche-suivi-detail.component';
 import { ProjetKPIComponent } from './pages/pilote-qualite/projet-kpi/projet-kpi.component';
 import { NotificationsComponent } from './pages/pilote-qualite/notifications/notifications.component';
+import { RapportBiComponent } from './pages/pilote-qualite/rapport-bi/rapport-bi.component';
 import { FicheSuiviDetailComponent } from './pages/fiche-suivi-detail/fiche-suivi-detail.component';
 import { FicheSuiviGanttComponent } from './pages/fiche-suivi-gantt/fiche-suivi-gantt.component';
 import { PiloteFicheSuiviGanttComponent } from './pages/pilote-qualite/fiche-suivi-gantt/fiche-suivi-gantt.component';
@@ -76,6 +77,7 @@ export const routes: Routes = [
       { path: 'fiches-suivi/:id/gantt', component: PiloteFicheSuiviGanttComponent },
       { path: 'projet-kpi/:id', component: ProjetKPIComponent },
       { path: 'notifications', component: NotificationsComponent },
+      { path: 'rapport-bi', component: RapportBiComponent },
     ]
   },
   { path: 'team-suggestion', component: TeamSuggestionComponent },

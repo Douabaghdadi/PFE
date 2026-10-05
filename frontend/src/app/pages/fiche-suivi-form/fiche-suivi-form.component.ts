@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FicheSuiviService, FicheSuivi, TacheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 interface PlanningAction {
   action: string;
@@ -186,7 +187,7 @@ export class FicheSuiviFormComponent implements OnInit {
       return;
     }
 
-    this.http.get<FicheProjet[]>('http://localhost:8081/api/chef-projet/fiches-projet', {
+    this.http.get<FicheProjet[]>(`${environment.apiUrl}/api/chef-projet/fiches-projet`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

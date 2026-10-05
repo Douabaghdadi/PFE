@@ -10,6 +10,7 @@ import {
   PlanningAction
 } from '../../../services/pilote-qualite-fiche-projet.service';
 import { HistoriqueComponent } from '../../../components/historique/historique.component';
+import { environment } from '../../../../environments/environment';
 
 interface MembreEquipe {
   nom: string;
@@ -176,7 +177,7 @@ export class PiloteFicheProjetDetailComponent implements OnInit {
     this.kpiDownloadError = null;
     
     const token = localStorage.getItem('token');
-    const url = `http://localhost:8081/api/pilote-qualite/rapports/projet/${this.ficheProjet.id}/kpi/download/${format}`;
+    const url = `${environment.apiUrl}/api/pilote-qualite/rapports/projet/${this.ficheProjet.id}/kpi/download/${format}`;
     
     this.http.get(url, {
       headers: { 'Authorization': `Bearer ${token}` },

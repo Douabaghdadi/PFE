@@ -27,6 +27,7 @@ import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Div;
+import com.itextpdf.layout.element.Image;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.element.Text;
@@ -37,6 +38,7 @@ import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -46,6 +48,9 @@ import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -74,6 +79,9 @@ public class PDFReportService {
     private static final DeviceRgb GRAY = new DeviceRgb(107, 114, 128);
 
     private static final float MARGIN = 40f;
+
+    private static final String LOGO_PATH = "branding/qualinet-logo-horizontal.png";
+    private static volatile byte[] logoPng;
 
     private PdfFont regular;
     private PdfFont bold;
@@ -155,6 +163,7 @@ public class PDFReportService {
         Table inner = new Table(UnitValue.createPercentArray(new float[]{62, 38})).useAllAvailableWidth();
 
         Cell left = new Cell().setBorder(Border.NO_BORDER).setPadding(0);
+        left.add(logoChip());
         left.add(new Paragraph("RAPPORT DE PILOTAGE QUALITÉ")
             .setFont(bold).setFontSize(7.5f).setFontColor(WHITE).setCharacterSpacing(1.4f).setMargin(0));
         left.add(new Paragraph("KPI du Projet")
@@ -211,6 +220,32 @@ public class PDFReportService {
     private java.awt.Color toAwt(DeviceRgb color) {
         float[] c = color.getColorValue();
         return new java.awt.Color(c[0], c[1], c[2]);
+    }
+
+    /** Logo Qualinet sur un cartouche blanc : ses couleurs restent lisibles sur le dégradé vert. */
+    private Table logoChip() {
+        Image logo = new Image(ImageDataFactory.create(logoPng())).scaleToFit(66, 18);
+        Table chip = new Table(UnitValue.createPointArray(new float[]{82}));
+        chip.setMarginBottom(10);
+        chip.addCell(new Cell()
+            .add(logo)
+            .setBackgroundColor(WHITE)
+            .setBorder(Border.NO_BORDER)
+            .setPaddingTop(5).setPaddingBottom(5).setPaddingLeft(8).setPaddingRight(8));
+        return chip;
+    }
+
+    private static byte[] logoPng() {
+        byte[] png = logoPng;
+        if (png == null) {
+            try (InputStream in = new ClassPathResource(LOGO_PATH).getInputStream()) {
+                png = in.readAllBytes();
+                logoPng = png;
+            } catch (IOException e) {
+                throw new UncheckedIOException("Logo introuvable : " + LOGO_PATH, e);
+            }
+        }
+        return png;
     }
 
     private Table statusBadge(String statut) {
@@ -875,7 +910,7 @@ public class PDFReportService {
 
         Canvas canvas = new Canvas(pdfCanvas, size);
         canvas.showTextAligned(
-            new Paragraph("QualityHub · Rapport KPI · " + projet)
+            new Paragraph("Qualinet · Rapport KPI · " + projet)
                 .setFont(regular).setFontSize(7.5f).setFontColor(MUTED),
             MARGIN, 32, TextAlignment.LEFT);
         canvas.showTextAligned(

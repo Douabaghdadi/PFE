@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
@@ -22,7 +23,7 @@ export interface ChatResponsePayload {
 @Injectable({ providedIn: 'root' })
 export class ChatbotService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/chat';
+  private apiUrl = `${environment.apiUrl}/api/chat`;
 
   sendMessage(message: string, context: 'chef_projet' | 'pilote_qualite'): Observable<ChatResponsePayload> {
     const token = localStorage.getItem('token');

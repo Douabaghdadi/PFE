@@ -50,7 +50,9 @@ import { AuthService } from '../../services/auth.service';
           <div class="right-bg">
             <div class="deco-circle c1"></div>
             <div class="deco-circle c2"></div>
-<img src="assets/images/login.png" class="illustration-img" alt="login illustration" />
+            <div class="brand-medal">
+              <img src="assets/images/branding/qualinet-logo.png" alt="Qualinet - Suivi projets & qualité" />
+            </div>
           </div>
         </div>
 
@@ -79,27 +81,6 @@ import { AuthService } from '../../services/auth.service';
       padding: 42px 48px;
       display: flex;
       flex-direction: column;
-    }
-    .logo-badge {
-      display: inline-flex;
-      margin-bottom: 24px;
-    }
-    .logo-eba {
-      background: #fff;
-      border: 2px solid #10b981;
-      color: #10b981;
-      font-weight: 700;
-      font-size: 13px;
-      padding: 2px 8px;
-      border-radius: 4px 0 0 4px;
-    }
-    .logo-dms {
-      background: #10b981;
-      color: #fff;
-      font-weight: 700;
-      font-size: 13px;
-      padding: 2px 8px;
-      border-radius: 0 4px 4px 0;
     }
     .login-title {
       font-size: 28px;
@@ -203,7 +184,19 @@ import { AuthService } from '../../services/auth.service';
     .deco-circle { position: absolute; border-radius: 50%; }
     .c1 { width: 210px; height: 210px; background: rgba(255,255,255,0.12); top: -70px; right: -70px; }
     .c2 { width: 130px; height: 130px; background: rgba(255,255,255,0.1); bottom: 10px; left: -40px; }
-    .illustration-img { width: 92%; height: auto; position: relative; z-index: 1; object-fit: contain; }
+    .brand-medal {
+      position: relative;
+      z-index: 1;
+      width: 268px;
+      height: 268px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 40px rgba(4,90,60,0.25), 0 0 0 12px rgba(255,255,255,0.18);
+    }
+    .brand-medal img { width: 192px; height: auto; }
   `]
 })
 export class LoginComponent {

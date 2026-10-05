@@ -1,0 +1,388 @@
+<div class="dash-page">
+  <div class="dash-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="dash-hero">
+      <div class="hero-bubble hero-bubble-1"></div>
+      <div class="hero-bubble hero-bubble-2"></div>
+
+      <div class="hero-content">
+        <div class="hero-left">
+          <span class="hero-badge"><i></i> ADMINISTRATION</span>
+          <h1 class="hero-title">Pilotage de la plateforme</h1>
+          <p class="hero-subtitle">
+            {{ rowsAll.length }} compte(s) &bull; {{ projets.length }} projet(s) &bull;
+            {{ fiches.length }} fiche(s) de suivi &bull; mise à jour {{ generatedAt | date:'dd/MM à HH:mm' }}
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button class="hero-btn" (click)="refresh()" [disabled]="loading" title="Recharger les données">
+            <svg [class.spinning]="loading" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Actualiser
+          </button>
+          <button class="hero-btn" (click)="exportCsv()" [disabled]="loading || !rows.length" title="Exporter la liste des comptes">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-9-4l4 4m0 0l4-4m-4 4V4"/>
+            </svg>
+            Export CSV
+          </button>
+          <button class="hero-btn" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimer
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ============ Barre de filtres ============ -->
+    <section class="toolbar" *ngIf="!error">
+      <div class="toolbar-field toolbar-search">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input type="text" placeholder="Rechercher un compte ou un email…"
+               [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
+        <button *ngIf="searchTerm" class="clear-input" (click)="searchTerm = ''; applyFilters()" aria-label="Effacer">&times;</button>
+      </div>
+
+      <select class="toolbar-select" [(ngModel)]="roleFilter" (ngModelChange)="applyFilters()">
+        <option value="">Tous les rôles</option>
+        <option *ngFor="let r of roleDefs" [value]="r.key">{{ r.label }}</option>
+      </select>
+
+      <select class="toolbar-select" [(ngModel)]="periode" (ngModelChange)="applyFilters()">
+        <option *ngFor="let o of periodeOptions" [value]="o.value">{{ o.label }}</option>
+      </select>
+
+      <button class="toolbar-reset" (click)="resetFilters()" [disabled]="!filtresActifs">Réinitialiser</button>
+    </section>
+
+    <div class="filter-chips" *ngIf="filtresActifs && !error">
+      <span class="chip-label">Filtres actifs :</span>
+      <span *ngIf="searchTerm" class="chip">« {{ searchTerm }} » <button (click)="searchTerm = ''; applyFilters()">&times;</button></span>
+      <span *ngIf="roleFilter" class="chip">{{ roleFilterLabel }} <button (click)="roleFilter = ''; applyFilters()">&times;</button></span>
+      <span *ngIf="periode !== '365'" class="chip">{{ periodeLabel }} <button (click)="periode = '365'; applyFilters()">&times;</button></span>
+    </div>
+
+    <!-- ============ Chargement ============ -->
+    <div *ngIf="loading" class="skeleton-wrap">
+      <div class="stats-grid">
+        <div class="skeleton skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+      <div class="row-3col">
+        <div class="skeleton skeleton-panel"></div>
+        <div class="skeleton skeleton-panel"></div>
+        <div class="skeleton skeleton-panel"></div>
+      </div>
+    </div>
+
+    <!-- ============ Erreur ============ -->
+    <div *ngIf="error && !loading" class="error-banner">
+      <span>{{ error }}</span>
+      <button (click)="refresh()">Réessayer</button>
+    </div>
+
+    <!-- ============ Contenu ============ -->
+    <div *ngIf="!loading && !error">
+
+      <!-- Points d'attention -->
+      <section *ngIf="attentions.length" class="alert-banner">
+        <div class="alert-head">
+          <span class="alert-ico">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </span>
+          <div>
+            <h2 class="alert-title">Points d'attention</h2>
+            <p class="alert-summary">{{ attentions.length }} sujet(s) de gouvernance à traiter</p>
+          </div>
+        </div>
+
+        <div class="attention-grid">
+          <article *ngFor="let a of attentions" class="attention-item" [ngClass]="'ton-' + a.ton"
+                   [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
+            <span class="attention-count">{{ a.count }}</span>
+            <div class="attention-body">
+              <p class="attention-label">{{ a.label }}</p>
+              <p class="attention-detail">{{ a.detail }}</p>
+            </div>
+            <svg *ngIf="a.lien" class="attention-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </article>
+        </div>
+      </section>
+
+      <!-- KPI -->
+      <section class="stats-grid">
+        <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
+                [class.selected]="kpi.action === 'role' && roleFilter === kpi.payload"
+                (click)="onKpiClick(kpi)">
+          <span class="stat-accent"></span>
+          <div class="stat-card-top">
+            <span class="stat-icon">{{ kpi.icon }}</span>
+            <span class="stat-value">{{ kpi.value }}</span>
+          </div>
+          <p class="stat-title">{{ kpi.title }}</p>
+          <p class="stat-hint">{{ kpi.hint }}</p>
+        </button>
+      </section>
+
+      <!-- Rôles / Volumétrie / Référentiel -->
+      <section class="row-3col">
+        <div class="panel">
+          <h2 class="panel-title">👥 Répartition des rôles</h2>
+          <p class="panel-subtitle">Cliquez sur un segment pour filtrer les comptes</p>
+
+          <div *ngIf="!rowsAll.length" class="panel-empty">Aucun compte enregistré.</div>
+
+          <div *ngIf="rowsAll.length" class="donut-wrap">
+            <div class="donut-holder">
+              <svg viewBox="0 0 120 120" class="donut-svg">
+                <circle cx="60" cy="60" r="54" class="donut-track"/>
+                <circle *ngFor="let s of roleSegments" cx="60" cy="60" r="54" class="donut-seg"
+                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset"
+                        [class.dimmed]="roleFilter && roleFilter !== s.key"
+                        (click)="setRoleFilter(s.key)">
+                  <title>{{ s.label }} : {{ s.count }} ({{ s.percent }}%)</title>
+                </circle>
+              </svg>
+              <div class="donut-center">
+                <strong>{{ rowsAll.length }}</strong>
+                <span>comptes</span>
+              </div>
+            </div>
+
+            <div class="donut-legend">
+              <button *ngFor="let s of roleSegments" class="legend-row"
+                      [class.active]="roleFilter === s.key" (click)="setRoleFilter(s.key)">
+                <span class="legend-dot" [style.background]="s.color"></span>
+                <span class="legend-label">{{ s.label }}</span>
+                <span class="legend-value">{{ s.count }}</span>
+                <span class="legend-pct">{{ s.percent }}%</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">📈 Volumétrie sur 12 mois</h2>
+          <p class="panel-subtitle">Créations enregistrées chaque mois</p>
+
+          <div class="chart-bars">
+            <div class="chart-col" *ngFor="let m of moisBars"
+                 [title]="m.titre + ' — ' + m.comptes + ' compte(s), ' + m.projets + ' projet(s), ' + m.fiches + ' fiche(s)'">
+              <div class="chart-stack">
+                <span class="chart-seg seg-fiches" [style.height.%]="m.hFiches"></span>
+                <span class="chart-seg seg-projets" [style.height.%]="m.hProjets"></span>
+                <span class="chart-seg seg-comptes" [style.height.%]="m.hComptes"></span>
+              </div>
+              <span class="chart-label">{{ m.label }}</span>
+            </div>
+          </div>
+
+          <div class="chart-legend">
+            <span><i class="seg-comptes"></i> Comptes</span>
+            <span><i class="seg-projets"></i> Projets</span>
+            <span><i class="seg-fiches"></i> Fiches de suivi</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">⚙️ Référentiel</h2>
+          <p class="panel-subtitle">{{ nomenclatures.length }} entrée(s) de nomenclature</p>
+
+          <div *ngIf="!referentiel.length" class="panel-empty">Aucune nomenclature définie.</div>
+
+          <div *ngFor="let g of referentiel" class="rubrique-row">
+            <div class="rubrique-head">
+              <span class="rubrique-label">{{ g.label }}</span>
+              <span class="rubrique-count">{{ g.actifs }}/{{ g.total }} actives</span>
+            </div>
+            <div class="progress-track slim">
+              <div class="progress-fill" [style.width.%]="g.total ? (g.actifs / g.total) * 100 : 0"></div>
+            </div>
+            <p *ngIf="g.inactifs" class="rubrique-note">{{ g.inactifs }} entrée(s) désactivée(s)</p>
+          </div>
+
+          <button class="panel-more" routerLink="/admin/nomenclature">Gérer le référentiel</button>
+        </div>
+      </section>
+
+      <!-- Portefeuille / Activité -->
+      <section class="row-2col">
+        <div class="panel">
+          <h2 class="panel-title">🗂️ Portefeuille projets</h2>
+          <p class="panel-subtitle">{{ projets.length }} projet(s) &bull; {{ projetsPeriode }} créé(s) sur la période</p>
+
+          <div *ngIf="!projets.length" class="panel-empty">Aucun projet enregistré sur la plateforme.</div>
+
+          <div *ngIf="projets.length">
+            <h3 class="sub-head">Par statut</h3>
+            <div *ngFor="let b of statutBarres" class="rubrique-row">
+              <div class="rubrique-head">
+                <span class="rubrique-label">
+                  <span class="legend-dot" [style.background]="b.color"></span>{{ b.label }}
+                </span>
+                <span class="rubrique-count">{{ b.count }} · {{ b.percent }}%</span>
+              </div>
+              <div class="progress-track slim">
+                <div class="progress-fill" [style.width.%]="b.percent" [style.background]="b.color"></div>
+              </div>
+            </div>
+
+            <h3 class="sub-head" *ngIf="categorieBarres.length">Par catégorie</h3>
+            <div *ngFor="let b of categorieBarres" class="rubrique-row">
+              <div class="rubrique-head">
+                <span class="rubrique-label">
+                  <span class="legend-dot" [style.background]="b.color"></span>{{ b.label }}
+                </span>
+                <span class="rubrique-count">{{ b.count }} · {{ b.percent }}%</span>
+              </div>
+              <div class="progress-track slim">
+                <div class="progress-fill" [style.width.%]="b.percent" [style.background]="b.color"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 class="panel-title">🕓 Activité récente</h2>
+          <p class="panel-subtitle">{{ activites.length }} évènement(s) sur {{ periodeLabel.toLowerCase() }}</p>
+
+          <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur la période sélectionnée.</div>
+
+          <div *ngFor="let a of activitesVisibles" class="activite-item" [ngClass]="'act-' + a.type"
+               [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
+            <span class="activite-ico">{{ a.icon }}</span>
+            <div class="activite-main">
+              <p class="activite-titre">{{ a.titre }}</p>
+              <p class="activite-meta">{{ a.meta }}</p>
+            </div>
+            <div class="activite-date">
+              <strong>{{ a.date | date:'dd/MM' }}</strong>
+              <span>{{ depuis(a.date) }}</span>
+            </div>
+          </div>
+
+          <button *ngIf="activites.length > 8" class="panel-more" (click)="activitesCompletes = !activitesCompletes">
+            {{ activitesCompletes ? 'Réduire' : 'Voir plus d\'activité' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Charge par chef de projet -->
+      <section class="panel section-gap" *ngIf="chefStats.length">
+        <div class="panel-head-row">
+          <div>
+            <h2 class="panel-title">📊 Charge par chef de projet</h2>
+            <p class="panel-subtitle">Répartition du portefeuille entre les comptes porteurs</p>
+          </div>
+        </div>
+
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Chef de projet</th>
+                <th>Projets</th>
+                <th>Part du portefeuille</th>
+                <th>Fiches déposées</th>
+                <th>Dernier dépôt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of chefStats">
+                <td class="cell-nom">
+                  <span class="avatar" [style.background]="couleurRole('ROLE_CHEF_PROJET')">{{ initiales(c.nom) }}</span>
+                  {{ c.nom }}
+                </td>
+                <td>{{ c.projets }}</td>
+                <td class="bar-cell">
+                  <div class="progress-track"><div class="progress-fill" [style.width.%]="c.part"></div></div>
+                  <span>{{ c.part }}%</span>
+                </td>
+                <td>{{ c.fiches }}</td>
+                <td>
+                  <span *ngIf="c.dernierDepot">{{ c.dernierDepot | date:'dd/MM/yyyy' }}</span>
+                  <span *ngIf="!c.dernierDepot" class="badge badge-neutral">Aucun</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Comptes -->
+      <section class="panel section-gap">
+        <div class="panel-head-row">
+          <div>
+            <h2 class="panel-title">🗃️ Comptes de la plateforme</h2>
+            <p class="panel-subtitle">{{ rows.length }} compte(s) affiché(s) sur {{ rowsAll.length }}</p>
+          </div>
+          <div class="sort-group">
+            <button [class.active]="sortKey === 'createdAt'" (click)="trier('createdAt')">Inscription</button>
+            <button [class.active]="sortKey === 'username'" (click)="trier('username')">Nom</button>
+            <button [class.active]="sortKey === 'projets'" (click)="trier('projets')">Projets</button>
+            <button [class.active]="sortKey === 'fiches'" (click)="trier('fiches')">Fiches</button>
+          </div>
+        </div>
+
+        <div *ngIf="!rows.length" class="panel-empty">Aucun compte ne correspond aux filtres.</div>
+
+        <div *ngIf="rows.length" class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Compte</th>
+                <th>Rôle principal</th>
+                <th>Inscription</th>
+                <th>Projets</th>
+                <th>Fiches</th>
+                <th>Dernier dépôt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let r of rowsVisibles">
+                <td class="cell-nom">
+                  <span class="avatar" [style.background]="r.roleColor">{{ initiales(r.username) }}</span>
+                  <div class="cell-identite">
+                    <strong>{{ r.username }}</strong>
+                    <span>{{ r.email }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="role-tag" [style.background]="r.roleColor + '1f'" [style.color]="r.roleColor">
+                    {{ libelleRoleCourt(r.rolePrincipal) }}
+                  </span>
+                  <span *ngIf="r.roles.length > 1" class="role-plus">+{{ r.roles.length - 1 }}</span>
+                </td>
+                <td>
+                  <span *ngIf="r.createdAt">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
+                  <span *ngIf="!r.createdAt" class="badge badge-neutral">Inconnue</span>
+                </td>
+                <td>{{ r.projets }}</td>
+                <td>{{ r.fiches }}</td>
+                <td>
+                  <span *ngIf="r.derniereActivite">{{ depuis(r.derniereActivite) }}</span>
+                  <span *ngIf="!r.derniereActivite" class="badge badge-neutral">Aucun</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <button *ngIf="rows.length > 10" class="panel-more" (click)="tableComplete = !tableComplete">
+          {{ tableComplete ? 'Réduire' : 'Voir les ' + rows.length + ' comptes' }}
+        </button>
+      </section>
+
+    </div>
+  </div>
+</div>

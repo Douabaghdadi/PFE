@@ -2,8 +2,9 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, interval, of } from 'rxjs';
 import { switchMap, tap, catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
-const API_URL = 'http://localhost:8081/api/user-notifications';
+const API_URL = `${environment.apiUrl}/api/user-notifications`;
 
 export interface Notification {
   id: string;

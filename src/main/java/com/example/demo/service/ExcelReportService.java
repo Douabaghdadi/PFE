@@ -54,7 +54,7 @@ public class ExcelReportService {
 
         Row titleRow = sheet.createRow(rowNum++);
         Cell titleCell = titleRow.createCell(0);
-        titleCell.setCellValue("RAPPORT KPI PROJET - QUALITYHUB");
+        titleCell.setCellValue("RAPPORT KPI PROJET - QUALINET");
         titleCell.setCellStyle(titleStyle);
         sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 3));
         rowNum++;

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface User {
   id: string;
@@ -22,7 +23,7 @@ export interface User {
 export class AuthService {
   private currentUserSignal = signal<User | null>(null);
   currentUser = this.currentUserSignal.asReadonly();
-  private apiUrl = 'http://localhost:8081/api/auth';
+  private apiUrl = `${environment.apiUrl}/api/auth`;
 
   constructor(private router: Router, private http: HttpClient) {
     // Charger l'utilisateur depuis le localStorage au démarrage

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-change-password',
@@ -148,7 +149,7 @@ export class ChangePasswordComponent {
         newPassword: this.changePasswordForm.value.newPassword
       };
 
-      this.http.post('http://localhost:8081/api/auth/change-password', payload)
+      this.http.post(`${environment.apiUrl}/api/auth/change-password`, payload)
         .subscribe({
           next: () => {
             this.isLoading = false;

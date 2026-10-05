@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface TeamSuggestionRequest {
   typeProjet: string;
@@ -32,7 +33,7 @@ export interface TeamSuggestionResponse {
 @Injectable({ providedIn: 'root' })
 export class TeamSuggestionService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/ai/suggest-team';
+  private apiUrl = `${environment.apiUrl}/api/ai/suggest-team`;
 
   suggestTeam(request: TeamSuggestionRequest): Observable<TeamSuggestionResponse> {
     const token = localStorage.getItem('token');

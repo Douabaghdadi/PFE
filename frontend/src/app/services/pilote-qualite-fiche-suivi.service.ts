@@ -2,13 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { FicheSuivi } from './fiche-suivi.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PiloteQualiteFicheSuiviService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/pilote-qualite/fiches-suivi';
+  private apiUrl = `${environment.apiUrl}/api/pilote-qualite/fiches-suivi`;
 
   /**
    * Récupère toutes les fiches de suivi (lecture seule)

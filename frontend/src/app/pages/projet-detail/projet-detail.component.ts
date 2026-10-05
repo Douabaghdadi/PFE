@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 interface MembreEquipe {
   nom: string;
@@ -537,7 +538,7 @@ export class ProjetDetailComponent implements OnInit {
       return;
     }
 
-    this.http.get<FicheProjet>(`http://localhost:8081/api/chef-projet/fiches-projet/${id}`, {
+    this.http.get<FicheProjet>(`${environment.apiUrl}/api/chef-projet/fiches-projet/${id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

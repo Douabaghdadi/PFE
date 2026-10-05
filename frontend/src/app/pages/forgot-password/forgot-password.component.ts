@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-forgot-password',
@@ -119,7 +120,7 @@ export class ForgotPasswordComponent {
         email: this.forgotPasswordForm.value.email
       };
 
-      this.http.post('http://localhost:8081/api/auth/forgot-password', payload)
+      this.http.post(`${environment.apiUrl}/api/auth/forgot-password`, payload)
         .subscribe({
           next: () => {
             this.isLoading = false;

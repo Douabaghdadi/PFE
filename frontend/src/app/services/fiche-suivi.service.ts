@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface FicheSuivi {
   id?: string;
@@ -96,7 +97,7 @@ export interface TacheGantt {
 })
 export class FicheSuiviService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/chef-projet/fiches-suivi';
+  private apiUrl = `${environment.apiUrl}/api/chef-projet/fiches-suivi`;
 
   // L'intercepteur auth.interceptor ajoute automatiquement le token
   // Pas besoin de le faire manuellement ici

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 
 interface NotificationInfo {
   projetId: string;
@@ -263,7 +264,7 @@ interface Chef {
 })
 export class NotificationsComponent implements OnInit {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:8081/api/pilote-qualite/notifications';
+  private apiUrl = `${environment.apiUrl}/api/pilote-qualite/notifications`;
 
   lateProjects: NotificationInfo[] = [];
   loading = true;

@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../environments/environment';
 
 interface User {
   id: string;
@@ -437,7 +438,7 @@ interface NewUser {
                     [(ngModel)]="newUser.email"
                     name="email"
                     required
-                    placeholder="Ex: jdupont@qualityhub.com"
+                    placeholder="Ex: jdupont@qualinet.com"
                     style="border-radius: 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;"
                     [class.is-invalid]="!newUser.email && createForm.submitted">
                   <div class="position-absolute top-50 end-0 translate-middle-y me-3">
@@ -712,7 +713,7 @@ export class AdminUsersComponent implements OnInit {
 
     console.log('Loading users with token:', token);
 
-    this.http.get<User[]>('http://localhost:8081/api/admin/users', {
+    this.http.get<User[]>(`${environment.apiUrl}/api/admin/users`, {
       headers: { 'Authorization': `Bearer ${token}` }
     }).subscribe({
       next: (data) => {
@@ -814,7 +815,7 @@ export class AdminUsersComponent implements OnInit {
   deleteUser(id: string) {
     if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
       const token = localStorage.getItem('token');
-      this.http.delete(`http://localhost:8081/api/admin/users/${id}`, {
+      this.http.delete(`${environment.apiUrl}/api/admin/users/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {
@@ -878,7 +879,7 @@ export class AdminUsersComponent implements OnInit {
         updateData.password = this.newUser.password;
       }
       
-      this.http.put(`http://localhost:8081/api/admin/users/${this.editingUserId()}`, updateData, {
+      this.http.put(`${environment.apiUrl}/api/admin/users/${this.editingUserId()}`, updateData, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {
@@ -900,7 +901,7 @@ export class AdminUsersComponent implements OnInit {
       });
     } else {
       // Mode création
-      this.http.post('http://localhost:8081/api/admin/users', this.newUser, {
+      this.http.post(`${environment.apiUrl}/api/admin/users`, this.newUser, {
         headers: { 'Authorization': `Bearer ${token}` }
       }).subscribe({
         next: () => {

@@ -13,13 +13,8 @@ import { UserNotificationService, Notification } from '../../services/user-notif
       <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
         <div class="d-flex justify-content-between align-items-center" style="height: 70px;">
           <!-- Logo -->
-          <a class="d-flex align-items-center gap-2 text-decoration-none" routerLink="/" style="font-weight: 600; font-size: 1.25rem; color: #111827;">
-            <div class="d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.5rem;">
-              <svg style="width: 24px; height: 24px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <span>QualityHub</span>
+          <a class="d-flex align-items-center text-decoration-none" routerLink="/" aria-label="Qualinet - Accueil">
+            <img src="assets/images/branding/qualinet-logo-horizontal.png" alt="Qualinet" style="height: 42px; width: auto; display: block;" />
           </a>
 
           <!-- Menu Desktop -->
@@ -348,7 +343,13 @@ import { UserNotificationService, Notification } from '../../services/user-notif
         </div>
       </div>
     </nav>
-  `
+  `,
+  styles: [`
+    /* La barre de navigation (notifications, compte, menu) n'a pas sa place dans un PDF imprimé. */
+    @media print {
+      :host { display: none !important; }
+    }
+  `]
 })
 export class NavbarComponent implements OnInit {
   authService = inject(AuthService);

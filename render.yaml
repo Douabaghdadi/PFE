@@ -1,0 +1,30 @@
+# Blueprint Render : décrit le service backend (Render > New > Blueprint)
+services:
+  - type: web
+    name: qualinet-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: PFE
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/test/all
+    envVars:
+      # Secrets : à saisir dans Render lors de la création (jamais dans Git)
+      - key: MONGODB_URI
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      # Généré automatiquement par Render (valeur aléatoire en base64)
+      - key: JWT_SECRET
+        generateValue: true
+      # Valeurs publiques
+      - key: MONGODB_DATABASE
+        value: qualinet
+      - key: FRONTEND_URL
+        value: https://douabaghdadi.github.io/PFE
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://douabaghdadi.github.io
