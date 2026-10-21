@@ -223,6 +223,8 @@ export class LoginComponent {
           this.router.navigate(['/admin/dashboard']);
         } else if (this.authService.hasRole('ROLE_CHEF_PROJET')) {
           this.router.navigate(['/projets']);
+        } else if (this.authService.hasRole('ROLE_PILOTE_QUALITE')) {
+          this.router.navigate(['/pilote-qualite/dashboard']);
         } else {
           this.router.navigate(['/dashboard']);
         }
