@@ -15,11 +15,10 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Vérifie l'envoi par l'API Brevo (utilisé sur Render, qui bloque le SMTP)
- * contre un faux serveur local : aucun email réel n'est envoyé.
+ * Vérifie l'envoi par l'API Brevo contre un faux serveur local :
+ * aucun email réel n'est envoyé.
  */
 class EmailServiceTest {
 
@@ -51,7 +50,6 @@ class EmailServiceTest {
         ReflectionTestUtils.setField(emailService, "brevoSender", "expediteur@exemple.com");
         ReflectionTestUtils.setField(emailService, "brevoUrl",
                 "http://localhost:" + serveur.getAddress().getPort() + "/v3/smtp/email");
-        ReflectionTestUtils.setField(emailService, "frontendUrl", "https://douabaghdadi.github.io/PFE");
     }
 
     @AfterEach
@@ -60,17 +58,15 @@ class EmailServiceTest {
     }
 
     @Test
-    void emailHtmlEnvoyeParBrevoAvecLogoPublic() {
-        emailService.sendEmail("chef@exemple.com", "Sujet",
-                "<img src='cid:" + EmailService.LOGO_CID + "'><p>Bonjour</p>");
+    void emailHtmlEnvoyeParBrevo() {
+        emailService.sendEmail("chef@exemple.com", "Sujet", "<p>Bonjour</p>");
 
         assertEquals("cle-test", cleRecue);
         assertEquals("expediteur@exemple.com", requeteRecue.at("/sender/email").asText());
         assertEquals("chef@exemple.com", requeteRecue.at("/to/0/email").asText());
         assertEquals("Sujet", requeteRecue.get("subject").asText());
-        String html = requeteRecue.get("htmlContent").asText();
-        assertTrue(html.contains("https://douabaghdadi.github.io/PFE/assets/images/branding/qualinet-logo.png"));
-        assertFalse(html.contains("cid:"));
+        assertEquals("<p>Bonjour</p>", requeteRecue.get("htmlContent").asText());
+        assertFalse(requeteRecue.has("textContent"));
     }
 
     @Test

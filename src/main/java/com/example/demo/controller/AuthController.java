@@ -177,13 +177,15 @@ public class AuthController {
 
             // Créer le lien de réinitialisation
             String resetLink = frontendUrl + "/reset-password?token=" + token;
+            // Logo servi par le frontend public (l'API Brevo n'intègre pas d'images jointes)
+            String logoUrl = frontendUrl + "/assets/images/branding/qualinet-logo.png";
 
             // Envoyer l'email
             String subject = "Réinitialisation de votre mot de passe - Qualinet";
             String body = "<html><body style='font-family: Arial, sans-serif;'>" +
                     "<div style='max-width: 600px; margin: 0 auto; padding: 20px;'>" +
                     "<div style='background: #ffffff; padding: 26px 30px 20px; border: 1px solid #e5e7eb; border-bottom: 4px solid #2dbb72; border-radius: 10px 10px 0 0; text-align: center;'>" +
-                    "<img src='cid:" + EmailService.LOGO_CID + "' alt='Qualinet' width='190' style='display: inline-block; width: 190px; height: auto; border: 0;'>" +
+                    "<img src='" + logoUrl + "' alt='Qualinet' width='190' style='display: inline-block; width: 190px; height: auto; border: 0;'>" +
                     "</div>" +
                     "<div style='background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px;'>" +
                     "<h2 style='color: #111827; margin-top: 0;'>Réinitialisation de mot de passe</h2>" +

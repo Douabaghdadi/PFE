@@ -1,15 +1,8 @@
 package com.example.demo.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -20,19 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Envoi des emails de la plateforme (réinitialisation du mot de passe, rappels) par l'API HTTPS de Brevo. */
 @Service
 public class EmailService {
 
-    /** Identifiant du logo Qualinet dans les emails HTML : utiliser {@code <img src='cid:qualinet-logo'>}. */
-    public static final String LOGO_CID = "qualinet-logo";
-
-    @Autowired
-    private JavaMailSender mailSender;
-
-    @Value("${app.email.from}")
-    private String fromEmail;
-
-    // Render (plan gratuit) bloque le SMTP : avec une clé Brevo, les emails partent par son API HTTPS
     @Value("${app.email.brevo.api-key:}")
     private String brevoApiKey;
 
@@ -41,9 +25,6 @@ public class EmailService {
 
     @Value("${app.email.brevo.url:https://api.brevo.com/v3/smtp/email}")
     private String brevoUrl;
-
-    @Value("${app.frontend.url}")
-    private String frontendUrl;
 
     private final RestClient restClient = creerClientHttp();
 
@@ -54,57 +35,12 @@ public class EmailService {
         return RestClient.builder().requestFactory(factory).build();
     }
 
-    private boolean brevoActif() {
-        return brevoApiKey != null && !brevoApiKey.isBlank();
-    }
-
     public void sendSimpleEmail(String to, String subject, String text) {
-        if (brevoActif()) {
-            envoyerViaBrevo(to, subject, Map.of("textContent", text));
-            return;
-        }
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(to);
-            message.setSubject(subject);
-            message.setText(text);
-            
-            mailSender.send(message);
-            System.out.println("Email envoyé avec succès à: " + to);
-        } catch (Exception e) {
-            System.err.println("Erreur lors de l'envoi de l'email à " + to + ": " + e.getMessage());
-            throw new RuntimeException("Erreur lors de l'envoi de l'email", e);
-        }
+        envoyerViaBrevo(to, subject, Map.of("textContent", text));
     }
 
     public void sendEmail(String to, String subject, String htmlContent) {
-        if (brevoActif()) {
-            // Pas d'image intégrée (cid) via l'API : le logo est chargé depuis le frontend public
-            String html = htmlContent.replace("cid:" + LOGO_CID,
-                    frontendUrl + "/assets/images/branding/qualinet-logo.png");
-            envoyerViaBrevo(to, subject, Map.of("htmlContent", html));
-            return;
-        }
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom(fromEmail);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true); // true = HTML
-            // Logo joint en pièce intégrée : les images hébergées sur localhost ne s'affichent pas chez le destinataire
-            if (htmlContent.contains("cid:" + LOGO_CID)) {
-                helper.addInline(LOGO_CID, new ClassPathResource("branding/qualinet-logo.png"), "image/png");
-            }
-
-            mailSender.send(message);
-            System.out.println("Email HTML envoyé avec succès à: " + to);
-        } catch (MessagingException e) {
-            System.err.println("Erreur lors de l'envoi de l'email HTML à " + to + ": " + e.getMessage());
-            throw new RuntimeException("Erreur lors de l'envoi de l'email HTML", e);
-        }
+        envoyerViaBrevo(to, subject, Map.of("htmlContent", htmlContent));
     }
 
     private void envoyerViaBrevo(String to, String subject, Map<String, String> contenu) {
@@ -134,7 +70,7 @@ public class EmailService {
 
     public void sendFicheSuiviReminderEmail(String to, String chefProjetName, String projetName, int joursRetard) {
         String subject = "Rappel: Fiche de suivi en retard - " + projetName;
-        
+
         String text = String.format(
             "Bonjour %s,\n\n" +
             "Nous vous informons que la fiche de suivi mensuelle pour le projet \"%s\" est en retard de %d jour(s).\n\n" +
@@ -151,7 +87,7 @@ public class EmailService {
             projetName,
             joursRetard
         );
-        
+
         sendSimpleEmail(to, subject, text);
     }
 }

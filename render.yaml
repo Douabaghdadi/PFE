@@ -12,14 +12,12 @@ services:
       # Secrets : à saisir dans Render lors de la création (jamais dans Git)
       - key: MONGODB_URI
         sync: false
-      - key: MAIL_USERNAME
-        sync: false
-      - key: MAIL_PASSWORD
-        sync: false
       - key: GEMINI_API_KEY
         sync: false
-      # Render bloque le SMTP sur le plan gratuit : les emails passent par l'API Brevo
+      # Emails : API Brevo (Render bloque le SMTP sur le plan gratuit) ; expéditeur validé dans Brevo
       - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
         sync: false
       # Généré automatiquement par Render (valeur aléatoire en base64)
       - key: JWT_SECRET
@@ -31,6 +29,3 @@ services:
         value: https://douabaghdadi.github.io/PFE
       - key: CORS_ALLOWED_ORIGINS
         value: https://douabaghdadi.github.io
-      # Pas d'emails de rappel à chaque réveil du service (le rappel de 8h reste actif)
-      - key: RETARDS_AU_DEMARRAGE
-        value: "false"
