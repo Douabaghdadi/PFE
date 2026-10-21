@@ -48,10 +48,10 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 logger.info("✅ Token valide: {}", isValid);
                 
                 if (isValid) {
-                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                    logger.info("👤 Username extrait du token: {}", username);
+                    String email = jwtUtils.getEmailFromJwtToken(jwt);
+                    logger.info("👤 Email extrait du token: {}", email);
 
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = userDetailsService.loadUserByEmail(email);
                     logger.info("👥 UserDetails chargé: {}, Authorities: {}", 
                         userDetails.getUsername(), 
                         userDetails.getAuthorities());

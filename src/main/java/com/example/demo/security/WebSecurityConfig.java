@@ -43,7 +43,8 @@ public class WebSecurityConfig {
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        // UserDetailsService n'a qu'une méthode : la référence de méthode branche la recherche par email
+        authProvider.setUserDetailsService(userDetailsService::loadUserByEmail);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
