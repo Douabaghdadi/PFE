@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
@@ -50,40 +50,46 @@ import { environment } from '../../../environments/environment';
             <form [formGroup]="changePasswordForm" (ngSubmit)="onSubmit()">
               <div class="mb-3">
                 <label class="form-label" style="font-weight: 500; color: #374151;">Mot de passe actuel</label>
-                <input 
-                  type="password" 
-                  class="form-control" 
+                <input
+                  type="password"
+                  class="form-control pwd-input"
+                  [class.is-invalid]="currentPassword.invalid && currentPassword.touched"
                   formControlName="currentPassword"
-                  placeholder="Entrez votre mot de passe actuel"
-                  style="border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.75rem;">
-                @if (changePasswordForm.get('currentPassword')?.invalid && changePasswordForm.get('currentPassword')?.touched) {
-                  <small class="text-danger">Le mot de passe actuel est requis</small>
+                  placeholder="Entrez votre mot de passe actuel">
+                @if (currentPassword.invalid && currentPassword.touched) {
+                  <div class="field-error">Le mot de passe actuel est requis.</div>
                 }
               </div>
 
               <div class="mb-3">
                 <label class="form-label" style="font-weight: 500; color: #374151;">Nouveau mot de passe</label>
-                <input 
-                  type="password" 
-                  class="form-control" 
+                <input
+                  type="password"
+                  class="form-control pwd-input"
+                  [class.is-invalid]="newPassword.invalid && newPassword.touched"
+                  [class.is-valid]="newPassword.valid && newPassword.touched"
                   formControlName="newPassword"
-                  placeholder="Entrez votre nouveau mot de passe"
-                  style="border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.75rem;">
-                @if (changePasswordForm.get('newPassword')?.invalid && changePasswordForm.get('newPassword')?.touched) {
-                  <small class="text-danger">Le mot de passe doit contenir au moins 6 caractères</small>
+                  placeholder="Entrez votre nouveau mot de passe">
+                @if (newPassword.invalid && newPassword.touched) {
+                  <div class="field-error">
+                    @if (newPassword.errors?.['required']) { Mot de passe requis. }
+                    @else if (newPassword.errors?.['minlength']) { Minimum 8 caractères. }
+                    @else { Doit contenir au moins 1 majuscule et 1 chiffre. }
+                  </div>
                 }
               </div>
 
               <div class="mb-4">
                 <label class="form-label" style="font-weight: 500; color: #374151;">Confirmer le nouveau mot de passe</label>
-                <input 
-                  type="password" 
-                  class="form-control" 
+                <input
+                  type="password"
+                  class="form-control pwd-input"
+                  [class.is-invalid]="confirmPassword.touched && passwordMismatch"
+                  [class.is-valid]="confirmPassword.touched && !passwordMismatch && !!confirmPassword.value"
                   formControlName="confirmPassword"
-                  placeholder="Confirmez votre nouveau mot de passe"
-                  style="border-radius: 0.5rem; border: 1px solid #e5e7eb; padding: 0.75rem;">
-                @if (changePasswordForm.get('confirmPassword')?.invalid && changePasswordForm.get('confirmPassword')?.touched) {
-                  <small class="text-danger">Les mots de passe ne correspondent pas</small>
+                  placeholder="Confirmez votre nouveau mot de passe">
+                @if (confirmPassword.touched && passwordMismatch) {
+                  <div class="field-error">Les mots de passe ne correspondent pas.</div>
                 }
               </div>
 
@@ -104,7 +110,20 @@ import { environment } from '../../../environments/environment';
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .pwd-input {
+      border-radius: 0.5rem;
+      border: 1.5px solid #e5e7eb;
+      padding: 0.75rem;
+      background-image: none;
+    }
+    .pwd-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.1); }
+    .pwd-input.is-valid { border-color: #10b981; }
+    .pwd-input.is-invalid { border-color: #ef4444; background: #fef2f2; }
+    .pwd-input.is-invalid:focus { box-shadow: 0 0 0 3px rgba(239,68,68,0.1); }
+    .field-error { font-size: 12px; color: #ef4444; margin-top: 6px; }
+  `]
 })
 export class ChangePasswordComponent {
   private fb = inject(FormBuilder);
@@ -120,20 +139,21 @@ export class ChangePasswordComponent {
   constructor() {
     this.changePasswordForm = this.fb.group({
       currentPassword: ['', Validators.required],
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      // Mêmes règles que le mot de passe de la page d'inscription
+      newPassword: ['', [Validators.required, Validators.minLength(8), Validators.pattern(/^(?=.*[A-Z])(?=.*[0-9]).+$/)]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
 
-  passwordMatchValidator(form: FormGroup) {
-    const newPassword = form.get('newPassword');
-    const confirmPassword = form.get('confirmPassword');
-    
-    if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
-      confirmPassword.setErrors({ passwordMismatch: true });
-      return { passwordMismatch: true };
-    }
-    return null;
+  get currentPassword() { return this.changePasswordForm.get('currentPassword')!; }
+  get newPassword() { return this.changePasswordForm.get('newPassword')!; }
+  get confirmPassword() { return this.changePasswordForm.get('confirmPassword')!; }
+  get passwordMismatch() { return this.changePasswordForm.hasError('passwordMismatch'); }
+
+  passwordMatchValidator(form: AbstractControl) {
+    return form.get('newPassword')?.value !== form.get('confirmPassword')?.value
+      ? { passwordMismatch: true }
+      : null;
   }
 
   onSubmit() {

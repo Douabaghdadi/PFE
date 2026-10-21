@@ -34,7 +34,6 @@ const ROLE_DEFS: RoleDef[] = [
   { key: 'ROLE_ADMIN', label: 'Administrateur', court: 'Admin', color: '#ef4444' },
   { key: 'ROLE_PILOTE_QUALITE', label: 'Pilote qualité', court: 'Pilote', color: '#6366f1' },
   { key: 'ROLE_CHEF_PROJET', label: 'Chef de projet', court: 'Chef projet', color: '#3b82f6' },
-  { key: 'ROLE_USER', label: 'Utilisateur', court: 'Utilisateur', color: '#09C82C' },
   { key: SANS_ROLE, label: 'Sans rôle', court: 'Sans rôle', color: '#94a3b8' },
 ];
 

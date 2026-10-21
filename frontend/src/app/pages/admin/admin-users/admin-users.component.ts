@@ -1,7 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
 
 interface User {
@@ -218,7 +218,7 @@ interface NewUser {
             <option value="">Tous les rôles</option>
             <option value="ROLE_ADMIN">Admin</option>
             <option value="ROLE_CHEF_PROJET">Chef de Projet</option>
-            <option value="ROLE_USER">Utilisateur</option>
+            <option value="ROLE_PILOTE_QUALITE">Pilote Qualité</option>
           </select>
         </div>
       </div>
@@ -264,7 +264,7 @@ interface NewUser {
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-slate-850 divide-y divide-gray-200 dark:divide-slate-700">
-                @for (user of filteredUsers(); track user.id) {
+                @for (user of pagedUsers(); track user.id) {
                   <tr class="hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
@@ -312,35 +312,51 @@ interface NewUser {
                       </button>
                     </td>
                   </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                      Aucun utilisateur ne correspond à votre recherche.
+                    </td>
+                  </tr>
                 }
               </tbody>
             </table>
           </div>
 
-          <!-- Pagination -->
-          <div class="bg-gray-50 dark:bg-slate-800 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-slate-700">
-            <div class="flex-1 flex justify-between sm:hidden">
-              <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <!-- Pagination : 10 comptes par page -->
+          <div class="bg-gray-50 dark:bg-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 dark:border-slate-700">
+            <p class="text-sm text-gray-700 dark:text-gray-400">
+              Affichage de <span class="font-medium">{{ rangeStart() }}</span> à <span class="font-medium">{{ rangeEnd() }}</span> sur <span class="font-medium">{{ filteredUsers().length }}</span> résultats
+            </p>
+            <nav class="flex items-center gap-1" aria-label="Pagination">
+              <button
+                (click)="goToPage(currentPage() - 1)"
+                [disabled]="currentPage() === 1"
+                class="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                 Précédent
               </button>
-              <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+              @for (page of pages(); track page) {
+                <button
+                  (click)="goToPage(page)"
+                  [class]="page === currentPage() ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
+                  class="px-3 py-1.5 border text-sm font-medium rounded-md">
+                  {{ page }}
+                </button>
+              }
+              <button
+                (click)="goToPage(currentPage() + 1)"
+                [disabled]="currentPage() === totalPages()"
+                class="px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
                 Suivant
               </button>
-            </div>
-            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-              <div>
-                <p class="text-sm text-gray-700 dark:text-gray-400">
-                  Affichage de <span class="font-medium">1</span> à <span class="font-medium">{{ filteredUsers().length }}</span> sur <span class="font-medium">{{ filteredUsers().length }}</span> résultats
-                </p>
-              </div>
-            </div>
+            </nav>
           </div>
         </div>
       }
     </div>
 
     <!-- Modal Créer Utilisateur - Design Luxe -->
-    <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-labelledby="createUserModalLabel" aria-hidden="true" (hidden.bs.modal)="resetForm()">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px; overflow: hidden;">
           
@@ -465,10 +481,13 @@ interface NewUser {
                       id="newPassword" 
                       [(ngModel)]="newUser.password"
                       name="password"
+                      #passwordField="ngModel"
                       required
-                      placeholder="Minimum 6 caractères"
+                      minlength="8"
+                      pattern="^(?=.*[A-Z])(?=.*[0-9]).+$"
+                      placeholder="Minimum 8 caractères"
                       style="border-radius: 14px 0 0 14px; font-size: 15px; padding: 14px 20px; font-weight: 500;"
-                      [class.is-invalid]="!newUser.password && createForm.submitted">
+                      [class.is-invalid]="passwordField.invalid && passwordField.touched">
                     <button 
                       class="btn luxury-input border-start-0 px-4" 
                       type="button"
@@ -479,12 +498,22 @@ interface NewUser {
                   </div>
                   <div class="d-flex align-items-center mt-2 ms-1">
                     <div class="flex-grow-1">
-                      <small class="form-text text-muted" style="font-size: 13px;">
-                        <i class="fas fa-shield-alt me-1" style="color: #10b981;"></i>
-                        Minimum 6 caractères requis
-                      </small>
+                      <!-- Mêmes règles et mêmes messages que la page d'inscription -->
+                      @if (passwordField.invalid && passwordField.touched) {
+                        <small class="text-danger" style="font-size: 13px;">
+                          <i class="fas fa-exclamation-circle me-1"></i>
+                          @if (passwordField.errors?.['required']) { Mot de passe requis. }
+                          @else if (passwordField.errors?.['minlength']) { Minimum 8 caractères. }
+                          @else { Doit contenir au moins 1 majuscule et 1 chiffre. }
+                        </small>
+                      } @else {
+                        <small class="form-text text-muted" style="font-size: 13px;">
+                          <i class="fas fa-shield-alt me-1" style="color: #10b981;"></i>
+                          Au moins 8 caractères, dont 1 majuscule et 1 chiffre
+                        </small>
+                      }
                     </div>
-                    @if (newUser.password.length >= 6) {
+                    @if (isPasswordValid(newUser.password)) {
                       <span class="badge bg-success" style="border-radius: 8px; font-size: 11px; padding: 4px 10px;">
                         <i class="fas fa-check me-1"></i>
                         Valide
@@ -648,7 +677,7 @@ interface NewUser {
               type="button" 
               class="btn btn-lg luxury-btn px-5 position-relative" 
               (click)="createUser()"
-              [disabled]="isCreating() || !newUser.username || !newUser.email || (!isEditMode() && !newUser.password) || newUser.roles.length === 0"
+              [disabled]="isCreating() || !newUser.username || !newUser.email || (!isEditMode() && !isPasswordValid(newUser.password)) || newUser.roles.length === 0"
               style="border-radius: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; font-weight: 600; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);">
               @if (isCreating()) {
                 <span class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -675,6 +704,8 @@ interface NewUser {
 export class AdminUsersComponent implements OnInit {
   http = inject(HttpClient);
 
+  @ViewChild('createForm') createForm?: NgForm;
+
   users = signal<User[]>([]);
   filteredUsers = signal<User[]>([]);
   isLoading = signal(true);
@@ -682,6 +713,19 @@ export class AdminUsersComponent implements OnInit {
   
   searchTerm = '';
   filterRole = '';
+
+  // Pagination côté client : 10 comptes par page
+  readonly pageSize = 10;
+  currentPage = signal(1);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredUsers().length / this.pageSize)));
+  pages = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+  pagedUsers = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return this.filteredUsers().slice(start, start + this.pageSize);
+  });
+  // Bornes du texte « Affichage de X à Y sur Z résultats »
+  rangeStart = computed(() => this.filteredUsers().length === 0 ? 0 : (this.currentPage() - 1) * this.pageSize + 1);
+  rangeEnd = computed(() => Math.min(this.currentPage() * this.pageSize, this.filteredUsers().length));
 
   // Propriétés pour la création d'utilisateur
   newUser: NewUser = {
@@ -719,7 +763,7 @@ export class AdminUsersComponent implements OnInit {
       next: (data) => {
         console.log('Users loaded successfully:', data);
         this.users.set(data);
-        this.filteredUsers.set(data);
+        this.applyFilters();
         this.isLoading.set(false);
       },
       error: (error) => {
@@ -734,6 +778,12 @@ export class AdminUsersComponent implements OnInit {
   }
 
   filterUsers() {
+    this.currentPage.set(1);
+    this.applyFilters();
+  }
+
+  /** Applique la recherche et le filtre par rôle ; reste sur une page qui existe encore (ex. après une suppression). */
+  private applyFilters() {
     let filtered = this.users();
 
     // Filter by search term
@@ -751,6 +801,11 @@ export class AdminUsersComponent implements OnInit {
     }
 
     this.filteredUsers.set(filtered);
+    this.goToPage(this.currentPage());
+  }
+
+  goToPage(page: number) {
+    this.currentPage.set(Math.min(Math.max(page, 1), this.totalPages()));
   }
 
   getInitials(name: string): string {
@@ -761,7 +816,7 @@ export class AdminUsersComponent implements OnInit {
     switch (role) {
       case 'ROLE_ADMIN': return 'bg-red-100 text-red-800';
       case 'ROLE_CHEF_PROJET': return 'bg-blue-100 text-blue-800';
-      case 'ROLE_USER': return 'bg-green-100 text-green-800';
+      case 'ROLE_PILOTE_QUALITE': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   }
@@ -770,7 +825,7 @@ export class AdminUsersComponent implements OnInit {
     switch (role) {
       case 'ROLE_ADMIN': return 'Admin';
       case 'ROLE_CHEF_PROJET': return 'Chef de Projet';
-      case 'ROLE_USER': return 'Utilisateur';
+      case 'ROLE_PILOTE_QUALITE': return 'Pilote Qualité';
       default: return role;
     }
   }
@@ -799,7 +854,7 @@ export class AdminUsersComponent implements OnInit {
       if (user.roles.includes('ROLE_CHEF_PROJET')) {
         this.newUser.roles.push('chef');
       }
-      if (user.roles.includes('ROLE_USER')) {
+      if (user.roles.includes('ROLE_PILOTE_QUALITE')) {
         this.newUser.roles.push('pilote');
       }
       
@@ -851,8 +906,8 @@ export class AdminUsersComponent implements OnInit {
       return;
     }
 
-    if (!this.isEditMode() && this.newUser.password.length < 6) {
-      this.createError.set('Le mot de passe doit contenir au moins 6 caractères');
+    if (!this.isEditMode() && !this.isPasswordValid(this.newUser.password)) {
+      this.createError.set('Le mot de passe doit contenir au moins 8 caractères, dont 1 majuscule et 1 chiffre');
       return;
     }
 
@@ -924,14 +979,23 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
+  // Mêmes règles que le mot de passe de la page d'inscription
+  isPasswordValid(password: string): boolean {
+    return password.length >= 8 && /^(?=.*[A-Z])(?=.*[0-9]).+$/.test(password);
+  }
+
   closeModal() {
     const modalElement = document.getElementById('createUserModal');
     const modal = (window as any).bootstrap.Modal.getInstance(modalElement);
     if (modal) {
       modal.hide();
     }
+    this.resetForm();
+  }
 
-    // Réinitialiser le formulaire
+  // Appelée aussi à chaque fermeture de la fenêtre (croix, « Annuler », clic à côté, Échap) :
+  // sans cela, « Nouvel Utilisateur » rouvrait le formulaire en mode modification
+  resetForm() {
     this.newUser = {
       username: '',
       email: '',
@@ -941,5 +1005,9 @@ export class AdminUsersComponent implements OnInit {
     this.isEditMode.set(false);
     this.editingUserId.set('');
     this.createError.set('');
+    this.showPassword.set(false);
+    // Sans cela, les messages d'erreur des champs déjà touchés réapparaissent à la réouverture
+    this.createForm?.form.markAsUntouched();
+    this.createForm?.form.markAsPristine();
   }
 }
