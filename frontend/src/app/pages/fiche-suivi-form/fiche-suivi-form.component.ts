@@ -142,6 +142,7 @@ export class FicheSuiviFormComponent implements OnInit {
           chefProjet: { ...last.ficheSignaletique.chefProjet, nom: this.getCurrentUserName() },
           experts: last.ficheSignaletique.experts ? [...last.ficheSignaletique.experts] : []
         };
+        this.reprendreMaitresDuProjet();
         this.ficheSuivi.constatGlobal = {
           ...last.constatGlobal,
           problemesRencontres: [...(last.constatGlobal.problemesRencontres || [])],
@@ -220,6 +221,7 @@ export class FicheSuiviFormComponent implements OnInit {
       if (selected.dateDebutRealisation) this.ficheSuivi.ficheSignaletique.delais.dateDebutRealisation = selected.dateDebutRealisation;
       if (selected.dateFinRealisation) this.ficheSuivi.ficheSignaletique.delais.dateFinRealisation = selected.dateFinRealisation;
       if (selected.ecartConventionnel) this.ficheSuivi.ficheSignaletique.delais.ecartConventionnel = selected.ecartConventionnel;
+      this.reprendreMaitresDuProjet();
     }
 
     // Pour une nouvelle fiche : si c'est la 1ère fiche de suivi du projet, on importe
@@ -228,6 +230,17 @@ export class FicheSuiviFormComponent implements OnInit {
     if (!this.isEditMode() && this.ficheSuivi.ficheProjetId) {
       this.prefillFromLastFiche(this.ficheSuivi.ficheProjetId);
     }
+  }
+
+  /**
+   * Le maître d'ouvrage et le maître d'œuvre ne se saisissent pas dans la fiche de suivi :
+   * ils sont repris de la fiche de projet, qui fait foi.
+   */
+  reprendreMaitresDuProjet() {
+    const selected = this.projets().find(p => p.id === this.ficheSuivi.ficheProjetId);
+    if (!selected) return;
+    if (selected.maitreOuvrage) this.ficheSuivi.ficheSignaletique.maitreOuvrage = selected.maitreOuvrage;
+    if (selected.maitreOeuvre) this.ficheSuivi.ficheSignaletique.maitreOeuvre = selected.maitreOeuvre;
   }
 
   /**
@@ -272,7 +285,10 @@ export class FicheSuiviFormComponent implements OnInit {
           this.ficheSuivi.ficheSignaletique.experts = 
             expertsStr.split(',').map((e: string) => e.trim()).filter((e: string) => e);
         }
-        
+
+        // Une fiche déposée avant cette reprise les récupère à la prochaine modification
+        this.reprendreMaitresDuProjet();
+
         this.isLoading.set(false);
       },
       error: (error) => {

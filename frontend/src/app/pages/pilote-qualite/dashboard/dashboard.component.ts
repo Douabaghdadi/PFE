@@ -1,10 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
+import { PiloteQualiteNotificationService } from '../../../services/pilote-qualite-notification.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
 
@@ -35,7 +35,6 @@ interface ProjetRow {
   id: string;
   nom: string;
   statut: string;
-  statutKey: string;
   chefProjet: string;
   conformite: Conformite;
   joursRetard: number;
@@ -44,10 +43,24 @@ interface ProjetRow {
   prochaineFiche?: string;
   joursAvantEcheance: number | null;
   nbFiches: number;
-  nbFichesPeriode: number;
   completude: number;
-  derive: number | null;
+  derniereFicheId?: string;
+  /** Rubriques absentes de la dernière fiche déposée. */
+  manquantes: string[];
   cases: HeatCase[];
+}
+
+type Probleme = 'retard' | 'jamais' | 'incomplete';
+
+/** Un projet à traiter : son problème le plus urgent, dit en une phrase, et l'action qui va avec. */
+interface ProjetATraiter {
+  id: string;
+  nom: string;
+  chefProjet: string;
+  probleme: Probleme;
+  badge: string;
+  detail: string;
+  ficheId?: string;
 }
 
 interface HeatCase {
@@ -63,7 +76,8 @@ interface KpiCard {
   hint: string;
   icon: string;
   accent: string;
-  action: 'conformite' | 'route' | 'reset';
+  /** Sans action, la carte est purement informative et n'est pas cliquable. */
+  action?: 'conformite' | 'route';
   payload?: string;
 }
 
@@ -89,14 +103,6 @@ interface EcheanceBucket {
   label: string;
   color: string;
   count: number;
-}
-
-interface Echeance {
-  projetId: string;
-  projetNom: string;
-  date: string;
-  jours: number;
-  periodicite?: number;
 }
 
 interface ChefStat {
@@ -141,13 +147,14 @@ const NB_MOIS_HEATMAP = 6;
 @Component({
   selector: 'app-pilote-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, ChatbotComponent],
+  imports: [CommonModule, RouterModule, ChatbotComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class PiloteDashboardComponent implements OnInit {
   private ficheProjetService = inject(PiloteQualiteFicheProjetService);
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
+  private notificationService = inject(PiloteQualiteNotificationService);
   private router = inject(Router);
 
   loading = true;
@@ -158,26 +165,20 @@ export class PiloteDashboardComponent implements OnInit {
   fichesProjet: FicheProjet[] = [];
   fichesSuivi: FicheSuivi[] = [];
   suiviStatus: ProjetSuiviStatus[] = [];
+  /** Nom du compte de chaque chef de projet, par identifiant. */
+  nomsChefs = new Map<string, string>();
 
-  // --- Filtres ---
-  searchTerm = '';
-  statutFilter = '';
-  periode: 'all' | '90' | '180' | '365' = 'all';
+  // --- Filtre (clic sur une carte de conformité) ---
   conformiteFilter: '' | Conformite = '';
-
-  periodeOptions = [
-    { value: 'all', label: 'Tout l\'historique' },
-    { value: '90', label: 'Dépôts des 3 derniers mois' },
-    { value: '180', label: 'Dépôts des 6 derniers mois' },
-    { value: '365', label: 'Dépôts des 12 derniers mois' },
-  ];
 
   // --- Options d'affichage ---
   alertesOuvertes = true;
   toutesLesLignes = false;
   heatmapComplete = false;
-  sortKey: 'retard' | 'completude' | 'anciennete' | 'nom' = 'retard';
-  sortAsc = false;
+
+  // --- Relances envoyées depuis le tableau de bord ---
+  relancesEnCours = new Set<string>();
+  relances = new Map<string, { ok: boolean; message: string }>();
 
   // --- Données calculées ---
   rowsAll: ProjetRow[] = [];
@@ -188,14 +189,13 @@ export class PiloteDashboardComponent implements OnInit {
   rubriques: RubriqueStat[] = [];
   moisLabels: string[] = [];
   echeanceBuckets: EcheanceBucket[] = [];
-  prochainesEcheances: Echeance[] = [];
   chefStats: ChefStat[] = [];
   derniersDepots: Depot[] = [];
+  projetsATraiter: ProjetATraiter[] = [];
 
   tauxConformite = 0;
   completudeMoyenne = 0;
-  deriveMoyenne = 0;
-  nbFichesPeriode = 0;
+  nbFichesAuditees = 0;
   nbEnRetard = 0;
   nbJamaisSuivi = 0;
   nbEcheances30j = 0;
@@ -216,11 +216,13 @@ export class PiloteDashboardComponent implements OnInit {
     Promise.all([
       firstValueFrom(this.ficheProjetService.getAllFichesProjet()),
       firstValueFrom(this.ficheSuiviService.getAllFichesSuivi()),
-      firstValueFrom(this.ficheProjetService.getProjetsSuiviStatus())
-    ]).then(([projets, suivis, status]) => {
+      firstValueFrom(this.ficheProjetService.getProjetsSuiviStatus()),
+      firstValueFrom(this.notificationService.getChefsProjet())
+    ]).then(([projets, suivis, status, chefs]) => {
       this.fichesProjet = projets || [];
       this.fichesSuivi = suivis || [];
       this.suiviStatus = status || [];
+      this.nomsChefs = new Map((chefs || []).map(c => [c.id, c.username]));
       this.auditerFiches();
       this.generatedAt = new Date();
       this.applyFilters();
@@ -282,24 +284,8 @@ export class PiloteDashboardComponent implements OnInit {
 
   applyFilters() {
     this.rowsAll = this.buildRows();
-
-    const terme = this.searchTerm.trim().toLowerCase();
-    this.rows = this.rowsAll.filter(r => {
-      if (terme && !r.nom.toLowerCase().includes(terme) && !r.chefProjet.toLowerCase().includes(terme)) return false;
-      if (this.statutFilter && r.statutKey !== this.statutFilter) return false;
-      if (this.conformiteFilter && r.conformite !== this.conformiteFilter) return false;
-      return true;
-    });
-
+    this.rows = this.rowsAll.filter(r => !this.conformiteFilter || r.conformite === this.conformiteFilter);
     this.computeAggregates();
-  }
-
-  resetFilters() {
-    this.searchTerm = '';
-    this.statutFilter = '';
-    this.periode = 'all';
-    this.conformiteFilter = '';
-    this.applyFilters();
   }
 
   setConformiteFilter(key: Conformite) {
@@ -307,34 +293,13 @@ export class PiloteDashboardComponent implements OnInit {
     this.applyFilters();
   }
 
-  get filtresActifs(): boolean {
-    return !!this.searchTerm || !!this.statutFilter || this.periode !== 'all' || !!this.conformiteFilter;
-  }
-
   get conformiteFilterLabel(): string {
     return CONFORMITE_DEFS.find(d => d.key === this.conformiteFilter)?.label || '';
-  }
-
-  get periodeLabel(): string {
-    return this.periodeOptions.find(o => o.value === this.periode)?.label || '';
-  }
-
-  get statutFilterLabel(): string {
-    const labels: { [key: string]: string } = {
-      EN_COURS: 'En cours', TERMINE: 'Terminés', EN_ATTENTE: 'En attente', ANNULE: 'Annulés',
-    };
-    return labels[this.statutFilter] || this.statutFilter;
-  }
-
-  private periodeLimite(): number | null {
-    if (this.periode === 'all') return null;
-    return Date.now() - parseInt(this.periode, 10) * JOUR_MS;
   }
 
   // ==================== Construction des lignes ====================
 
   private buildRows(): ProjetRow[] {
-    const limite = this.periodeLimite();
     const now = Date.now();
 
     const parProjet = new Map<string, FicheSuivi[]>();
@@ -350,7 +315,6 @@ export class PiloteDashboardComponent implements OnInit {
     return this.fichesProjet.filter(p => !!p.id).map(p => {
       const id = p.id!;
       const liste = (parProjet.get(id) || []).sort((a, b) => this.dateOf(b) - this.dateOf(a));
-      const dansPeriode = liste.filter(f => !limite || this.dateOf(f) >= limite);
       const status = statusParProjet.get(id);
 
       const joursRetard = status?.ficheSuiviEnRetard ? status.joursRetard : 0;
@@ -360,15 +324,15 @@ export class PiloteDashboardComponent implements OnInit {
       const prochaineTs = prochaine ? new Date(prochaine).getTime() : NaN;
       const joursAvantEcheance = isNaN(prochaineTs) ? null : Math.round((prochaineTs - now) / JOUR_MS);
 
-      const scores = dansPeriode.map(f => this.auditDe(f)?.score).filter((s): s is number => s != null);
+      const scores = liste.map(f => this.auditDe(f)?.score).filter((s): s is number => s != null);
       const completude = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
       return {
         id,
         nom: p.nomProjet || p.designationProjet || 'Projet sans nom',
         statut: p.statut || 'Non défini',
-        statutKey: this.normalize(p.statut),
-        chefProjet: p.responsable || liste[0]?.ficheSignaletique?.chefProjet?.nom || 'Non attribué',
+        // Le chef est le compte rattaché au projet, comme sur le tableau de bord admin.
+        chefProjet: this.nomsChefs.get(p.chefProjetId || '') || 'Non attribué',
         conformite,
         joursRetard,
         periodicite: status?.periodiciteSuiviMois || p.periodiciteSuiviMois,
@@ -376,26 +340,12 @@ export class PiloteDashboardComponent implements OnInit {
         prochaineFiche: prochaine,
         joursAvantEcheance,
         nbFiches: liste.length,
-        nbFichesPeriode: dansPeriode.length,
         completude,
-        derive: this.calculerDerive(liste, status?.periodiciteSuiviMois || p.periodiciteSuiviMois),
+        derniereFicheId: liste[0]?.id,
+        manquantes: liste[0] ? this.rubriquesManquantes(liste[0]) : [],
         cases: this.construireCases(liste),
       };
     });
-  }
-
-  /** Dérive moyenne : écart en jours entre l'intervalle réel de dépôt et la périodicité attendue. */
-  private calculerDerive(liste: FicheSuivi[], periodicite?: number): number | null {
-    if (!periodicite || liste.length < 2) return null;
-    const dates = liste.map(f => this.dateOf(f)).filter(t => t > 0).sort((a, b) => a - b);
-    if (dates.length < 2) return null;
-
-    const attendu = periodicite * MOIS_JOURS;
-    let total = 0;
-    for (let i = 1; i < dates.length; i++) {
-      total += (dates[i] - dates[i - 1]) / JOUR_MS - attendu;
-    }
-    return Math.round(total / (dates.length - 1));
   }
 
   private construireMoisLabels(): string[] {
@@ -462,10 +412,8 @@ export class PiloteDashboardComponent implements OnInit {
 
     // --- Complétude documentaire ---
     const idsVisibles = new Set(rows.map(r => r.id));
-    const limite = this.periodeLimite();
-    const fichesVisibles = this.fichesSuivi.filter(f =>
-      idsVisibles.has(f.ficheProjetId) && (!limite || this.dateOf(f) >= limite));
-    this.nbFichesPeriode = fichesVisibles.length;
+    const fichesVisibles = this.fichesSuivi.filter(f => idsVisibles.has(f.ficheProjetId));
+    this.nbFichesAuditees = fichesVisibles.length;
 
     this.rubriques = RUBRIQUES.map(r => {
       const renseignees = fichesVisibles.filter(f => this.auditDe(f)?.[r.cle] === true).length;
@@ -480,15 +428,14 @@ export class PiloteDashboardComponent implements OnInit {
     const scores = fichesVisibles.map(f => this.auditDe(f)?.score).filter((s): s is number => s != null);
     this.completudeMoyenne = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
-    // --- Ponctualité ---
-    const derives = rows.map(r => r.derive).filter((d): d is number => d != null);
-    this.deriveMoyenne = derives.length ? Math.round(derives.reduce((a, b) => a + b, 0) / derives.length) : 0;
-
     // --- Échéancier ---
     this.construireEcheancier(rows);
 
     // --- Discipline par chef de projet ---
     this.chefStats = this.construireChefStats(rows);
+
+    // --- Projets à traiter ---
+    this.projetsATraiter = this.construireProjetsATraiter(rows);
 
     // --- Derniers dépôts ---
     const noms = new Map(rows.map(r => [r.id, r.nom]));
@@ -522,18 +469,6 @@ export class PiloteDashboardComponent implements OnInit {
     ];
 
     this.nbEcheances30j = compte(0, 30);
-
-    this.prochainesEcheances = avecEcheance
-      .filter(r => r.joursAvantEcheance! >= 0)
-      .sort((a, b) => a.joursAvantEcheance! - b.joursAvantEcheance!)
-      .slice(0, 6)
-      .map(r => ({
-        projetId: r.id,
-        projetNom: r.nom,
-        date: r.prochaineFiche!,
-        jours: r.joursAvantEcheance!,
-        periodicite: r.periodicite,
-      }));
   }
 
   private construireChefStats(rows: ProjetRow[]): ChefStat[] {
@@ -547,11 +482,11 @@ export class PiloteDashboardComponent implements OnInit {
     return [...parChef.entries()]
       .map(([nom, liste]) => {
         const aJour = liste.filter(r => r.conformite === 'A_JOUR').length;
-        const avecFiches = liste.filter(r => r.nbFichesPeriode > 0);
+        const avecFiches = liste.filter(r => r.nbFiches > 0);
         return {
           nom,
           projets: liste.length,
-          fiches: liste.reduce((s, r) => s + r.nbFichesPeriode, 0),
+          fiches: liste.reduce((s, r) => s + r.nbFiches, 0),
           retards: liste.filter(r => r.conformite !== 'A_JOUR').length,
           conformite: Math.round((aJour / liste.length) * 100),
           completude: avecFiches.length
@@ -562,12 +497,45 @@ export class PiloteDashboardComponent implements OnInit {
       .sort((a, b) => a.conformite - b.conformite || b.retards - a.retards);
   }
 
+  /** Chaque projet n'apparaît qu'une fois, avec son problème le plus urgent : retard, puis aucune fiche, puis fiche incomplète. */
+  private construireProjetsATraiter(rows: ProjetRow[]): ProjetATraiter[] {
+    const retards = rows
+      .filter(r => r.conformite === 'EN_RETARD')
+      .sort((a, b) => b.joursRetard - a.joursRetard)
+      .map(r => ({
+        id: r.id, nom: r.nom, chefProjet: r.chefProjet, probleme: 'retard' as const,
+        badge: `En retard de ${r.joursRetard} j`,
+        detail: r.prochaineFiche
+          ? `Fiche de suivi attendue depuis le ${new Date(r.prochaineFiche).toLocaleDateString('fr-FR')}.`
+          : 'Fiche de suivi attendue et non déposée.',
+      }));
+
+    const jamaisSuivis = rows
+      .filter(r => r.conformite === 'JAMAIS_SUIVI')
+      .map(r => ({
+        id: r.id, nom: r.nom, chefProjet: r.chefProjet, probleme: 'jamais' as const,
+        badge: 'Aucune fiche',
+        detail: 'Aucune fiche de suivi déposée depuis la création du projet.',
+      }));
+
+    const incompletes = rows
+      .filter(r => r.conformite === 'A_JOUR' && r.manquantes.length > 0)
+      .sort((a, b) => b.manquantes.length - a.manquantes.length)
+      .map(r => ({
+        id: r.id, nom: r.nom, chefProjet: r.chefProjet, probleme: 'incomplete' as const,
+        badge: 'Fiche incomplète',
+        detail: `Il manque dans la dernière fiche : ${r.manquantes.join(', ')}.`,
+        ficheId: r.derniereFicheId,
+      }));
+
+    return [...retards, ...jamaisSuivis, ...incompletes];
+  }
+
   private buildKpis() {
     this.kpis = [
       {
         key: 'conformite', title: 'Conformité du suivi', value: `${this.tauxConformite}%`, icon: '✅', accent: 'green',
         hint: `${this.rows.length - this.nbEnRetard - this.nbJamaisSuivi}/${this.rows.length} projets à jour`,
-        action: 'conformite', payload: 'A_JOUR',
       },
       {
         key: 'retard', title: 'Fiches en retard', value: `${this.nbEnRetard}`, icon: '⏰', accent: 'red',
@@ -582,16 +550,10 @@ export class PiloteDashboardComponent implements OnInit {
       {
         key: 'completude', title: 'Complétude des fiches', value: `${this.completudeMoyenne}%`, icon: '📝', accent: 'indigo',
         hint: `${RUBRIQUES.length} rubriques auditées`,
-        action: 'reset',
-      },
-      {
-        key: 'derive', title: 'Dérive de dépôt', value: this.formatDerive(this.deriveMoyenne), icon: '📅', accent: 'orange',
-        hint: 'Écart moyen vs périodicité',
-        action: 'reset',
       },
       {
         key: 'echeances', title: 'Échéances sous 30 j', value: `${this.nbEcheances30j}`, icon: '🔔', accent: 'blue',
-        hint: `${this.nbFichesPeriode} dépôt(s) sur la période`,
+        hint: `${this.nbFichesAuditees} fiche(s) déposée(s)`,
         action: 'route', payload: '/pilote-qualite/notifications',
       },
     ];
@@ -599,22 +561,8 @@ export class PiloteDashboardComponent implements OnInit {
 
   // ==================== Tri & rendu ====================
 
-  get projetsNonConformes(): ProjetRow[] {
-    const liste = this.rows.filter(r => r.conformite !== 'A_JOUR' || r.completude < 100);
-    const sens = this.sortAsc ? 1 : -1;
-    liste.sort((a, b) => {
-      switch (this.sortKey) {
-        case 'nom': return a.nom.localeCompare(b.nom) * sens;
-        case 'completude': return (a.completude - b.completude) * sens;
-        case 'anciennete': return (this.tsOf(a.derniereFiche) - this.tsOf(b.derniereFiche)) * sens * -1;
-        default: return (a.joursRetard - b.joursRetard) * sens;
-      }
-    });
-    return this.toutesLesLignes ? liste : liste.slice(0, 6);
-  }
-
-  get nbNonConformes(): number {
-    return this.rows.filter(r => r.conformite !== 'A_JOUR' || r.completude < 100).length;
+  get projetsATraiterVisibles(): ProjetATraiter[] {
+    return this.toutesLesLignes ? this.projetsATraiter : this.projetsATraiter.slice(0, 6);
   }
 
   get heatmapRows(): ProjetRow[] {
@@ -666,15 +614,6 @@ export class PiloteDashboardComponent implements OnInit {
     return Math.min(100, Math.round((row.joursRetard / reference) * 100));
   }
 
-  sortBy(key: 'retard' | 'completude' | 'anciennete' | 'nom') {
-    if (this.sortKey === key) {
-      this.sortAsc = !this.sortAsc;
-    } else {
-      this.sortKey = key;
-      this.sortAsc = key === 'nom' || key === 'completude';
-    }
-  }
-
   conformiteColor(c: Conformite): string {
     return CONFORMITE_DEFS.find(d => d.key === c)?.color || '#94a3b8';
   }
@@ -699,24 +638,6 @@ export class PiloteDashboardComponent implements OnInit {
     }
   }
 
-  formatDerive(jours: number): string {
-    if (!jours) return '0 j';
-    return `${jours > 0 ? '+' : ''}${jours} j`;
-  }
-
-  formatEcheance(jours: number): string {
-    if (jours === 0) return "aujourd'hui";
-    if (jours === 1) return 'demain';
-    return `dans ${jours} j`;
-  }
-
-  private normalize(valeur?: string): string {
-    return (valeur || '')
-      .toUpperCase()
-      .normalize('NFD').replace(/[̀-ͯ]/g, '')
-      .replace(/[\s-]+/g, '_');
-  }
-
   private dateOf(f: FicheSuivi): number {
     return this.tsOf(f.dateRapport);
   }
@@ -730,13 +651,13 @@ export class PiloteDashboardComponent implements OnInit {
 
   exportCsv() {
     const entetes = ['Projet', 'Statut', 'Chef de projet', 'Conformite', 'Jours de retard', 'Periodicite (mois)',
-      'Derniere fiche', 'Prochaine echeance', 'Fiches deposees', 'Completude (%)', 'Derive (j)'];
+      'Derniere fiche', 'Prochaine echeance', 'Fiches deposees', 'Completude (%)'];
 
     const lignes = this.rows.map(r => [
       r.nom, r.statut, r.chefProjet, this.conformiteLabel(r.conformite), r.joursRetard, r.periodicite ?? '',
       r.derniereFiche ? new Date(r.derniereFiche).toLocaleDateString('fr-FR') : '',
       r.prochaineFiche ? new Date(r.prochaineFiche).toLocaleDateString('fr-FR') : '',
-      r.nbFichesPeriode, r.completude, r.derive ?? ''
+      r.nbFiches, r.completude
     ]);
 
     const echapper = (v: any) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
@@ -759,18 +680,36 @@ export class PiloteDashboardComponent implements OnInit {
     switch (kpi.action) {
       case 'conformite': this.setConformiteFilter(kpi.payload as Conformite); break;
       case 'route': this.navigateTo(kpi.payload!); break;
-      case 'reset': this.resetFilters(); break;
     }
+  }
+
+  /** Envoie au chef de projet l'email de relance du projet, sans quitter le tableau de bord. */
+  relancer(projetId: string, event: Event) {
+    event.stopPropagation();
+    this.relancesEnCours.add(projetId);
+    this.relances.delete(projetId);
+
+    this.notificationService.relancerProjet(projetId).subscribe({
+      next: (res) => {
+        this.relances.set(projetId, { ok: true, message: res.message });
+        this.relancesEnCours.delete(projetId);
+      },
+      error: (err) => {
+        this.relances.set(projetId, { ok: false, message: err.error?.message || 'Erreur lors de l\'envoi de la relance' });
+        this.relancesEnCours.delete(projetId);
+      }
+    });
+  }
+
+  libelleRelance(projetId: string): string {
+    if (this.relancesEnCours.has(projetId)) return 'Envoi…';
+    const relance = this.relances.get(projetId);
+    if (!relance) return 'Relancer';
+    return relance.ok ? 'Relance envoyée' : 'Échec, réessayer';
   }
 
   navigateTo(link: string) {
     this.router.navigate([link]);
-  }
-
-  /** Passage de relais vers l'analyse de performance : le dashboard détecte, la page KPI diagnostique. */
-  analyserProjet(id: string, event?: Event) {
-    event?.stopPropagation();
-    this.router.navigate(['/pilote-qualite/projet-kpi', id]);
   }
 
   viewProjet(id: string) {

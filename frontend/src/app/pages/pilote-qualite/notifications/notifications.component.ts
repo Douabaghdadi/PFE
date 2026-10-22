@@ -185,8 +185,16 @@ interface Chef {
 
         <!-- Projects List -->
         <div *ngIf="!loading && lateProjects.length > 0">
-          <div style="margin-bottom: 1rem; color: #6b7280; font-weight: 600;">
-            {{ lateProjects.length }} projet(s) en retard
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+            <span style="color: #6b7280; font-weight: 600;">{{ lateProjects.length }} projet(s) en retard</span>
+            <button (click)="sendAllNotifications()"
+                    [disabled]="sending"
+                    style="height: 2.4rem; padding: 0 1.1rem; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; border-radius: 0.7rem; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.45rem; box-shadow: 0 4px 10px rgba(37,99,235,0.3); transition: all 0.2s ease;"
+                    [style.opacity]="sending ? '0.5' : '1'"
+                    [style.cursor]="sending ? 'not-allowed' : 'pointer'">
+              <i class="fas fa-paper-plane"></i>
+              {{ sending ? 'Envoi en cours...' : 'Relancer tous les retards' }}
+            </button>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

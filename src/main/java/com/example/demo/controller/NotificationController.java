@@ -50,6 +50,10 @@ public class NotificationController {
     public ResponseEntity<?> sendNotification(@PathVariable String projetId) {
         try {
             NotificationService.NotificationResult result = notificationService.sendReminderForProjet(projetId);
+            if (result.getEmailsSent() == 0) {
+                return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Erreur: l'email de relance n'a pas pu être envoyé"));
+            }
             String message = String.format("%d email(s) envoyé(s) avec succès", result.getEmailsSent());
             return ResponseEntity.ok(new MessageResponse(message));
         } catch (Exception e) {

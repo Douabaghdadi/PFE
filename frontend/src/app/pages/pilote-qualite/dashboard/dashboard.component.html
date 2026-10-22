@@ -40,38 +40,9 @@
       </div>
     </header>
 
-    <!-- ============ Barre de filtres ============ -->
-    <section class="toolbar" *ngIf="!error">
-      <div class="toolbar-field toolbar-search">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" placeholder="Rechercher un projet ou un chef de projet…"
-               [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
-        <button *ngIf="searchTerm" class="clear-input" (click)="searchTerm = ''; applyFilters()" aria-label="Effacer">&times;</button>
-      </div>
-
-      <select class="toolbar-select" [(ngModel)]="statutFilter" (ngModelChange)="applyFilters()">
-        <option value="">Tous les statuts</option>
-        <option value="EN_COURS">En cours</option>
-        <option value="TERMINE">Terminés</option>
-        <option value="EN_ATTENTE">En attente</option>
-        <option value="ANNULE">Annulés</option>
-      </select>
-
-      <select class="toolbar-select" [(ngModel)]="periode" (ngModelChange)="applyFilters()">
-        <option *ngFor="let o of periodeOptions" [value]="o.value">{{ o.label }}</option>
-      </select>
-
-      <button class="toolbar-reset" (click)="resetFilters()" [disabled]="!filtresActifs">Réinitialiser</button>
-    </section>
-
-    <div class="filter-chips" *ngIf="filtresActifs && !error">
-      <span class="chip-label">Filtres actifs :</span>
-      <span *ngIf="searchTerm" class="chip">« {{ searchTerm }} » <button (click)="searchTerm = ''; applyFilters()">&times;</button></span>
-      <span *ngIf="statutFilter" class="chip">{{ statutFilterLabel }} <button (click)="statutFilter = ''; applyFilters()">&times;</button></span>
-      <span *ngIf="periode !== 'all'" class="chip">{{ periodeLabel }} <button (click)="periode = 'all'; applyFilters()">&times;</button></span>
-      <span *ngIf="conformiteFilter" class="chip">{{ conformiteFilterLabel }} <button (click)="conformiteFilter = ''; applyFilters()">&times;</button></span>
+    <div class="filter-chips" *ngIf="conformiteFilter && !error">
+      <span class="chip-label">Filtre actif :</span>
+      <span class="chip">{{ conformiteFilterLabel }} <button (click)="conformiteFilter = ''; applyFilters()">&times;</button></span>
     </div>
 
     <!-- ============ Chargement ============ -->
@@ -173,10 +144,13 @@
                 <span class="delay-value">{{ a.joursRetard }}<small>j</small></span>
                 <span class="delay-caption">de retard</span>
               </div>
-              <button class="alert-cta" (click)="$event.stopPropagation(); viewProjet(a.id)">
-                Relancer
+              <button class="alert-cta" [class.envoyee]="relances.get(a.id)?.ok"
+                      [disabled]="relancesEnCours.has(a.id) || !!relances.get(a.id)?.ok"
+                      [title]="relances.get(a.id)?.message || 'Envoyer un email de relance au chef de projet'"
+                      (click)="relancer(a.id, $event)">
+                {{ libelleRelance(a.id) }}
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                 </svg>
               </button>
             </div>
@@ -188,6 +162,7 @@
       <section class="stats-grid">
         <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
                 [class.selected]="kpi.action === 'conformite' && conformiteFilter === kpi.payload"
+                [disabled]="!kpi.action"
                 (click)="onKpiClick(kpi)">
           <span class="stat-accent"></span>
           <div class="stat-card-top">
@@ -201,9 +176,9 @@
 
       <!-- Conformité / Échéancier / Complétude -->
       <section class="row-3col">
-        <div class="panel">
+        <div class="panel panel-fill">
           <h2 class="panel-title">🎯 Conformité du reporting</h2>
-          <p class="panel-subtitle">Cliquez sur un segment pour filtrer</p>
+          <p class="panel-subtitle">Répartition des projets par état de suivi</p>
 
           <div *ngIf="!rows.length" class="panel-empty">Aucun projet ne correspond aux filtres.</div>
 
@@ -212,9 +187,7 @@
               <svg viewBox="0 0 120 120" class="donut-svg">
                 <circle cx="60" cy="60" r="54" class="donut-track"/>
                 <circle *ngFor="let s of conformiteSegments" cx="60" cy="60" r="54" class="donut-seg"
-                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset"
-                        [class.dimmed]="conformiteFilter && conformiteFilter !== s.key"
-                        (click)="setConformiteFilter(s.key)">
+                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset">
                   <title>{{ s.label }} : {{ s.count }} ({{ s.percent }}%)</title>
                 </circle>
               </svg>
@@ -225,18 +198,17 @@
             </div>
 
             <div class="donut-legend">
-              <button *ngFor="let s of conformiteSegments" class="legend-row"
-                      [class.active]="conformiteFilter === s.key" (click)="setConformiteFilter(s.key)">
+              <div *ngFor="let s of conformiteSegments" class="legend-row">
                 <span class="legend-dot" [style.background]="s.color"></span>
                 <span class="legend-label">{{ s.label }}</span>
                 <span class="legend-value">{{ s.count }}</span>
                 <span class="legend-pct">{{ s.percent }}%</span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel panel-fill">
           <h2 class="panel-title">📅 Échéancier des dépôts</h2>
           <p class="panel-subtitle">Prochaines fiches attendues</p>
 
@@ -246,28 +218,15 @@
               <span>{{ b.label }}</span>
             </div>
           </div>
-
-          <div *ngIf="!prochainesEcheances.length" class="panel-empty">Aucune échéance planifiée à venir.</div>
-
-          <div *ngFor="let e of prochainesEcheances" class="echeance-item" (click)="viewProjet(e.projetId)">
-            <div class="echeance-date">
-              <strong>{{ e.date | date:'dd/MM' }}</strong>
-              <span>{{ formatEcheance(e.jours) }}</span>
-            </div>
-            <div class="echeance-main">
-              <p class="echeance-nom">{{ e.projetNom }}</p>
-              <p class="echeance-meta" *ngIf="e.periodicite">Périodicité {{ e.periodicite }} mois</p>
-            </div>
-          </div>
         </div>
 
         <div class="panel">
           <h2 class="panel-title">📝 Complétude documentaire</h2>
-          <p class="panel-subtitle">Rubriques renseignées sur {{ nbFichesPeriode }} fiche(s)</p>
+          <p class="panel-subtitle">Rubriques renseignées sur {{ nbFichesAuditees }} fiche(s)</p>
 
-          <div *ngIf="!nbFichesPeriode" class="panel-empty">Aucune fiche déposée sur la période.</div>
+          <div *ngIf="!nbFichesAuditees" class="panel-empty">Aucune fiche déposée.</div>
 
-          <div *ngIf="nbFichesPeriode">
+          <div *ngIf="nbFichesAuditees">
             <div class="completude-global">
               <span>Taux global de remplissage</span>
               <strong [style.color]="completudeColor(completudeMoyenne)">{{ completudeMoyenne }}%</strong>
@@ -276,7 +235,7 @@
             <div *ngFor="let r of rubriques" class="rubrique-row">
               <div class="rubrique-head">
                 <span class="rubrique-label">{{ r.label }}</span>
-                <span class="rubrique-count">{{ r.renseignees }}/{{ nbFichesPeriode }}</span>
+                <span class="rubrique-count">{{ r.renseignees }}/{{ nbFichesAuditees }}</span>
               </div>
               <div class="progress-track slim">
                 <div class="progress-fill" [style.width.%]="r.percent" [style.background]="completudeColor(r.percent)"></div>
@@ -331,52 +290,37 @@
         </button>
       </section>
 
-      <!-- Défauts de reporting / Derniers dépôts -->
+      <!-- Projets à traiter / Derniers dépôts -->
       <section class="row-2col">
         <div class="panel">
-          <div class="panel-head-row">
-            <div>
-              <h2 class="panel-title">🚩 Défauts de reporting</h2>
-              <p class="panel-subtitle">{{ nbNonConformes }} projet(s) en retard ou à fiche incomplète</p>
-            </div>
-            <div class="sort-group">
-              <button [class.active]="sortKey === 'retard'" (click)="sortBy('retard')">Retard</button>
-              <button [class.active]="sortKey === 'completude'" (click)="sortBy('completude')">Complétude</button>
-              <button [class.active]="sortKey === 'anciennete'" (click)="sortBy('anciennete')">Ancienneté</button>
-              <button [class.active]="sortKey === 'nom'" (click)="sortBy('nom')">Nom</button>
-            </div>
-          </div>
+          <h2 class="panel-title">🚩 Projets à traiter</h2>
+          <p class="panel-subtitle">Un projet par ligne : son problème et l'action à faire</p>
 
-          <div *ngIf="!nbNonConformes" class="panel-empty">Le processus est respecté sur tout le portefeuille 🎉</div>
+          <div *ngIf="!projetsATraiter.length" class="panel-empty">Aucun projet à traiter : tout est à jour 🎉</div>
 
-          <div *ngFor="let p of projetsNonConformes" class="defaut-item" (click)="viewProjet(p.id)">
-            <span class="defaut-marker" [style.background]="conformiteColor(p.conformite)"></span>
+          <div *ngFor="let p of projetsATraiterVisibles" class="defaut-item" [ngClass]="'defaut-' + p.probleme">
+            <span class="defaut-marker"></span>
             <div class="defaut-main">
-              <p class="defaut-nom">{{ p.nom }}</p>
-              <p class="defaut-meta">
-                {{ p.chefProjet }}
-                <span *ngIf="p.derniereFiche"> &bull; dernier dépôt {{ p.derniereFiche | date:'dd/MM/yyyy' }}</span>
-                <span *ngIf="!p.derniereFiche"> &bull; aucun dépôt</span>
-                <span *ngIf="p.periodicite"> &bull; tous les {{ p.periodicite }} mois</span>
-              </p>
-              <div class="defaut-progress" *ngIf="p.nbFichesPeriode">
-                <div class="progress-track slim">
-                  <div class="progress-fill" [style.width.%]="p.completude" [style.background]="completudeColor(p.completude)"></div>
-                </div>
-                <span class="defaut-progress-val">{{ p.completude }}% rempli</span>
+              <div class="defaut-head">
+                <p class="defaut-nom">{{ p.nom }}</p>
+                <span class="defaut-badge">{{ p.badge }}</span>
               </div>
+              <p class="defaut-detail">{{ p.detail }}</p>
+              <p class="defaut-chef">Chef de projet : {{ p.chefProjet }}</p>
             </div>
-            <div class="defaut-actions">
-              <span *ngIf="p.joursRetard > 0" class="badge badge-delay">{{ p.joursRetard }} j</span>
-              <span *ngIf="p.conformite === 'JAMAIS_SUIVI'" class="badge badge-neutral">Jamais suivi</span>
-              <button class="analyse-link" (click)="analyserProjet(p.id, $event)" title="Ouvrir l'analyse de performance du projet">
-                Analyser ↗
-              </button>
-            </div>
+
+            <button *ngIf="p.probleme === 'retard'" class="defaut-btn" [class.envoyee]="relances.get(p.id)?.ok"
+                    [disabled]="relancesEnCours.has(p.id) || !!relances.get(p.id)?.ok"
+                    [title]="relances.get(p.id)?.message || 'Envoyer un email de relance au chef de projet'"
+                    (click)="relancer(p.id, $event)">
+              {{ libelleRelance(p.id) }}
+            </button>
+            <button *ngIf="p.probleme === 'jamais'" class="defaut-btn" (click)="viewProjet(p.id)">Voir le projet</button>
+            <button *ngIf="p.probleme === 'incomplete'" class="defaut-btn" (click)="viewFicheSuivi(p.ficheId || '')">Voir la fiche</button>
           </div>
 
-          <button *ngIf="nbNonConformes > 6" class="panel-more" (click)="toutesLesLignes = !toutesLesLignes">
-            {{ toutesLesLignes ? 'Réduire la liste' : 'Voir les ' + nbNonConformes + ' projets' }}
+          <button *ngIf="projetsATraiter.length > 6" class="panel-more" (click)="toutesLesLignes = !toutesLesLignes">
+            {{ toutesLesLignes ? 'Réduire la liste' : 'Voir les ' + projetsATraiter.length + ' projets' }}
           </button>
         </div>
 
@@ -384,7 +328,7 @@
           <h2 class="panel-title">📥 Derniers dépôts</h2>
           <p class="panel-subtitle">Contrôle de remplissage à la réception</p>
 
-          <div *ngIf="!derniersDepots.length" class="panel-empty">Aucun dépôt sur la période sélectionnée.</div>
+          <div *ngIf="!derniersDepots.length" class="panel-empty">Aucun dépôt enregistré.</div>
 
           <div *ngFor="let d of derniersDepots" class="depot-item" (click)="viewFicheSuivi(d.id)">
             <div class="depot-score" [style.borderColor]="completudeColor(d.completude)">
@@ -419,7 +363,6 @@
                 <th>Chef de projet</th>
                 <th>Projets</th>
                 <th>Dépôts</th>
-                <th>Non conformes</th>
                 <th>Conformité</th>
                 <th>Complétude</th>
               </tr>
@@ -432,9 +375,6 @@
                 </td>
                 <td>{{ c.projets }}</td>
                 <td>{{ c.fiches }}</td>
-                <td>
-                  <span class="badge" [ngClass]="c.retards ? 'badge-delay' : 'badge-ok'">{{ c.retards }}</span>
-                </td>
                 <td class="chef-bar-cell">
                   <div class="progress-track slim">
                     <div class="progress-fill" [style.width.%]="c.conformite" [style.background]="completudeColor(c.conformite)"></div>
