@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
@@ -232,6 +233,7 @@ import { environment } from '../../../../environments/environment';
 })
 export class AdminProfileComponent {
   authService = inject(AuthService);
+  userService = inject(UserService);
   http = inject(HttpClient);
 
   successMessage = signal('');
@@ -245,7 +247,7 @@ export class AdminProfileComponent {
     role: '',
     firstName: '',
     lastName: '',
-    createdAt: new Date(),
+    createdAt: null as string | null,
     lastLogin: new Date()
   });
 
@@ -260,6 +262,18 @@ export class AdminProfileComponent {
 
   ngOnInit() {
     this.loadProfile();
+    this.loadDateInscription();
+  }
+
+  /** La session ne garde pas la date d'inscription : on la lit sur le compte côté serveur. */
+  loadDateInscription() {
+    const id = this.authService.currentUser()?.id;
+    if (!id) return;
+
+    this.userService.getUserById(id).subscribe({
+      next: (compte) => this.userProfile.update(p => ({ ...p, createdAt: compte.createdAt || null })),
+      error: (error) => console.error('Erreur lors du chargement de la date d\'inscription:', error)
+    });
   }
 
   loadProfile() {
@@ -269,10 +283,10 @@ export class AdminProfileComponent {
         id: user.id || '',
         username: user.username || '',
         email: user.email || '',
-        role: user.role || '',
+        role: this.rolePrincipal(user.roles || []),
         firstName: user.firstName || '',
         lastName: user.lastName || '',
-        createdAt: user.createdAt || new Date(),
+        createdAt: this.userProfile().createdAt,
         lastLogin: new Date()
       });
 
@@ -287,16 +301,21 @@ export class AdminProfileComponent {
     }
   }
 
+  /** Le rôle le plus élevé du compte, dans le même ordre que le tableau de bord. */
+  rolePrincipal(roles: string[]): string {
+    return ['ROLE_ADMIN', 'ROLE_PILOTE_QUALITE', 'ROLE_CHEF_PROJET'].find(r => roles.includes(r)) || roles[0] || '';
+  }
+
   getRoleName(role: string): string {
     const roles: { [key: string]: string } = {
-      'ADMIN': 'Administrateur',
-      'CHEF_PROJET': 'Chef de Projet',
-      'USER': 'Utilisateur'
+      'ROLE_ADMIN': 'Administrateur',
+      'ROLE_PILOTE_QUALITE': 'Pilote qualité',
+      'ROLE_CHEF_PROJET': 'Chef de projet'
     };
     return roles[role] || role;
   }
 
-  formatDate(date: Date | string): string {
+  formatDate(date: Date | string | null): string {
     if (!date) return 'N/A';
     const d = new Date(date);
     return d.toLocaleDateString('fr-FR', { 

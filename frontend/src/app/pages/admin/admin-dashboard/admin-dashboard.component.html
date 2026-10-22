@@ -17,18 +17,6 @@
         </div>
 
         <div class="hero-actions">
-          <button class="hero-btn" (click)="refresh()" [disabled]="loading" title="Recharger les données">
-            <svg [class.spinning]="loading" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Actualiser
-          </button>
-          <button class="hero-btn" (click)="exportCsv()" [disabled]="loading || !rows.length" title="Exporter la liste des comptes">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-9-4l4 4m0 0l4-4m-4 4V4"/>
-            </svg>
-            Export CSV
-          </button>
           <button class="hero-btn" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
@@ -123,6 +111,7 @@
       <section class="stats-grid">
         <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
                 [class.selected]="kpi.action === 'role' && roleFilter === kpi.payload"
+                [disabled]="!kpi.action"
                 (click)="onKpiClick(kpi)">
           <span class="stat-accent"></span>
           <div class="stat-card-top">
@@ -215,66 +204,29 @@
         </div>
       </section>
 
-      <!-- Portefeuille / Activité -->
-      <section class="row-2col">
-        <div class="panel">
-          <h2 class="panel-title">🗂️ Portefeuille projets</h2>
-          <p class="panel-subtitle">{{ projets.length }} projet(s) &bull; {{ projetsPeriode }} créé(s) sur la période</p>
+      <!-- Activité récente -->
+      <section class="panel section-gap">
+        <h2 class="panel-title">🕓 Activité récente</h2>
+        <p class="panel-subtitle">{{ activites.length }} évènement(s) sur {{ periodeLabel.toLowerCase() }}</p>
 
-          <div *ngIf="!projets.length" class="panel-empty">Aucun projet enregistré sur la plateforme.</div>
+        <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur la période sélectionnée.</div>
 
-          <div *ngIf="projets.length">
-            <h3 class="sub-head">Par statut</h3>
-            <div *ngFor="let b of statutBarres" class="rubrique-row">
-              <div class="rubrique-head">
-                <span class="rubrique-label">
-                  <span class="legend-dot" [style.background]="b.color"></span>{{ b.label }}
-                </span>
-                <span class="rubrique-count">{{ b.count }} · {{ b.percent }}%</span>
-              </div>
-              <div class="progress-track slim">
-                <div class="progress-fill" [style.width.%]="b.percent" [style.background]="b.color"></div>
-              </div>
-            </div>
-
-            <h3 class="sub-head" *ngIf="categorieBarres.length">Par catégorie</h3>
-            <div *ngFor="let b of categorieBarres" class="rubrique-row">
-              <div class="rubrique-head">
-                <span class="rubrique-label">
-                  <span class="legend-dot" [style.background]="b.color"></span>{{ b.label }}
-                </span>
-                <span class="rubrique-count">{{ b.count }} · {{ b.percent }}%</span>
-              </div>
-              <div class="progress-track slim">
-                <div class="progress-fill" [style.width.%]="b.percent" [style.background]="b.color"></div>
-              </div>
-            </div>
+        <div *ngFor="let a of activitesVisibles" class="activite-item" [ngClass]="'act-' + a.type"
+             [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
+          <span class="activite-ico">{{ a.icon }}</span>
+          <div class="activite-main">
+            <p class="activite-titre">{{ a.titre }}</p>
+            <p class="activite-meta">{{ a.meta }}</p>
+          </div>
+          <div class="activite-date">
+            <strong>{{ a.date | date:'dd/MM' }}</strong>
+            <span>{{ depuis(a.date) }}</span>
           </div>
         </div>
 
-        <div class="panel">
-          <h2 class="panel-title">🕓 Activité récente</h2>
-          <p class="panel-subtitle">{{ activites.length }} évènement(s) sur {{ periodeLabel.toLowerCase() }}</p>
-
-          <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur la période sélectionnée.</div>
-
-          <div *ngFor="let a of activitesVisibles" class="activite-item" [ngClass]="'act-' + a.type"
-               [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
-            <span class="activite-ico">{{ a.icon }}</span>
-            <div class="activite-main">
-              <p class="activite-titre">{{ a.titre }}</p>
-              <p class="activite-meta">{{ a.meta }}</p>
-            </div>
-            <div class="activite-date">
-              <strong>{{ a.date | date:'dd/MM' }}</strong>
-              <span>{{ depuis(a.date) }}</span>
-            </div>
-          </div>
-
-          <button *ngIf="activites.length > 8" class="panel-more" (click)="activitesCompletes = !activitesCompletes">
-            {{ activitesCompletes ? 'Réduire' : 'Voir plus d\'activité' }}
-          </button>
-        </div>
+        <button *ngIf="activites.length > 8" class="panel-more" (click)="activitesCompletes = !activitesCompletes">
+          {{ activitesCompletes ? 'Réduire' : 'Voir plus d\'activité' }}
+        </button>
       </section>
 
       <!-- Charge par chef de projet -->

@@ -37,14 +37,6 @@ const ROLE_DEFS: RoleDef[] = [
   { key: SANS_ROLE, label: 'Sans rôle', court: 'Sans rôle', color: '#94a3b8' },
 ];
 
-const STATUT_DEFS: { key: string; label: string; color: string }[] = [
-  { key: 'EN_COURS', label: 'En cours', color: '#3b82f6' },
-  { key: 'TERMINE', label: 'Terminé', color: '#09C82C' },
-  { key: 'EN_ATTENTE', label: 'En attente', color: '#f59e0b' },
-  { key: 'ANNULE', label: 'Annulé', color: '#94a3b8' },
-  { key: 'NON_RENSEIGNE', label: 'Non renseigné', color: '#cbd5e1' },
-];
-
 const NOMENCLATURE_DEFS: { key: string; label: string }[] = [
   { key: 'STATUT', label: 'Statuts' },
   { key: 'CATEGORIE_PROJET', label: 'Catégories de projet' },
@@ -72,7 +64,8 @@ interface KpiCard {
   hint: string;
   icon: string;
   accent: string;
-  action: 'role' | 'route' | 'reset';
+  /** Sans action, la carte est purement informative et n'est pas cliquable. */
+  action?: 'role' | 'route' | 'reset';
   payload?: string;
 }
 
@@ -84,14 +77,6 @@ interface DonutSegment {
   percent: number;
   dash: string;
   offset: number;
-}
-
-interface BarreStat {
-  key: string;
-  label: string;
-  color: string;
-  count: number;
-  percent: number;
 }
 
 interface MoisBar {
@@ -185,8 +170,6 @@ export class AdminDashboardComponent implements OnInit {
   rows: UserRow[] = [];
   kpis: KpiCard[] = [];
   roleSegments: DonutSegment[] = [];
-  statutBarres: BarreStat[] = [];
-  categorieBarres: BarreStat[] = [];
   moisBars: MoisBar[] = [];
   referentiel: ReferentielGroupe[] = [];
   chefStats: ChefStat[] = [];
@@ -194,7 +177,6 @@ export class AdminDashboardComponent implements OnInit {
   attentions: Attention[] = [];
 
   nouveauxComptes = 0;
-  projetsPeriode = 0;
   fichesPeriode = 0;
   projetsActifs = 0;
   nomenclaturesActives = 0;
@@ -349,7 +331,6 @@ export class AdminDashboardComponent implements OnInit {
 
   private calculerIndicateurs() {
     this.nouveauxComptes = this.rowsAll.filter(r => this.dansPeriode(r.createdAt)).length;
-    this.projetsPeriode = this.projets.filter(p => this.dansPeriode(p.dateCreation)).length;
     this.fichesPeriode = this.fiches.filter(f => this.dansPeriode(f.dateCreation || f.dateRapport)).length;
     this.projetsActifs = this.projets.filter(p => (p.statut || '') === 'EN_COURS').length;
     this.nomenclaturesActives = this.nomenclatures.filter(n => n.actif !== false).length;
@@ -357,8 +338,6 @@ export class AdminDashboardComponent implements OnInit {
 
     this.construireRoleSegments();
     this.construireKpis();
-    this.construireStatuts();
-    this.construireCategories();
     this.construireMois();
     this.construireReferentiel();
     this.construireChefStats();
@@ -378,7 +357,7 @@ export class AdminDashboardComponent implements OnInit {
     this.kpis = [
       {
         key: 'comptes',
-        title: 'Comptes actifs',
+        title: 'Comptes enregistrés',
         value: String(this.rowsAll.length),
         hint: sansRole ? `${sansRole} sans rôle attribué` : 'Tous les comptes ont un rôle',
         icon: '👥',
@@ -412,8 +391,6 @@ export class AdminDashboardComponent implements OnInit {
         hint: 'Administrateurs et pilotes qualité',
         icon: '🛡️',
         accent: 'red',
-        action: 'role',
-        payload: 'ROLE_ADMIN',
       },
       {
         key: 'projets',
@@ -461,56 +438,6 @@ export class AdminDashboardComponent implements OnInit {
       offset += longueur;
       return segment;
     });
-  }
-
-  private construireStatuts() {
-    const total = this.projets.length;
-    const comptes = new Map<string, number>();
-
-    for (const p of this.projets) {
-      const brut = (p.statut || '').trim().toUpperCase();
-      const cle = STATUT_DEFS.some(d => d.key === brut && d.key !== 'NON_RENSEIGNE') ? brut : 'NON_RENSEIGNE';
-      comptes.set(cle, (comptes.get(cle) || 0) + 1);
-    }
-
-    this.statutBarres = STATUT_DEFS
-      .map(d => ({
-        key: d.key,
-        label: d.label,
-        color: d.color,
-        count: comptes.get(d.key) || 0,
-        percent: total ? Math.round(((comptes.get(d.key) || 0) / total) * 100) : 0,
-      }))
-      .filter(b => b.count > 0);
-  }
-
-  /** Les catégories viennent du référentiel : on affiche le libellé quand le code est connu. */
-  private construireCategories() {
-    const total = this.projets.length;
-    const comptes = new Map<string, number>();
-
-    for (const p of this.projets) {
-      const cle = (p.categorie || '').trim() || 'NON_RENSEIGNE';
-      comptes.set(cle, (comptes.get(cle) || 0) + 1);
-    }
-
-    const palette = ['#6366f1', '#09C82C', '#f59e0b', '#3b82f6', '#ec4899', '#14b8a6', '#94a3b8'];
-
-    this.categorieBarres = [...comptes.entries()]
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 7)
-      .map(([cle, count], i) => ({
-        key: cle,
-        label: cle === 'NON_RENSEIGNE' ? 'Non renseignée' : this.libelleNomenclature('CATEGORIE_PROJET', cle),
-        color: palette[i % palette.length],
-        count,
-        percent: total ? Math.round((count / total) * 100) : 0,
-      }));
-  }
-
-  private libelleNomenclature(type: string, code: string): string {
-    const n = this.nomenclatures.find(x => x.type === type && x.code === code);
-    return n?.libelle || code;
   }
 
   /** Volumétrie mensuelle sur 12 mois : comptes créés, projets créés, fiches déposées. */
@@ -703,7 +630,6 @@ export class AdminDashboardComponent implements OnInit {
         detail: 'Rôle attribué mais aucune fiche projet rattachée.',
         count: chefsSansProjet,
         ton: 'orange',
-        lien: ['/admin/users'],
       },
       {
         key: 'projets-sans-suivi',
@@ -794,30 +720,7 @@ export class AdminDashboardComponent implements OnInit {
     return `il y a ${Math.floor(mois / 12)} an(s)`;
   }
 
-  // ==================== Export & navigation ====================
-
-  exportCsv() {
-    const entetes = ['Utilisateur', 'Email', 'Roles', 'Role principal', 'Inscription',
-      'Projets pilotes', 'Fiches deposees', 'Dernier depot'];
-
-    const lignes = this.rows.map(r => [
-      r.username, r.email, (r.roles || []).join(' | '), r.roleLabel,
-      r.createdAt ? new Date(r.createdAt).toLocaleDateString('fr-FR') : '',
-      r.projets, r.fiches,
-      r.derniereActivite ? new Date(r.derniereActivite).toLocaleDateString('fr-FR') : '',
-    ]);
-
-    const echapper = (v: any) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-    const csv = '﻿' + [entetes, ...lignes].map(l => l.map(echapper).join(';')).join('\r\n');
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `comptes-plateforme-${new Date().toISOString().slice(0, 10)}.csv`;
-    lien.click();
-    URL.revokeObjectURL(url);
-  }
+  // ==================== Impression & navigation ====================
 
   imprimer() {
     window.print();
