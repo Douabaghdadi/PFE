@@ -384,6 +384,46 @@ class KPIServiceTest {
         assertEquals(23.0, composante(kpi, "Qualité").getPoints(), 0.01);
     }
 
+    @Test
+    void signaleUnePrevisionBudgetaireSansCommuneMesureAvecLeCadrage() {
+        // Budget cadré à 2,5 MD, mais 250 saisis dans la fiche de suivi : erreur d'unité.
+        FicheSuivi.FinancierInfo financier = new FicheSuivi.FinancierInfo();
+        financier.setBudgetPrevision(250.0);
+        financier.setBudgetRealisation(100.0);
+        FicheSuivi.FicheSignaletique signaletique = new FicheSuivi.FicheSignaletique();
+        signaletique.setFinancier(financier);
+        FicheSuivi fiche = ficheCourante();
+        fiche.setFicheSignaletique(signaletique);
+
+        when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
+        when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of(fiche));
+
+        ProjetKPIReportDTO kpi = kpiService.calculateProjetKPIs(PROJET_ID);
+
+        assertTrue(kpi.getAlertes().stream()
+            .anyMatch(a -> a.getTitre().equals("Budget de suivi incohérent avec le cadrage")));
+    }
+
+    @Test
+    void accepteUneReestimationRaisonnableDuBudget() {
+        FicheSuivi.FinancierInfo financier = new FicheSuivi.FinancierInfo();
+        financier.setBudgetPrevision(3.0);
+        financier.setBudgetRealisation(1.0);
+        FicheSuivi.FicheSignaletique signaletique = new FicheSuivi.FicheSignaletique();
+        signaletique.setFinancier(financier);
+        FicheSuivi fiche = ficheCourante();
+        fiche.setFicheSignaletique(signaletique);
+
+        when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
+        when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of(fiche));
+
+        ProjetKPIReportDTO kpi = kpiService.calculateProjetKPIs(PROJET_ID);
+
+        assertTrue(kpi.getAlertes().stream()
+            .noneMatch(a -> a.getTitre().equals("Budget de suivi incohérent avec le cadrage")),
+            "passer de 2,5 à 3 MD est une réestimation, pas une erreur d'unité");
+    }
+
     private ComposanteScoreDTO composante(ProjetKPIReportDTO kpi, String prefixeLibelle) {
         return kpi.getDetailScore().stream()
             .filter(c -> c.getLibelle().startsWith(prefixeLibelle))

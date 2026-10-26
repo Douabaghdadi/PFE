@@ -136,7 +136,6 @@ public class FicheSuiviService {
         
         ficheSuivi.setConstatGlobal(request.getConstatGlobal());
         ficheSuivi.setTachesSuivi(request.getTachesSuivi());
-        ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setChefProjetId(chefProjetId);
         ficheSuivi.setDateCreation(LocalDateTime.now());
         ficheSuivi.setDateRemplissage(LocalDateTime.now());
@@ -199,11 +198,6 @@ public class FicheSuiviService {
             anciennesValeurs.put("nombreTaches", ficheSuivi.getTachesSuivi().size());
         }
         
-        // Planning actuel
-        if (ficheSuivi.getPlanningActuel() != null && ficheSuivi.getPlanningActuel().getTaches() != null) {
-            anciennesValeurs.put("nombreTachesPlanning", ficheSuivi.getPlanningActuel().getTaches().size());
-        }
-        
         System.out.println("=== DEBUG UPDATE FICHE SUIVI ===");
         System.out.println("Anciennes valeurs capturées: " + anciennesValeurs.size() + " champs");
 
@@ -234,7 +228,6 @@ public class FicheSuiviService {
         
         ficheSuivi.setConstatGlobal(request.getConstatGlobal());
         ficheSuivi.setTachesSuivi(request.getTachesSuivi());
-        ficheSuivi.setPlanningActuel(request.getPlanningActuel());
         ficheSuivi.setDateModification(LocalDateTime.now());
 
         FicheSuivi updated = ficheSuiviRepository.save(ficheSuivi);
@@ -266,11 +259,6 @@ public class FicheSuiviService {
         // Tâches de suivi
         if (updated.getTachesSuivi() != null) {
             nouvellesValeurs.put("nombreTaches", updated.getTachesSuivi().size());
-        }
-        
-        // Planning actuel
-        if (updated.getPlanningActuel() != null && updated.getPlanningActuel().getTaches() != null) {
-            nouvellesValeurs.put("nombreTachesPlanning", updated.getPlanningActuel().getTaches().size());
         }
         
         System.out.println("Nouvelles valeurs capturées: " + nouvellesValeurs.size() + " champs");

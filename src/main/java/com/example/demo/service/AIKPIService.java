@@ -4,6 +4,7 @@ import com.example.demo.dto.ActionIADTO;
 import com.example.demo.dto.AIKPIReportDTO;
 import com.example.demo.dto.AlerteKPIDTO;
 import com.example.demo.dto.AxeAnalyseIADTO;
+import com.example.demo.dto.ChargeMembreDTO;
 import com.example.demo.dto.ComposanteScoreDTO;
 import com.example.demo.dto.PointHistoriqueKPIDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
@@ -312,7 +313,8 @@ public class AIKPIService {
               .append("RÈGLES IMPÉRATIVES :\n")
               .append("1. Appuie chaque constat sur les chiffres fournis et cite-les explicitement.\n")
               .append("2. N'invente aucune donnée : si un indicateur est marqué « non renseigné », signale-le ")
-              .append("comme un manque de pilotage plutôt que de le supposer.\n")
+              .append("comme un manque de pilotage plutôt que de le supposer. Exception : les temps estimés et ")
+              .append("passés, que l'application ne collecte pas (voir la rubrique Charge).\n")
               .append("3. Les actions doivent être concrètes, réalisables sous 30 jours, et nommer la tâche ")
               .append("ou l'intervenant concerné quand l'information est disponible.\n")
               .append("4. Distingue le score de santé déjà calculé (règles déterministes) de ta propre ")
@@ -390,8 +392,14 @@ public class AIKPIService {
                       .append(" (>1 = produit plus que ce qu'il consomme)\n");
             }
         } else {
-            prompt.append("Non renseignée (ni charge estimée ni charge consommée dans les fiches)\n");
+            // Le formulaire de fiche de suivi ne propose pas de saisir les temps : leur absence n'est pas
+            // une faute du chef de projet, et l'IA ne doit pas la lui reprocher.
+            prompt.append("Temps estimés et temps passés : non collectés par l'application (la fiche de suivi ")
+                  .append("ne comporte pas ces champs). Ce n'est pas un défaut de pilotage : ne le reproche pas, ")
+                  .append("n'en fais ni un point de vigilance ni une action. Évalue l'axe Charge sur la ")
+                  .append("répartition du travail entre les membres de l'équipe :\n");
         }
+        ajouterRepartition(prompt, kpi.getChargeParMembre());
 
         prompt.append("\n-- Qualité --\n");
         prompt.append("Problèmes déclarés : ").append(kpi.getNombreProblemes())
@@ -477,6 +485,26 @@ public class AIKPIService {
         prompt.append(titre).append(" :\n");
         for (String element : elements) {
             prompt.append("  . ").append(element).append('\n');
+        }
+    }
+
+    /** Tâches par membre : ce que l'application sait réellement de la charge de chacun. */
+    private void ajouterRepartition(StringBuilder prompt, List<ChargeMembreDTO> membres) {
+        if (membres == null || membres.isEmpty()) {
+            prompt.append("Aucune tâche assignée nominativement\n");
+            return;
+        }
+        prompt.append("Répartition des tâches par membre :\n");
+        for (ChargeMembreDTO membre : membres) {
+            prompt.append("  . ").append(orNc(membre.getNom())).append(" : ")
+                  .append(membre.getNombreTaches()).append(" tâche(s), ")
+                  .append(membre.getTachesTerminees()).append(" terminée(s), ")
+                  .append(membre.getTachesEnRetard()).append(" hors délai, avancement moyen ")
+                  .append(pct(membre.getAvancementMoyen()));
+            if (membre.getChargeEstimee() > 0) {
+                prompt.append(", charge estimée ").append(dec(membre.getChargeEstimee())).append(" j");
+            }
+            prompt.append('\n');
         }
     }
 

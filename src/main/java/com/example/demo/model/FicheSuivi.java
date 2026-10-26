@@ -28,9 +28,6 @@ public class FicheSuivi {
     // Section III: État d'avancement global du projet
     private List<TacheSuivi> tachesSuivi = new ArrayList<>();
 
-    // Section IV: Planning actuel (Gantt)
-    private PlanningActuel planningActuel;
-
     private String chefProjetId;
     private LocalDateTime dateCreation;
     private LocalDateTime dateModification;
@@ -41,7 +38,6 @@ public class FicheSuivi {
         this.dateRapport = LocalDate.now();
         this.ficheSignaletique = new FicheSignaletique();
         this.constatGlobal = new ConstatGlobal();
-        this.planningActuel = new PlanningActuel();
     }
 
     // Getters and Setters
@@ -65,9 +61,6 @@ public class FicheSuivi {
 
     public List<TacheSuivi> getTachesSuivi() { return tachesSuivi; }
     public void setTachesSuivi(List<TacheSuivi> tachesSuivi) { this.tachesSuivi = tachesSuivi; }
-
-    public PlanningActuel getPlanningActuel() { return planningActuel; }
-    public void setPlanningActuel(PlanningActuel planningActuel) { this.planningActuel = planningActuel; }
 
     public String getChefProjetId() { return chefProjetId; }
     public void setChefProjetId(String chefProjetId) { this.chefProjetId = chefProjetId; }
@@ -281,39 +274,5 @@ public class FicheSuivi {
 
         public Boolean getEstTitre() { return estTitre; }
         public void setEstTitre(Boolean estTitre) { this.estTitre = estTitre; }
-    }
-
-    public static class PlanningActuel {
-        private List<TacheGantt> taches = new ArrayList<>();
-
-        public List<TacheGantt> getTaches() { return taches; }
-        public void setTaches(List<TacheGantt> taches) { this.taches = taches; }
-    }
-
-    public static class TacheGantt {
-        private String nom;
-        private LocalDate dateDebut;
-        private LocalDate dateFin;
-        private Integer tauxAvancement;
-        private String statut;
-        private List<TacheGantt> sousTaches = new ArrayList<>();
-
-        public String getNom() { return nom; }
-        public void setNom(String nom) { this.nom = nom; }
-
-        public LocalDate getDateDebut() { return dateDebut; }
-        public void setDateDebut(LocalDate dateDebut) { this.dateDebut = dateDebut; }
-
-        public LocalDate getDateFin() { return dateFin; }
-        public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
-
-        public Integer getTauxAvancement() { return tauxAvancement; }
-        public void setTauxAvancement(Integer tauxAvancement) { this.tauxAvancement = tauxAvancement; }
-
-        public String getStatut() { return statut; }
-        public void setStatut(String statut) { this.statut = statut; }
-
-        public List<TacheGantt> getSousTaches() { return sousTaches; }
-        public void setSousTaches(List<TacheGantt> sousTaches) { this.sousTaches = sousTaches; }
     }
 }

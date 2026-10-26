@@ -15,7 +15,6 @@ public class FicheSuiviRequest {
     private FicheSignaletique ficheSignaletique;
     private ConstatGlobal constatGlobal;
     private List<TacheSuivi> tachesSuivi;
-    private PlanningActuel planningActuel;
 
     // Getters and Setters
     public String getFicheProjetId() { return ficheProjetId; }
@@ -35,7 +34,4 @@ public class FicheSuiviRequest {
 
     public List<TacheSuivi> getTachesSuivi() { return tachesSuivi; }
     public void setTachesSuivi(List<TacheSuivi> tachesSuivi) { this.tachesSuivi = tachesSuivi; }
-
-    public PlanningActuel getPlanningActuel() { return planningActuel; }
-    public void setPlanningActuel(PlanningActuel planningActuel) { this.planningActuel = planningActuel; }
 }

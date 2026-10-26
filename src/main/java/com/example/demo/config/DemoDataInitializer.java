@@ -34,7 +34,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -806,7 +805,7 @@ public class DemoDataInitializer implements CommandLineRunner {
             tache("", "1- Recette", "PV de recette", lobna, "2026-09-07", "2026-09-18"),
             tache("", "2- Déploiement dans les commissariats régionaux", "PV de déploiement", mehdi, "2026-09-21", "2026-09-30"));
 
-        // Fiche remplie rapidement : ni recommandations ni planning actuel
+        // Fiche remplie rapidement : aucune recommandation
         deposer(parc, "2026-06-05 18:30")
             .avancement(100, 40, 0, 0, 0, 0, 0)
             .etat("Spécifications terminées. Le module de gestion des véhicules est en cours de développement.")
@@ -815,7 +814,6 @@ public class DemoDataInitializer implements CommandLineRunner {
             .risques("Retard du développement à cause de la disponibilité partielle de la développeuse.",
                 "Reprise des données des véhicules plus longue que prévu.")
             .budgetRealise(0.09)
-            .sansPlanningActuel()
             .enregistrer();
 
         // --- Deux fiches, la prochaine est attendue depuis le 7 octobre ---
@@ -978,7 +976,6 @@ public class DemoDataInitializer implements CommandLineRunner {
         private List<String> recommandations = List.of();
         private Double budgetPrevision;
         private double budgetRealise;
-        private boolean avecPlanningActuel = true;
 
         private Depot(Dossier dossier, LocalDateTime rempliLe) {
             this.dossier = dossier;
@@ -1024,11 +1021,6 @@ public class DemoDataInitializer implements CommandLineRunner {
             return this;
         }
 
-        Depot sansPlanningActuel() {
-            this.avecPlanningActuel = false;
-            return this;
-        }
-
         FicheSuivi enregistrer() {
             FicheProjet projet = dossier.projet;
             LocalDate dateRapport = rempliLe.toLocalDate();
@@ -1048,9 +1040,6 @@ public class DemoDataInitializer implements CommandLineRunner {
             constat.setRecommandations(new ArrayList<>(recommandations));
 
             fiche.setTachesSuivi(taches);
-            if (avecPlanningActuel) {
-                fiche.getPlanningActuel().setTaches(gantt(taches));
-            }
             fiche.setChefProjetId(dossier.chef.getId());
             fiche.setDateCreation(rempliLe);
             fiche.setDateRemplissage(rempliLe);
@@ -1216,38 +1205,6 @@ public class DemoDataInitializer implements CommandLineRunner {
             taches.add(tache);
         }
         return taches;
-    }
-
-    /** Planning actuel : une barre par action, de sa première sous-tâche à sa dernière échéance. */
-    private List<FicheSuivi.TacheGantt> gantt(List<FicheSuivi.TacheSuivi> taches) {
-        List<FicheSuivi.TacheGantt> barres = new ArrayList<>();
-        String action = null;
-        List<FicheSuivi.TacheSuivi> groupe = new ArrayList<>();
-        for (FicheSuivi.TacheSuivi tache : taches) {
-            if (Boolean.TRUE.equals(tache.getEstTitre())) {
-                ajouterBarre(barres, action, groupe);
-                action = tache.getSujet();
-                groupe = new ArrayList<>();
-            } else {
-                groupe.add(tache);
-            }
-        }
-        ajouterBarre(barres, action, groupe);
-        return barres;
-    }
-
-    private void ajouterBarre(List<FicheSuivi.TacheGantt> barres, String action, List<FicheSuivi.TacheSuivi> groupe) {
-        if (action == null || groupe.isEmpty()) {
-            return;
-        }
-        FicheSuivi.TacheGantt barre = new FicheSuivi.TacheGantt();
-        barre.setNom(action);
-        barre.setDateDebut(groupe.stream().map(FicheSuivi.TacheSuivi::getDebut).min(Comparator.naturalOrder()).orElse(null));
-        barre.setDateFin(groupe.stream().map(FicheSuivi.TacheSuivi::getEcheance).max(Comparator.naturalOrder()).orElse(null));
-        barre.setTauxAvancement((int) Math.round(groupe.stream()
-            .mapToInt(FicheSuivi.TacheSuivi::getPourcentageRealise).average().orElse(0)));
-        barre.setStatut(EN_COURS); // valeur par défaut du formulaire, qui ne propose pas d'autre statut
-        barres.add(barre);
     }
 
     /** Fiche signalétique : maîtres d'ouvrage et d'œuvre, délais et budget sont repris de la fiche projet. */

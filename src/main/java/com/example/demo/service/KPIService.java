@@ -48,6 +48,8 @@ public class KPIService {
     private static final double PENALITE_RISQUE_NON_TRAITE = 2.5;
     /** Borne haute de la projection de fin, pour éviter des extrapolations absurdes. */
     private static final long PROJECTION_MAX_JOURS = 3650;
+    /** Facteur au-delà duquel la prévision de suivi s'écarte trop du budget cadré pour être une réestimation. */
+    private static final double FACTEUR_INCOHERENCE_BUDGET = 10;
 
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
@@ -619,6 +621,18 @@ public class KPIService {
             alertes.add(new AlerteKPIDTO(AlerteKPIDTO.MAJEUR, "Charge", "Dérive de la charge",
                 String.format("Indice d'efficacité de %.2f : la charge consommée dépasse la valeur produite.",
                     kpi.getIndiceEfficacite())));
+        }
+
+        // Une prévision 10 fois plus grande (ou plus petite) que le budget cadré signale presque
+        // toujours une saisie dans la mauvaise unité : les montants de suivi sont en MD.
+        if (kpi.getBudgetTotal() > 0 && kpi.getBudgetPrevision() > 0) {
+            double rapport = kpi.getBudgetPrevision() / kpi.getBudgetTotal();
+            if (rapport > FACTEUR_INCOHERENCE_BUDGET || rapport < 1 / FACTEUR_INCOHERENCE_BUDGET) {
+                alertes.add(new AlerteKPIDTO(AlerteKPIDTO.MAJEUR, "Budget", "Budget de suivi incohérent avec le cadrage",
+                    String.format("La fiche de suivi prévoit %.2f MD contre %.2f MD cadrés dans la fiche projet : "
+                        + "vérifier l'unité de saisie (millions de dinars).",
+                        kpi.getBudgetPrevision(), kpi.getBudgetTotal())));
+            }
         }
 
         if (kpi.getBudgetRealisation() > 0

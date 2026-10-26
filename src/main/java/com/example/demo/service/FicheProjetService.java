@@ -90,8 +90,10 @@ public class FicheProjetService {
         ficheProjet.setDescription(request.getDescription());
         ficheProjet.setObjectifs(request.getObjectifs());
         ficheProjet.setResponsable(request.getResponsable());
-        ficheProjet.setDateDebut(request.getDateDebut());
-        ficheProjet.setDateFinPrevue(request.getDateFinPrevue());
+        // Le formulaire ne saisit que les délais prévisionnels : ce sont eux qui donnent le début
+        // et la fin prévue lus par les cartes projet, les KPI de retard et les fiches de suivi.
+        ficheProjet.setDateDebut(request.getDateDebutPrevision() != null ? request.getDateDebutPrevision() : request.getDateDebut());
+        ficheProjet.setDateFinPrevue(request.getDateFinPrevision() != null ? request.getDateFinPrevision() : request.getDateFinPrevue());
         ficheProjet.setStatut(request.getStatut() != null ? request.getStatut() : "EN_COURS");
         ficheProjet.setCategorie(request.getCategorie());
         ficheProjet.setChefProjetId(chefProjetId);
@@ -174,8 +176,10 @@ public class FicheProjetService {
         ficheProjet.setDescription(request.getDescription());
         ficheProjet.setObjectifs(request.getObjectifs());
         ficheProjet.setResponsable(request.getResponsable());
-        ficheProjet.setDateDebut(request.getDateDebut());
-        ficheProjet.setDateFinPrevue(request.getDateFinPrevue());
+        // Le formulaire ne saisit que les délais prévisionnels : ce sont eux qui donnent le début
+        // et la fin prévue lus par les cartes projet, les KPI de retard et les fiches de suivi.
+        ficheProjet.setDateDebut(request.getDateDebutPrevision() != null ? request.getDateDebutPrevision() : request.getDateDebut());
+        ficheProjet.setDateFinPrevue(request.getDateFinPrevision() != null ? request.getDateFinPrevision() : request.getDateFinPrevue());
         ficheProjet.setStatut(request.getStatut());
         ficheProjet.setCategorie(request.getCategorie());
         

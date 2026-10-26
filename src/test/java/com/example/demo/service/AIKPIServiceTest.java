@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.AIKPIReportDTO;
 import com.example.demo.dto.AlerteKPIDTO;
 import com.example.demo.dto.AxeAnalyseIADTO;
+import com.example.demo.dto.ChargeMembreDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
 import com.example.demo.dto.TacheKPIDTO;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -291,6 +292,24 @@ class AIKPIServiceTest {
             "les alertes déterministes doivent être transmises pour éviter les doublons");
         assertTrue(prompt.contains("Aucun suivi budgétaire renseigné"),
             "l'absence de donnée doit être dite explicitement plutôt que tue");
+    }
+
+    @Test
+    void sansTempsSaisisLaChargeSeJugeSurLaRepartitionDesTaches() {
+        ProjetKPIReportDTO kpi = kpiExploitable();
+        kpi.setChargeEstimee(0);
+        kpi.setChargeConsommee(0);
+        ChargeMembreDTO nour = new ChargeMembreDTO("Nour Hamdi");
+        nour.setNombreTaches(3);
+        nour.setTachesEnRetard(2);
+        kpi.setChargeParMembre(List.of(nour));
+
+        String prompt = aiKpiService.buildPrompt(kpi);
+
+        assertTrue(prompt.contains("non collectés par l'application"),
+            "l'IA doit savoir que les temps ne sont pas saisissables, pour ne pas le reprocher");
+        assertTrue(prompt.contains("Nour Hamdi : 3 tâche(s)"), "la répartition par membre doit être transmise");
+        assertTrue(prompt.contains("2 hors délai"), "les retards par membre doivent être transmis");
     }
 
     /* ---------------- Transport : reprise, quota, cache ---------------- */
