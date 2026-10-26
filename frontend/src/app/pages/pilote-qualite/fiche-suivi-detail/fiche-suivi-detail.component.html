@@ -16,7 +16,6 @@
     <button [class.active]="currentTab==='signaletique'" (click)="setTab('signaletique')">📋 Signalétique</button>
     <button [class.active]="currentTab==='constat'" (click)="setTab('constat')">📊 Constat Global</button>
     <button [class.active]="currentTab==='taches'" (click)="setTab('taches')">✅ Tâches</button>
-    <button [class.active]="currentTab==='planning'" (click)="setTab('planning')">📅 Planning</button>
   </div>
 
   <!-- Tab: Signalétique -->
@@ -82,7 +81,7 @@
 
     <!-- Financier -->
     <div class="section yellow-section">
-      <h2 class="section-title yellow-title"><span class="num yellow">5</span> Financier</h2>
+      <h2 class="section-title yellow-title"><span class="num yellow">5</span> Financier (MD/HT)</h2>
       <div class="grid-3">
         <div class="field-card yellow-border">
           <label>Budget prévision</label>
@@ -197,44 +196,6 @@
       <p>Aucune tâche enregistrée.</p>
     </div>
   </div>
-
-  <!-- Tab: Planning -->
-  <div class="tab-content" *ngIf="currentTab==='planning'">
-    <div class="section" *ngIf="ficheSuivi.planningActuel?.taches && ficheSuivi.planningActuel?.taches?.length! > 0">
-      <h2 class="section-title"><span class="num green">📅</span> Planning actuel</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Tâche</th>
-              <th>Date début</th>
-              <th>Date fin</th>
-              <th>Avancement</th>
-              <th>Statut</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let tg of ficheSuivi.planningActuel.taches">
-              <td><strong>{{ tg.nom || '-' }}</strong></td>
-              <td>{{ formatShortDate(tg.dateDebut) }}</td>
-              <td>{{ formatShortDate(tg.dateFin) }}</td>
-              <td>
-                <div class="progress-bar-wrap">
-                  <div class="progress-bar" [style.width.%]="tg.tauxAvancement || 0"></div>
-                </div>
-                <span class="progress-text">{{ tg.tauxAvancement || 0 }}%</span>
-              </td>
-              <td><span [style]="getStatutStyle(tg.statut)">{{ tg.statut || '-' }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="empty-state" *ngIf="!ficheSuivi.planningActuel?.taches || ficheSuivi.planningActuel?.taches?.length === 0">
-      <p>Aucune donnée de planning.</p>
-    </div>
-  </div>
-
 </div>
 
 <!-- Loading -->

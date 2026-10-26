@@ -387,11 +387,11 @@ export class ProjetKPIComponent implements OnInit {
     }
   }
 
-  /** Lecture du SPI : au-dessus de 1 le projet est en avance sur son planning. */
+  /** Lecture du SPI : nettement au-dessus de 1 le projet est en avance, autour de 1 il est conforme. */
   getSpiLabel(): string {
     if (!this.kpiData || this.kpiData.tauxAvancementPlanifie <= 0) return 'Planning non exploitable';
     const spi = this.kpiData.spi;
-    if (spi >= 1) return 'En avance sur le planning';
+    if (spi > 1.05) return 'En avance sur le planning';
     if (spi >= 0.9) return 'Conforme au planning';
     if (spi >= 0.8) return 'Léger retrait';
     return 'Retard significatif';
@@ -484,6 +484,18 @@ export class ProjetKPIComponent implements OnInit {
     const end = new Date(this.kpiData.dateFinPrevue).getTime();
     if (isNaN(start) || isNaN(end) || end < start) return null;
     return Math.round((end - start) / 86400000);
+  }
+
+  /**
+   * Retard de livraison d'un projet livré (fin réelle - fin prévue, en jours), null s'il n'est pas livré :
+   * une fois le projet clos, le retard « à date » vaut 0 et ne dit plus rien de la livraison.
+   */
+  getRetardLivraison(): number | null {
+    if (!this.kpiData?.dateFinReelle || !this.kpiData?.dateFinPrevue) return null;
+    const prevue = new Date(this.kpiData.dateFinPrevue).getTime();
+    const reelle = new Date(this.kpiData.dateFinReelle).getTime();
+    if (isNaN(prevue) || isNaN(reelle)) return null;
+    return Math.round((reelle - prevue) / 86400000);
   }
 
   getTimelineProgress(): number {

@@ -52,6 +52,8 @@ export interface FicheProjet {
   chefProjetId?: string;
   dateDebut?: string;
   dateFinPrevue?: string;
+  dateDebutPrevision?: string;
+  dateFinPrevision?: string;
   statut?: string;
   categorie?: string;
   dateCreation?: string;

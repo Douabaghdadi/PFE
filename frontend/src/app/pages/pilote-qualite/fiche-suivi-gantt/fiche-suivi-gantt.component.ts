@@ -20,11 +20,12 @@ export class PiloteFicheSuiviGanttComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  ganttDayWidth = 28;
+  // Le diagramme est dimensionné en pourcentage de la largeur disponible :
+  // toute la période tient à l'écran, sans défilement horizontal.
   ganttStart: Date = new Date();
   ganttEnd: Date = new Date();
-  ganttTotalWidth = 1;
-  ganttMonths: { label: string; days: number }[] = [];
+  ganttTotalDays = 1;
+  ganttMonths: { label: string; percent: number }[] = [];
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -79,8 +80,7 @@ export class PiloteFicheSuiviGanttComponent implements OnInit {
     this.ganttStart = new Date(this.ganttStart.getFullYear(), this.ganttStart.getMonth(), 1);
     this.ganttEnd   = new Date(this.ganttEnd.getFullYear(), this.ganttEnd.getMonth() + 1, 0);
 
-    const totalDays = Math.ceil((this.ganttEnd.getTime() - this.ganttStart.getTime()) / 86400000) + 1;
-    this.ganttTotalWidth = totalDays * this.ganttDayWidth;
+    this.ganttTotalDays = Math.ceil((this.ganttEnd.getTime() - this.ganttStart.getTime()) / 86400000) + 1;
 
     this.ganttMonths = [];
     let cur = new Date(this.ganttStart);
@@ -91,23 +91,25 @@ export class PiloteFicheSuiviGanttComponent implements OnInit {
       const endOfMonth = lastDay < this.ganttEnd ? lastDay : this.ganttEnd;
       const days = Math.ceil((endOfMonth.getTime() - cur.getTime()) / 86400000) + 1;
       this.ganttMonths.push({
-        label: cur.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' }),
-        days
+        label: cur.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }),
+        percent: days / this.ganttTotalDays * 100
       });
       cur = new Date(year, month + 1, 1);
     }
   }
 
+  /** Position du début de la barre, en % de la période affichée. */
   getBarLeft(date?: string): number {
     if (!date) return 0;
     const diff = Math.ceil((new Date(date).getTime() - this.ganttStart.getTime()) / 86400000);
-    return Math.max(0, diff) * this.ganttDayWidth;
+    return Math.max(0, diff) / this.ganttTotalDays * 100;
   }
 
+  /** Longueur de la barre, en % de la période affichée (un jour au minimum). */
   getBarWidth(debut?: string, echeance?: string): number {
-    if (!debut || !echeance) return this.ganttDayWidth;
+    if (!debut || !echeance) return 1 / this.ganttTotalDays * 100;
     const days = Math.ceil((new Date(echeance).getTime() - new Date(debut).getTime()) / 86400000) + 1;
-    return Math.max(1, days) * this.ganttDayWidth;
+    return Math.max(1, days) / this.ganttTotalDays * 100;
   }
 
   getBarStyle(statut?: string): string {

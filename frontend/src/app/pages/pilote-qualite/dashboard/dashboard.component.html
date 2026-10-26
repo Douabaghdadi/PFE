@@ -84,8 +84,8 @@
               </p>
             </div>
           </div>
-          <button *ngIf="nbAlertes > 2" class="alert-toggle" (click)="alertesOuvertes = !alertesOuvertes">
-            {{ alertesOuvertes ? 'Réduire' : 'Tout afficher (' + nbAlertes + ')' }}
+          <button *ngIf="nbAlertes > 3" class="alert-toggle" (click)="alertesOuvertes = !alertesOuvertes">
+            {{ alertesOuvertes ? 'Réduire' : 'Afficher les ' + (nbAlertes - 3) + ' autres' }}
           </button>
         </div>
 
@@ -246,7 +246,7 @@
       </section>
 
       <!-- Carte de chaleur -->
-      <section class="panel section-gap">
+      <section class="panel section-gap heatmap-panel">
         <div class="panel-head-row">
           <div>
             <h2 class="panel-title">🗓️ Carte de chaleur du reporting</h2>
@@ -292,7 +292,7 @@
 
       <!-- Projets à traiter / Derniers dépôts -->
       <section class="row-2col">
-        <div class="panel">
+        <div class="panel panel-liste">
           <h2 class="panel-title">🚩 Projets à traiter</h2>
           <p class="panel-subtitle">Un projet par ligne : son problème et l'action à faire</p>
 
@@ -324,7 +324,7 @@
           </button>
         </div>
 
-        <div class="panel">
+        <div class="panel panel-liste">
           <h2 class="panel-title">📥 Derniers dépôts</h2>
           <p class="panel-subtitle">Contrôle de remplissage à la réception</p>
 

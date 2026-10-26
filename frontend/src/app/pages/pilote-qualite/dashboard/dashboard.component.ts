@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -26,7 +26,6 @@ interface AuditFiche {
   delaisFinancier: boolean;
   constat: boolean;
   taches: boolean;
-  planning: boolean;
   recommandations: boolean;
   score: number;
 }
@@ -135,7 +134,6 @@ const RUBRIQUES: { cle: keyof AuditFiche; label: string }[] = [
   { cle: 'delaisFinancier', label: 'Délais & données financières' },
   { cle: 'constat', label: 'Constat global' },
   { cle: 'taches', label: 'Tâches de suivi' },
-  { cle: 'planning', label: 'Planning actuel' },
   { cle: 'recommandations', label: 'Recommandations' },
 ];
 
@@ -156,6 +154,7 @@ export class PiloteDashboardComponent implements OnInit {
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
   private notificationService = inject(PiloteQualiteNotificationService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   loading = true;
   error: string | null = null;
@@ -172,9 +171,12 @@ export class PiloteDashboardComponent implements OnInit {
   conformiteFilter: '' | Conformite = '';
 
   // --- Options d'affichage ---
-  alertesOuvertes = true;
+  /** Les alertes s'ouvrent repliées : les plus en retard d'abord, les autres sur demande. */
+  alertesOuvertes = false;
   toutesLesLignes = false;
   heatmapComplete = false;
+  /** Pendant l'impression, les listes raccourcies à l'écran sont imprimées en entier. */
+  impression = false;
 
   // --- Relances envoyées depuis le tableau de bord ---
   relancesEnCours = new Set<string>();
@@ -255,7 +257,6 @@ export class PiloteDashboardComponent implements OnInit {
           && sig?.financier?.budgetPrevision != null,
         constat: this.rempli(constat?.etatAvancement) && this.rempli(constat?.objectifPrincipal),
         taches: (f.tachesSuivi || []).some(t => !t.estTitre),
-        planning: (f.planningActuel?.taches || []).length > 0,
         recommandations: (constat?.recommandations || []).some(r => this.rempli(r)),
         score: 0,
       };
@@ -562,17 +563,17 @@ export class PiloteDashboardComponent implements OnInit {
   // ==================== Tri & rendu ====================
 
   get projetsATraiterVisibles(): ProjetATraiter[] {
-    return this.toutesLesLignes ? this.projetsATraiter : this.projetsATraiter.slice(0, 6);
+    return this.toutesLesLignes || this.impression ? this.projetsATraiter : this.projetsATraiter.slice(0, 6);
   }
 
   get heatmapRows(): ProjetRow[] {
     const liste = [...this.rows].sort((a, b) => a.nom.localeCompare(b.nom));
-    return this.heatmapComplete ? liste : liste.slice(0, 8);
+    return this.heatmapComplete || this.impression ? liste : liste.slice(0, 8);
   }
 
   get alertes(): ProjetRow[] {
     const liste = this.rows.filter(r => r.conformite === 'EN_RETARD').sort((a, b) => b.joursRetard - a.joursRetard);
-    return this.alertesOuvertes ? liste : liste.slice(0, 2);
+    return this.alertesOuvertes || this.impression ? liste : liste.slice(0, 3);
   }
 
   get nbAlertes(): number {
@@ -673,7 +674,20 @@ export class PiloteDashboardComponent implements OnInit {
   }
 
   imprimer() {
+    this.avantImpression();
     window.print();
+  }
+
+  // Aussi déclenché par Ctrl+P : le DOM doit être complété avant que le navigateur ne mette en page
+  @HostListener('window:beforeprint')
+  avantImpression() {
+    this.impression = true;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('window:afterprint')
+  apresImpression() {
+    this.impression = false;
   }
 
   onKpiClick(kpi: KpiCard) {

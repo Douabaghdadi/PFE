@@ -86,6 +86,15 @@ export class HistoriqueProjetComponent implements OnInit {
     return labels[action] || action;
   }
 
+  getRoleLabel(role: string): string {
+    const labels: { [key: string]: string } = {
+      'ROLE_ADMIN': 'Administrateur',
+      'ROLE_CHEF_PROJET': 'Chef de projet',
+      'ROLE_PILOTE_QUALITE': 'Pilote qualité'
+    };
+    return labels[role] || role;
+  }
+
   getActionClass(action: string): string {
     const classes: { [key: string]: string } = {
       'CREATION': 'bg-green-100 text-green-800',

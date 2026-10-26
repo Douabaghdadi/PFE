@@ -167,12 +167,6 @@
 
           <div class="mini-grid">
             <div class="mini-stat">
-              <span class="mini-label">Écart au planning</span>
-              <span class="mini-value" [style.color]="getEcartColor()">
-                {{ kpiData.ecartPlanning > 0 ? '+' : '' }}{{ kpiData.ecartPlanning | number:'1.0-0' }} pts
-              </span>
-            </div>
-            <div class="mini-stat">
               <span class="mini-label">Depuis la fiche précédente</span>
               <span class="mini-value" [style.color]="kpiData.deltaAvancement > 0 ? '#09C82C' : '#f59e0b'">
                 {{ kpiData.deltaAvancement > 0 ? '+' : '' }}{{ kpiData.deltaAvancement | number:'1.1-1' }} pts
@@ -477,7 +471,10 @@
               <span class="status-chip late" *ngIf="kpiData.joursRetard > 0">
                 ⚠️ {{ kpiData.joursRetard }} jour(s) de retard
               </span>
-              <span class="status-chip ontime" *ngIf="kpiData.joursRetard === 0">
+              <span class="status-chip late" *ngIf="(getRetardLivraison() ?? 0) > 0">
+                ⚠️ Livré avec {{ getRetardLivraison() }} jour(s) de retard
+              </span>
+              <span class="status-chip ontime" *ngIf="kpiData.joursRetard === 0 && (getRetardLivraison() ?? 0) <= 0">
                 ✅ Dans les délais
               </span>
               <span class="status-chip" [class.late]="kpiData.joursDerapageProjete > 0"
@@ -651,14 +648,14 @@
             de pilotage assortie d'un plan d'action priorisé.
           </p>
           <button (click)="analyzeWithAI()" class="ia-cta">
-            ✨ Lancer l'analyse
+            Lancer l'analyse
           </button>
         </div>
 
         <!-- Analyse en cours -->
         <div *ngIf="loadingAI" class="state-box card">
-          <div class="spinner purple"></div>
-          <p class="state-text" style="color: #7c3aed;">Analyse des indicateurs en cours...</p>
+          <div class="spinner ia"></div>
+          <p class="state-text" style="color: #07a625;">Analyse des indicateurs en cours...</p>
         </div>
 
         <!-- Erreur réseau -->

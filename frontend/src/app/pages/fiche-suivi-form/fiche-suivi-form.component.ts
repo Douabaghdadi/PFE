@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
-import { FicheSuiviService, FicheSuivi, TacheSuivi, TacheGantt } from '../../services/fiche-suivi.service';
+import { FicheSuiviService, FicheSuivi, TacheSuivi } from '../../services/fiche-suivi.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { environment } from '../../../environments/environment';
@@ -28,6 +28,7 @@ interface FicheProjet {
   dateFinRealisation?: string;
   ecartConventionnel?: number;
   planning?: PlanningAction[];
+  estimationBudget?: { budgetMDHT?: string };
 }
 
 @Component({
@@ -70,10 +71,7 @@ export class FicheSuiviFormComponent implements OnInit {
       principauxRisques: [],
       recommandations: []
     },
-    tachesSuivi: [],
-    planningActuel: {
-      taches: []
-    }
+    tachesSuivi: []
   };
 
   ngOnInit() {
@@ -143,6 +141,7 @@ export class FicheSuiviFormComponent implements OnInit {
           experts: last.ficheSignaletique.experts ? [...last.ficheSignaletique.experts] : []
         };
         this.reprendreMaitresDuProjet();
+        this.reprendreBudgetCadre();
         this.ficheSuivi.constatGlobal = {
           ...last.constatGlobal,
           problemesRencontres: [...(last.constatGlobal.problemesRencontres || [])],
@@ -152,9 +151,6 @@ export class FicheSuiviFormComponent implements OnInit {
         // Reprendre tel quel le contenu de la fiche précédente : titres (actions
         // du projet) et sous-tâches détaillées, sans réimporter le planning.
         this.ficheSuivi.tachesSuivi = last.tachesSuivi.map(t => ({ ...t }));
-        this.ficheSuivi.planningActuel = {
-          taches: last.planningActuel.taches.map(t => ({ ...t, sousTaches: [...(t.sousTaches || [])] }))
-        };
         // Réinitialiser les champs propres à la nouvelle fiche
         this.ficheSuivi.dateRapport = new Date().toISOString().split('T')[0];
         this.generateNumeroRapport();
@@ -222,6 +218,7 @@ export class FicheSuiviFormComponent implements OnInit {
       if (selected.dateFinRealisation) this.ficheSuivi.ficheSignaletique.delais.dateFinRealisation = selected.dateFinRealisation;
       if (selected.ecartConventionnel) this.ficheSuivi.ficheSignaletique.delais.ecartConventionnel = selected.ecartConventionnel;
       this.reprendreMaitresDuProjet();
+      this.reprendreBudgetCadre();
     }
 
     // Pour une nouvelle fiche : si c'est la 1ère fiche de suivi du projet, on importe
@@ -241,6 +238,51 @@ export class FicheSuiviFormComponent implements OnInit {
     if (!selected) return;
     if (selected.maitreOuvrage) this.ficheSuivi.ficheSignaletique.maitreOuvrage = selected.maitreOuvrage;
     if (selected.maitreOeuvre) this.ficheSuivi.ficheSignaletique.maitreOeuvre = selected.maitreOeuvre;
+  }
+
+  /** Budget cadré dans la fiche de projet, en MD/HT (null s'il n'est pas renseigné). */
+  budgetCadre(): number | null {
+    const selected = this.projets().find(p => p.id === this.ficheSuivi.ficheProjetId);
+    const budget = parseFloat(selected?.estimationBudget?.budgetMDHT || '');
+    return budget > 0 ? budget : null;
+  }
+
+  /**
+   * Une prévision vide part du budget cadré dans la fiche de projet : le chef de projet
+   * n'a plus qu'à l'ajuster, et la saisie démarre dans la bonne unité (MD).
+   */
+  reprendreBudgetCadre() {
+    const financier = (this.ficheSuivi.ficheSignaletique.financier ??= {});
+    const cadre = this.budgetCadre();
+    if (cadre !== null && financier.budgetPrevision == null) {
+      financier.budgetPrevision = cadre;
+      this.calculerEcartBudget();
+    }
+  }
+
+  /** L'écart se déduit de la prévision et de la réalisation au lieu d'être ressaisi. */
+  calculerEcartBudget() {
+    const financier = this.ficheSuivi.ficheSignaletique.financier;
+    if (financier.budgetPrevision == null || financier.budgetRealisation == null) {
+      financier.ecart = undefined;
+      return;
+    }
+    financier.ecart = Math.round((financier.budgetPrevision - financier.budgetRealisation) * 100) / 100;
+  }
+
+  /** Une prévision à plus d'un facteur 10 du budget cadré trahit presque toujours une erreur d'unité. */
+  previsionHorsCadrage(): boolean {
+    const cadre = this.budgetCadre();
+    const prevision = this.ficheSuivi.ficheSignaletique.financier?.budgetPrevision;
+    if (cadre === null || !prevision || prevision <= 0) return false;
+    const rapport = prevision / cadre;
+    return rapport > 10 || rapport < 0.1;
+  }
+
+  /** Équivalent en dinars d'un montant saisi en MD, affiché sous le champ pour lever l'ambiguïté d'unité. */
+  enDinars(montantMD?: number | null): string {
+    if (montantMD == null) return '';
+    return (montantMD * 1000000).toLocaleString('fr-FR', { maximumFractionDigits: 0 }) + ' DT';
   }
 
   /**
@@ -307,7 +349,7 @@ export class FicheSuiviFormComponent implements OnInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    const tabs = ['signaletique', 'constat', 'taches', 'planning'];
+    const tabs = ['signaletique', 'constat', 'taches'];
     const currentIndex = tabs.indexOf(this.currentTab());
     if (currentIndex < tabs.length - 1) {
       this.currentTab.set(tabs[currentIndex + 1]);
@@ -339,16 +381,6 @@ export class FicheSuiviFormComponent implements OnInit {
       });
     }
 
-    if (tab === 'planning') {
-      this.ficheSuivi.planningActuel.taches.forEach((t, i) => {
-        if (!t.nom?.trim()) errors[`ganttNom_${i}`] = 'Le nom de la tâche est obligatoire.';
-        if (t.dateDebut && t.dateFin && t.dateFin < t.dateDebut)
-          errors[`ganttFin_${i}`] = 'La date de fin doit être après la date de début.';
-        if ((t.tauxAvancement ?? 0) < 0 || (t.tauxAvancement ?? 0) > 100)
-          errors[`ganttTaux_${i}`] = 'Le taux doit être entre 0 et 100.';
-      });
-    }
-
     this.validationErrors.set(errors);
     return Object.keys(errors).length === 0;
   }
@@ -362,7 +394,7 @@ export class FicheSuiviFormComponent implements OnInit {
   }
 
   previousTab() {
-    const tabs = ['signaletique', 'constat', 'taches', 'planning'];
+    const tabs = ['signaletique', 'constat', 'taches'];
     const currentIndex = tabs.indexOf(this.currentTab());
     if (currentIndex > 0) {
       this.currentTab.set(tabs[currentIndex - 1]);
@@ -374,7 +406,7 @@ export class FicheSuiviFormComponent implements OnInit {
   }
 
   isLastTab(): boolean {
-    return this.currentTab() === 'planning';
+    return this.currentTab() === 'taches';
   }
 
   addCaracteristique() {
@@ -462,25 +494,11 @@ export class FicheSuiviFormComponent implements OnInit {
     });
   }
 
-  addTacheGantt() {
-    const newTache: TacheGantt = {
-      nom: '',
-      tauxAvancement: 0,
-      statut: 'En cours',
-      sousTaches: []
-    };
-    this.ficheSuivi.planningActuel.taches.push(newTache);
-  }
-
-  removeTacheGantt(index: number) {
-    this.ficheSuivi.planningActuel.taches.splice(index, 1);
-  }
-
   onSubmit() {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const allTabs = ['signaletique', 'constat', 'taches', 'planning'];
+    const allTabs = ['signaletique', 'constat', 'taches'];
     for (const tab of allTabs) {
       this.currentTab.set(tab);
       if (!this.validateCurrentTab()) {
@@ -488,7 +506,7 @@ export class FicheSuiviFormComponent implements OnInit {
         return;
       }
     }
-    this.currentTab.set('planning');
+    this.currentTab.set('taches');
     
     this.isLoading.set(true);
     

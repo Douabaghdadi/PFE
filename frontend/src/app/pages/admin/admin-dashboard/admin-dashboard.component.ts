@@ -1,6 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AdminDashboardService, AdminUser, Nomenclature } from '../../../services/admin-dashboard.service';
@@ -16,9 +15,9 @@ import { FicheSuivi } from '../../../services/fiche-suivi.service';
  * tableau de bord du pilote qualité (/pilote-qualite/dashboard).
  */
 
-type Periode = '30' | '90' | '365' | 'all';
-
 const JOUR_MS = 24 * 60 * 60 * 1000;
+/** Période fixe des indicateurs datés (nouvelles inscriptions, fiches, activité récente). */
+const PERIODE_JOURS = 365;
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 const SANS_ROLE = 'SANS_ROLE';
 
@@ -65,7 +64,7 @@ interface KpiCard {
   icon: string;
   accent: string;
   /** Sans action, la carte est purement informative et n'est pas cliquable. */
-  action?: 'role' | 'route' | 'reset';
+  action?: 'route';
   payload?: string;
 }
 
@@ -130,7 +129,7 @@ interface Attention {
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.css']
 })
@@ -148,17 +147,6 @@ export class AdminDashboardComponent implements OnInit {
   projets: FicheProjet[] = [];
   fiches: FicheSuivi[] = [];
   nomenclatures: Nomenclature[] = [];
-
-  // --- Filtres ---
-  searchTerm = '';
-  roleFilter = '';
-  periode: Periode = '365';
-  readonly periodeOptions: { value: Periode; label: string }[] = [
-    { value: '30', label: '30 derniers jours' },
-    { value: '90', label: '90 derniers jours' },
-    { value: '365', label: '12 derniers mois' },
-    { value: 'all', label: 'Depuis le début' },
-  ];
 
   // --- Tri du tableau des comptes ---
   sortKey: 'username' | 'createdAt' | 'projets' | 'fiches' = 'createdAt';
@@ -183,7 +171,6 @@ export class AdminDashboardComponent implements OnInit {
   nomenclaturesInactives = 0;
   activitesCompletes = false;
 
-  readonly roleDefs = ROLE_DEFS;
   readonly donutCircumference = DONUT_CIRCUMFERENCE;
 
   ngOnInit() {
@@ -208,7 +195,9 @@ export class AdminDashboardComponent implements OnInit {
       this.nomenclatures = nomenclatures || [];
       this.generatedAt = new Date();
       this.construireLignes();
-      this.applyFilters();
+      this.rows = [...this.rowsAll];
+      this.trierLignes();
+      this.calculerIndicateurs();
       this.loading = false;
     }).catch(err => {
       console.error('Erreur lors du chargement du tableau de bord admin:', err);
@@ -275,56 +264,12 @@ export class AdminDashboardComponent implements OnInit {
       || { key, label: key, court: key, color: '#94a3b8' };
   }
 
-  // ==================== Filtres ====================
+  // ==================== Période ====================
 
-  applyFilters() {
-    const terme = this.searchTerm.trim().toLowerCase();
-
-    this.rows = this.rowsAll.filter(r => {
-      if (this.roleFilter && r.rolePrincipal !== this.roleFilter) return false;
-      if (!terme) return true;
-      return r.username.toLowerCase().includes(terme) || r.email.toLowerCase().includes(terme);
-    });
-
-    this.trierLignes();
-    this.calculerIndicateurs();
-  }
-
-  resetFilters() {
-    this.searchTerm = '';
-    this.roleFilter = '';
-    this.periode = '365';
-    this.applyFilters();
-  }
-
-  get filtresActifs(): boolean {
-    return !!this.searchTerm || !!this.roleFilter || this.periode !== '365';
-  }
-
-  get roleFilterLabel(): string {
-    return this.roleDef(this.roleFilter).label;
-  }
-
-  get periodeLabel(): string {
-    return this.periodeOptions.find(o => o.value === this.periode)?.label || '';
-  }
-
-  setRoleFilter(key: string) {
-    this.roleFilter = this.roleFilter === key ? '' : key;
-    this.applyFilters();
-  }
-
-  /** Borne basse de la période, ou null quand on regarde tout l'historique. */
-  private periodeLimite(): number | null {
-    if (this.periode === 'all') return null;
-    return Date.now() - parseInt(this.periode, 10) * JOUR_MS;
-  }
-
+  /** Vrai si la date tombe dans les 12 derniers mois. */
   private dansPeriode(date?: string): boolean {
-    const limite = this.periodeLimite();
-    if (limite === null) return true;
     const t = this.temps(date);
-    return t > 0 && t >= limite;
+    return t > 0 && t >= Date.now() - PERIODE_JOURS * JOUR_MS;
   }
 
   // ==================== Indicateurs ====================
@@ -369,10 +314,9 @@ export class AdminDashboardComponent implements OnInit {
         key: 'nouveaux',
         title: 'Nouvelles inscriptions',
         value: String(this.nouveauxComptes),
-        hint: this.periode === 'all' ? 'Depuis le début' : this.periodeLabel.toLowerCase(),
+        hint: '12 derniers mois',
         icon: '✨',
         accent: 'green',
-        action: 'reset',
       },
       {
         key: 'chefs',
@@ -381,8 +325,6 @@ export class AdminDashboardComponent implements OnInit {
         hint: chefsSansProjet ? `${chefsSansProjet} sans projet rattaché` : 'Tous ont au moins un projet',
         icon: '📁',
         accent: 'indigo',
-        action: 'role',
-        payload: 'ROLE_CHEF_PROJET',
       },
       {
         key: 'privilegies',
@@ -399,7 +341,6 @@ export class AdminDashboardComponent implements OnInit {
         hint: `${this.projetsActifs} en cours · ${projetsSansSuivi} sans fiche de suivi`,
         icon: '🗂️',
         accent: 'orange',
-        action: 'reset',
       },
       {
         key: 'referentiel',
@@ -727,11 +668,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   onKpiClick(kpi: KpiCard) {
-    switch (kpi.action) {
-      case 'role': this.setRoleFilter(kpi.payload!); break;
-      case 'route': this.router.navigate([kpi.payload!]); break;
-      case 'reset': this.resetFilters(); break;
-    }
+    if (kpi.action === 'route') this.router.navigate([kpi.payload!]);
   }
 
   navigateTo(lien?: any[]) {

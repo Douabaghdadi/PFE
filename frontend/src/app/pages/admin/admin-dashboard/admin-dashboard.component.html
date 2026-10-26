@@ -27,36 +27,6 @@
       </div>
     </header>
 
-    <!-- ============ Barre de filtres ============ -->
-    <section class="toolbar" *ngIf="!error">
-      <div class="toolbar-field toolbar-search">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <input type="text" placeholder="Rechercher un compte ou un email…"
-               [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()">
-        <button *ngIf="searchTerm" class="clear-input" (click)="searchTerm = ''; applyFilters()" aria-label="Effacer">&times;</button>
-      </div>
-
-      <select class="toolbar-select" [(ngModel)]="roleFilter" (ngModelChange)="applyFilters()">
-        <option value="">Tous les rôles</option>
-        <option *ngFor="let r of roleDefs" [value]="r.key">{{ r.label }}</option>
-      </select>
-
-      <select class="toolbar-select" [(ngModel)]="periode" (ngModelChange)="applyFilters()">
-        <option *ngFor="let o of periodeOptions" [value]="o.value">{{ o.label }}</option>
-      </select>
-
-      <button class="toolbar-reset" (click)="resetFilters()" [disabled]="!filtresActifs">Réinitialiser</button>
-    </section>
-
-    <div class="filter-chips" *ngIf="filtresActifs && !error">
-      <span class="chip-label">Filtres actifs :</span>
-      <span *ngIf="searchTerm" class="chip">« {{ searchTerm }} » <button (click)="searchTerm = ''; applyFilters()">&times;</button></span>
-      <span *ngIf="roleFilter" class="chip">{{ roleFilterLabel }} <button (click)="roleFilter = ''; applyFilters()">&times;</button></span>
-      <span *ngIf="periode !== '365'" class="chip">{{ periodeLabel }} <button (click)="periode = '365'; applyFilters()">&times;</button></span>
-    </div>
-
     <!-- ============ Chargement ============ -->
     <div *ngIf="loading" class="skeleton-wrap">
       <div class="stats-grid">
@@ -110,7 +80,6 @@
       <!-- KPI -->
       <section class="stats-grid">
         <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
-                [class.selected]="kpi.action === 'role' && roleFilter === kpi.payload"
                 [disabled]="!kpi.action"
                 (click)="onKpiClick(kpi)">
           <span class="stat-accent"></span>
@@ -127,7 +96,7 @@
       <section class="row-3col">
         <div class="panel">
           <h2 class="panel-title">👥 Répartition des rôles</h2>
-          <p class="panel-subtitle">Cliquez sur un segment pour filtrer les comptes</p>
+          <p class="panel-subtitle">Rôle principal de chaque compte</p>
 
           <div *ngIf="!rowsAll.length" class="panel-empty">Aucun compte enregistré.</div>
 
@@ -136,9 +105,7 @@
               <svg viewBox="0 0 120 120" class="donut-svg">
                 <circle cx="60" cy="60" r="54" class="donut-track"/>
                 <circle *ngFor="let s of roleSegments" cx="60" cy="60" r="54" class="donut-seg"
-                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset"
-                        [class.dimmed]="roleFilter && roleFilter !== s.key"
-                        (click)="setRoleFilter(s.key)">
+                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset">
                   <title>{{ s.label }} : {{ s.count }} ({{ s.percent }}%)</title>
                 </circle>
               </svg>
@@ -149,13 +116,12 @@
             </div>
 
             <div class="donut-legend">
-              <button *ngFor="let s of roleSegments" class="legend-row"
-                      [class.active]="roleFilter === s.key" (click)="setRoleFilter(s.key)">
+              <div *ngFor="let s of roleSegments" class="legend-row">
                 <span class="legend-dot" [style.background]="s.color"></span>
                 <span class="legend-label">{{ s.label }}</span>
                 <span class="legend-value">{{ s.count }}</span>
                 <span class="legend-pct">{{ s.percent }}%</span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
@@ -207,9 +173,9 @@
       <!-- Activité récente -->
       <section class="panel section-gap">
         <h2 class="panel-title">🕓 Activité récente</h2>
-        <p class="panel-subtitle">{{ activites.length }} évènement(s) sur {{ periodeLabel.toLowerCase() }}</p>
+        <p class="panel-subtitle">{{ activites.length }} évènement(s) sur les 12 derniers mois</p>
 
-        <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur la période sélectionnée.</div>
+        <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur les 12 derniers mois.</div>
 
         <div *ngFor="let a of activitesVisibles" class="activite-item" [ngClass]="'act-' + a.type"
              [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
@@ -276,7 +242,7 @@
         <div class="panel-head-row">
           <div>
             <h2 class="panel-title">🗃️ Comptes de la plateforme</h2>
-            <p class="panel-subtitle">{{ rows.length }} compte(s) affiché(s) sur {{ rowsAll.length }}</p>
+            <p class="panel-subtitle">{{ rows.length }} compte(s)</p>
           </div>
           <div class="sort-group">
             <button [class.active]="sortKey === 'createdAt'" (click)="trier('createdAt')">Inscription</button>
@@ -286,7 +252,7 @@
           </div>
         </div>
 
-        <div *ngIf="!rows.length" class="panel-empty">Aucun compte ne correspond aux filtres.</div>
+        <div *ngIf="!rows.length" class="panel-empty">Aucun compte enregistré.</div>
 
         <div *ngIf="rows.length" class="table-scroll">
           <table class="data-table">

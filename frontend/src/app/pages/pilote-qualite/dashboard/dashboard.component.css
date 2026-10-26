@@ -454,11 +454,103 @@ a.hero-btn, a.hero-btn:hover { text-decoration: none; }
   @bottom-right { content: ""; }
 }
 
+/* Une page A4 fait environ 720 px de large : les règles « tablette » ci-dessus s'appliqueraient.
+   Ce bloc, placé en dernier, redonne une mise en page de rapport compacte. */
 @media print {
-  .dash-page { background: #fff; padding: 0; }
-  .hero-actions, .panel-more, app-chatbot { display: none !important; }
-  .panel, .stat-card { box-shadow: none; break-inside: avoid; }
-  .dash-hero { box-shadow: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .row-3col, .row-2col { grid-template-columns: 1fr 1fr; }
+  /* Sans cela, le navigateur n'imprime pas les fonds : cases de la carte de chaleur, barres et pastilles sortent blanches */
+  .dash-page { background: #fff; padding: 0; min-height: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .dash-container { padding: 0; max-width: none; }
+
+  /* Tout ce qui sert à agir à l'écran disparaît du papier */
+  .hero-actions, .hero-bubble, .panel-more, .alert-toggle, .alert-cta, .defaut-btn, app-chatbot { display: none !important; }
+  .panel, .stat-card, .alert-banner, .dash-hero { box-shadow: none; }
+
+  /* En-tête */
+  .dash-hero { padding: 0.9rem 1.2rem; margin-bottom: 0.8rem; border-radius: 12px; }
+  .hero-badge { margin-bottom: 0.35rem; padding: 0.2rem 0.6rem; font-size: 0.6rem; }
+  .hero-title { font-size: 1.25rem; }
+  .hero-subtitle { font-size: 0.75rem; }
+
+  /* Alertes : une ligne par projet */
+  .alert-banner { padding: 0.8rem 0.9rem; margin-bottom: 0.8rem; border-radius: 12px; }
+  .alert-head { margin-bottom: 0.55rem; }
+  .alert-ico { width: 1.9rem; height: 1.9rem; }
+  .alert-list { gap: 0.3rem; }
+  .alert-item {
+    grid-template-columns: 4px 1fr auto; align-items: center; gap: 0 0.7rem;
+    padding: 0.4rem 0.7rem 0.4rem 0; border-radius: 8px; break-inside: avoid;
+  }
+  .alert-body { display: flex; align-items: center; flex-wrap: wrap; gap: 0.25rem 0.6rem; }
+  .alert-identity { margin: 0; }
+  .alert-item-name { font-size: 0.82rem; }
+  .alert-chips { margin: 0; gap: 0.25rem; }
+  .alert-chip { font-size: 0.66rem; padding: 0.1rem 0.4rem; }
+  .alert-chip svg { display: none; }
+  .alert-gauge-track { display: none; }
+  .alert-gauge-text { font-size: 0.64rem; }
+  .alert-side { grid-column: auto; width: auto; margin: 0; padding: 0; border: none; }
+  .delay-meter { flex-direction: row; align-items: baseline; gap: 0.25rem; padding: 0.2rem 0.5rem; min-width: 0; }
+  .delay-value { font-size: 1rem; }
+
+  /* Indicateurs : les cinq sur une ligne */
+  .stats-grid { grid-template-columns: repeat(5, 1fr); gap: 0.5rem; margin-bottom: 0.8rem; }
+  .stat-card { padding: 0.6rem 0.7rem; border-radius: 10px; break-inside: avoid; }
+  .stat-card-top { margin-bottom: 0.3rem; }
+  .stat-icon { width: 1.7rem; height: 1.7rem; font-size: 0.85rem; border-radius: 0.5rem; }
+  .stat-value { font-size: 1.2rem; }
+  .stat-title { font-size: 0.72rem; }
+  .stat-hint { font-size: 0.62rem; }
+
+  /* Panneaux */
+  .panel { padding: 0.8rem 0.9rem; border-radius: 12px; }
+  .panel-title { font-size: 0.88rem; }
+  .panel-subtitle { font-size: 0.68rem; margin-bottom: 0.6rem; }
+  .panel-title, .panel-subtitle, .panel-head-row { break-after: avoid; }
+  .section-gap, .row-3col, .row-2col { margin-bottom: 0.8rem; }
+
+  /* Conformité, échéancier, complétude : côte à côte */
+  .row-3col { grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; }
+  .row-3col > .panel { break-inside: avoid; }
+  .row-3col > .panel:last-child { grid-column: auto; }
+  .donut-holder { width: 110px; }
+  .donut-center strong { font-size: 1.45rem; }
+  .donut-wrap { gap: 0.5rem; }
+  .legend-row { padding: 0.25rem 0.2rem; font-size: 0.72rem; }
+  .echeance-buckets { gap: 0.45rem; }
+  .echeance-bucket { padding: 0.55rem; gap: 0.2rem; }
+  .echeance-bucket strong { font-size: 1.5rem; }
+  .echeance-bucket span { font-size: 0.68rem; }
+  .completude-global { padding: 0.45rem 0.6rem; margin-bottom: 0.6rem; font-size: 0.72rem; }
+  .completude-global strong { font-size: 1.05rem; }
+  .rubrique-row { margin-bottom: 0.45rem; }
+  .rubrique-label { font-size: 0.7rem; }
+
+  /* Carte de chaleur : lignes serrées, en-tête répété si elle passe sur deux pages */
   .heatmap-scroll, .table-scroll { overflow: visible; }
+  .heatmap { font-size: 0.72rem; }
+  .heatmap td { padding: 0.12rem 0.25rem; }
+  .heatmap tr, .chef-table tr { break-inside: avoid; }
+  /* Tient sur une page : imprimée d'un seul bloc plutôt que coupée après quelques lignes */
+  .heatmap-panel { break-inside: avoid; }
+  .heat-projet { min-width: 0; max-width: 220px; }
+  .heat-case { height: 0.95rem; border-radius: 3px; }
+
+  /* Projets à traiter et derniers dépôts : pleine largeur, deux éléments par ligne */
+  .row-2col { grid-template-columns: 1fr; gap: 0.8rem; }
+  .panel-liste { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1.2rem; }
+  .panel-liste > .panel-title, .panel-liste > .panel-subtitle, .panel-liste > .panel-empty { grid-column: 1 / -1; }
+  /* Six dépôts au plus : le cadre ne doit pas commencer vide en bas de page */
+  .row-2col > .panel-liste:last-child { break-inside: avoid; }
+  .defaut-item, .depot-item { padding: 0.4rem 0.3rem; gap: 0.55rem; break-inside: avoid; }
+  .defaut-item:last-of-type, .depot-item:last-of-type { border-bottom: 1px solid var(--border); }
+  .defaut-marker { min-height: 1.8rem; }
+  .defaut-nom, .depot-nom { font-size: 0.78rem; }
+  .defaut-detail { font-size: 0.7rem; }
+  .defaut-chef, .depot-meta, .depot-manquant, .depot-complet { font-size: 0.64rem; }
+  .depot-score { width: 2.4rem; height: 2.4rem; }
+
+  /* Tableau des chefs de projet */
+  .chef-table { font-size: 0.74rem; }
+  .chef-table td { padding: 0.35rem 0.5rem; }
+  .chef-avatar { width: 1.35rem; height: 1.35rem; font-size: 0.65rem; }
 }

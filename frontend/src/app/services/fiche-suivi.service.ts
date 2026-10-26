@@ -11,7 +11,6 @@ export interface FicheSuivi {
   ficheSignaletique: FicheSignaletique;
   constatGlobal: ConstatGlobal;
   tachesSuivi: TacheSuivi[];
-  planningActuel: PlanningActuel;
   chefProjetId?: string;
   dateCreation?: string;
   dateModification?: string;
@@ -77,19 +76,6 @@ export interface TacheSuivi {
   remarque?: string;
   /** true si cette ligne représente une action de la fiche de projet (grand titre), utilisée pour regrouper les sous-tâches détaillées en dessous. */
   estTitre?: boolean;
-}
-
-export interface PlanningActuel {
-  taches: TacheGantt[];
-}
-
-export interface TacheGantt {
-  nom?: string;
-  dateDebut?: string;
-  dateFin?: string;
-  tauxAvancement?: number;
-  statut?: string;
-  sousTaches: TacheGantt[];
 }
 
 @Injectable({

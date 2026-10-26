@@ -13,38 +13,38 @@
 
   <div class="section" *ngIf="ganttMonths.length > 0">
     <div class="gantt-wrapper">
-      <div class="gantt-header-row" [style.min-width.px]="ganttTotalWidth + 200">
+      <div class="gantt-header-row">
         <div class="gantt-label-col">Action / Tâche</div>
         <div class="gantt-timeline">
-          <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.px]="ganttDayWidth * m.days">{{ m.label }}</div>
+          <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.%]="m.percent">{{ m.label }}</div>
         </div>
       </div>
 
       <ng-container *ngFor="let t of ficheSuivi.tachesSuivi">
         <!-- Ligne de titre (action de la fiche de projet) : pas de barre -->
-        <div class="gantt-row gantt-row-titre" *ngIf="isTitre(t)" [style.min-width.px]="ganttTotalWidth + 200">
+        <div class="gantt-row gantt-row-titre" *ngIf="isTitre(t)">
           <div class="gantt-label-col">
-            <span class="gantt-task-name gantt-titre-name">{{ t.sujet }}</span>
+            <span class="gantt-task-name gantt-titre-name" [title]="t.sujet">{{ t.sujet }}</span>
           </div>
-          <div class="gantt-timeline gantt-timeline-row" [style.min-width.px]="ganttTotalWidth">
-            <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
+          <div class="gantt-timeline-row">
+            <div class="gantt-grid"><span *ngFor="let m of ganttMonths" [style.width.%]="m.percent"></span></div>
           </div>
         </div>
         <!-- Ligne de sous-tâche détaillée -->
-        <div class="gantt-row" *ngIf="!isTitre(t)" [style.min-width.px]="ganttTotalWidth + 200">
+        <div class="gantt-row" *ngIf="!isTitre(t)">
           <div class="gantt-label-col">
-            <span class="gantt-task-name">{{ t.sujet || '-' }}</span>
+            <span class="gantt-task-name" [title]="t.sujet">{{ t.sujet || '-' }}</span>
             <span class="gantt-pct">{{ t.pourcentageRealise || 0 }}%</span>
           </div>
-          <div class="gantt-timeline gantt-timeline-row" [style.min-width.px]="ganttTotalWidth">
-            <div class="gantt-bg" [style.width.px]="ganttTotalWidth"></div>
-            <div class="gantt-bar-wrap"
-                 [style.left.px]="getBarLeft(t.debut)"
-                 [style.width.px]="getBarWidth(t.debut, t.echeance)">
+          <div class="gantt-timeline-row">
+            <div class="gantt-grid"><span *ngFor="let m of ganttMonths" [style.width.%]="m.percent"></span></div>
+            <div class="gantt-bar-wrap" *ngIf="t.debut || t.echeance"
+                 [style.left.%]="getBarLeft(t.debut || t.echeance)"
+                 [style.width.%]="getBarWidth(t.debut, t.echeance)"
+                 [title]="(t.sujet || '') + ' : ' + (t.pourcentageRealise || 0) + ' %'">
               <div class="gantt-bar" [style]="getBarStyle(t.statut)">
                 <div class="gantt-bar-progress" [style.width.%]="t.pourcentageRealise || 0"></div>
               </div>
-              <span class="gantt-bar-label">{{ t.sujet }}</span>
             </div>
           </div>
         </div>
