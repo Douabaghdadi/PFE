@@ -8,7 +8,8 @@ import { TeamSuggestionService, TeamSuggestionRequest, TeamSuggestionResponse } 
   selector: 'app-team-suggestion',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './team-suggestion.component.html'
+  templateUrl: './team-suggestion.component.html',
+  styleUrls: ['./team-suggestion.component.css']
 })
 export class TeamSuggestionComponent {
   private teamService = inject(TeamSuggestionService);
@@ -51,7 +52,7 @@ export class TeamSuggestionComponent {
         const status = err.status;
         if (status === 401) this.error = 'Non autorisé (401) - Token invalide ou expiré. Reconnectez-vous.';
         else if (status === 403) this.error = 'Accès refusé (403) - Vous n\'avez pas les droits nécessaires.';
-        else if (status === 0) this.error = 'Impossible de contacter le serveur. Vérifiez que le backend est démarré sur le port 8081.';
+        else if (status === 0) this.error = 'Impossible de contacter le serveur. Réessayez dans un instant.';
         else this.error = `Erreur ${status} : ${err.error?.message || err.message || 'Erreur inconnue'}`;
         this.loading = false;
       }
@@ -75,12 +76,18 @@ export class TeamSuggestionComponent {
     this.router.navigate(['/projets']);
   }
 
-  getComplexiteStyle(complexite: string): string {
-    switch (complexite) {
-      case 'FAIBLE': return 'background:#d1fae5; color:#065f46;';
-      case 'MOYENNE': return 'background:#fef3c7; color:#92400e;';
-      case 'ELEVEE': return 'background:#fee2e2; color:#991b1b;';
-      default: return 'background:#f3f4f6; color:#374151;';
-    }
+  /** L'IA renvoie « Prénom Nom - rôle » (ou « À recruter - rôle ») : nom et rôle sont affichés séparément. */
+  decomposerMembre(membre: string): { nom: string; role: string; aRecruter: boolean } {
+    const [nom, ...role] = membre.split(/\s+[-–]\s+/);
+    const propre = (nom || '').trim();
+    return {
+      nom: propre,
+      role: role.join(' - ').trim(),
+      aRecruter: /^[àaÀA]\s+recruter$/i.test(propre)
+    };
+  }
+
+  initiales(nom: string): string {
+    return nom.split(/\s+/).filter(Boolean).slice(0, 2).map(partie => partie.charAt(0).toUpperCase()).join('');
   }
 }

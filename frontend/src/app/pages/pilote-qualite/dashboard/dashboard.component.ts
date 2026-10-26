@@ -331,7 +331,7 @@ export class PiloteDashboardComponent implements OnInit {
       return {
         id,
         nom: p.nomProjet || p.designationProjet || 'Projet sans nom',
-        statut: p.statut || 'Non défini',
+        statut: this.statutLabel(p.statut),
         // Le chef est le compte rattaché au projet, comme sur le tableau de bord admin.
         chefProjet: this.nomsChefs.get(p.chefProjetId || '') || 'Non attribué',
         conformite,
@@ -646,6 +646,18 @@ export class PiloteDashboardComponent implements OnInit {
   private tsOf(date?: string): number {
     const t = date ? new Date(date).getTime() : 0;
     return isNaN(t) ? 0 : t;
+  }
+
+  /** Statut tel qu'on le lit : « En cours » plutôt que le code EN_COURS. */
+  private statutLabel(statut?: string): string {
+    switch ((statut || '').toUpperCase()) {
+      case 'EN_COURS': return 'En cours';
+      case 'TERMINE': return 'Terminé';
+      case 'EN_ATTENTE': return 'En attente';
+      case 'ANNULE': return 'Annulé';
+      case '': return 'Non défini';
+      default: return statut!;
+    }
   }
 
   // ==================== Export & navigation ====================
