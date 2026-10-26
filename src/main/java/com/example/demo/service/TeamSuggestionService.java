@@ -148,7 +148,7 @@ public class TeamSuggestionService {
         // Nouveau projet
         prompt.append("NOUVEAU PROJET:\n");
         prompt.append("type=" + (request.getTypeProjet() != null ? request.getTypeProjet() : "Non specifie") + "\n");
-        prompt.append("budget=" + (request.getBudgetMDH() != null ? request.getBudgetMDH() + " MDH" : "Non specifie") + "\n");
+        prompt.append("budget=" + (request.getBudgetMDH() != null ? request.getBudgetMDH() + " MDHT" : "Non specifie") + "\n");
         prompt.append("duree=" + (request.getDureeEnMois() != null ? request.getDureeEnMois() + " mois" : "Non specifiee") + "\n");
         prompt.append("complexite=" + (request.getComplexite() != null ? request.getComplexite() : "MOYENNE") + "\n");
         prompt.append("modalite=" + (request.getModaliteDeveloppement() != null ? request.getModaliteDeveloppement() : "Non specifiee") + "\n");
@@ -196,7 +196,7 @@ public class TeamSuggestionService {
             ctx.append("  - Modalité : ").append(p.getModaliteDeveloppement() != null ? p.getModaliteDeveloppement() : "N/A").append("\n");
 
             if (p.getEstimationBudget() != null && p.getEstimationBudget().getBudgetMDHT() != null) {
-                ctx.append("  - Budget : ").append(p.getEstimationBudget().getBudgetMDHT()).append(" MDH\n");
+                ctx.append("  - Budget : ").append(p.getEstimationBudget().getBudgetMDHT()).append(" MDHT\n");
             }
             if (p.getDureeEnMois() != null) {
                 ctx.append("  - Durée : ").append(p.getDureeEnMois()).append(" mois\n");

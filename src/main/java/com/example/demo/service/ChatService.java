@@ -115,7 +115,7 @@ public class ChatService {
                 ctx.append(", Problèmes: ").append(kpi.getNombreProblemes());
                 ctx.append(", Risques: ").append(kpi.getNombreRisques());
                 ctx.append(", Jours retard: ").append(kpi.getJoursRetard());
-                ctx.append(", Budget: ").append(kpi.getBudgetTotal()).append(" MDH");
+                ctx.append(", Budget: ").append(kpi.getBudgetTotal()).append(" MDHT");
                 ctx.append(", Équipe: ").append(kpi.getTailleEquipe()).append(" membres");
                 if (kpi.getListeProblemes() != null && !kpi.getListeProblemes().isEmpty())
                     ctx.append(", Liste problèmes: ").append(kpi.getListeProblemes());

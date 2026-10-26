@@ -2,7 +2,7 @@ package com.example.demo.dto;
 
 public class TeamSuggestionRequest {
     private String typeProjet;       // Nouveau, Evolution, Refonte
-    private String budgetMDH;        // ex: "2.5"
+    private String budgetMDH;        // en MDHT (millions de dinars hors taxes), ex: "0.40"
     private Integer dureeEnMois;     // ex: 12
     private String complexite;       // FAIBLE, MOYENNE, ELEVEE
     private String description;      // description courte du projet

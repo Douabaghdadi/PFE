@@ -7,8 +7,14 @@ import com.example.demo.dto.MembreEquipeDTO;
 import com.example.demo.dto.PointHistoriqueKPIDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
 import com.example.demo.dto.TacheKPIDTO;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DateUtil;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -162,12 +168,31 @@ class KPIReportRenderingTest {
 
         assertNotNull(xlsx);
         try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(xlsx))) {
-            assertEquals(4, workbook.getNumberOfSheets());
+            assertEquals(5, workbook.getNumberOfSheets());
             assertNotNull(workbook.getSheet("Synthèse"));
+            assertNotNull(workbook.getSheet("Alertes et qualité"));
             assertNotNull(workbook.getSheet("Tâches"));
             assertNotNull(workbook.getSheet("Équipe"));
             assertNotNull(workbook.getSheet("Historique"));
+
+            // Un vrai classeur : les indicateurs sont des nombres, les listes de vrais tableaux Excel
+            Row avancement = ligneDont(workbook.getSheet("Synthèse"), "Avancement réel");
+            assertEquals(CellType.NUMERIC, avancement.getCell(1).getCellType());
+            assertEquals(0.5, avancement.getCell(1).getNumericCellValue(), 0.0001);
+            assertTrue(DateUtil.isCellDateFormatted(ligneDont(workbook.getSheet("Synthèse"), "Début").getCell(1)));
+            assertEquals(1, ((XSSFSheet) workbook.getSheet("Tâches")).getTables().size());
+            assertEquals(1, ((XSSFSheet) workbook.getSheet("Historique")).getTables().size());
         }
+    }
+
+    private Row ligneDont(Sheet sheet, String libelle) {
+        for (Row row : sheet) {
+            Cell cell = row.getCell(0);
+            if (cell != null && cell.getCellType() == CellType.STRING && libelle.equals(cell.getStringCellValue())) {
+                return row;
+            }
+        }
+        throw new AssertionError("Ligne introuvable : " + libelle);
     }
 
     @Test
