@@ -1,401 +1,233 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
 import { UserService } from '../../../services/user.service';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-admin-profile',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  template: `
-    <div class="w-full px-6 py-6 mx-auto">
-      <!-- Alerts -->
-      @if (successMessage()) {
-        <div class="relative p-4 mb-4 text-white bg-green-500 rounded-lg shadow-lg animate-fade-in">
-          <div class="flex items-center">
-            <i class="fas fa-check-circle mr-3"></i>
-            <span>{{ successMessage() }}</span>
-          </div>
-        </div>
-      }
-
-      @if (errorMessage()) {
-        <div class="relative p-4 mb-4 text-white bg-red-500 rounded-lg shadow-lg animate-fade-in">
-          <div class="flex items-center">
-            <i class="fas fa-exclamation-circle mr-3"></i>
-            <span>{{ errorMessage() }}</span>
-          </div>
-        </div>
-      }
-
-      <div class="flex flex-wrap -mx-3">
-        <!-- Profile Card -->
-        <div class="w-full max-w-full px-3 lg:w-4/12 lg:flex-none">
-          <div class="relative flex flex-col min-w-0 break-words bg-white border-0 shadow-xl rounded-2xl bg-clip-border">
-            <div class="relative overflow-hidden rounded-t-2xl bg-gradient-to-r from-emerald-500 to-green-600 h-32">
-              <span class="absolute top-0 left-0 w-full h-full bg-center bg-cover opacity-20"></span>
-            </div>
-            
-            <div class="flex-auto p-6">
-              <div class="flex flex-wrap -mx-3">
-                <div class="w-full max-w-full px-3 flex-0">
-                  <div class="flex justify-center -mt-16 mb-4">
-                    <div class="relative inline-flex items-center justify-center w-24 h-24 text-white transition-all duration-200 ease-in-out text-3xl rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 shadow-lg">
-                      <i class="fas fa-user"></i>
-                    </div>
-                  </div>
-                  
-                  <div class="text-center">
-                    <h5 class="mb-1 text-xl font-bold text-slate-700">{{ userProfile().username }}</h5>
-                    <p class="mb-0 text-sm leading-normal text-slate-400">
-                      <i class="fas fa-envelope mr-1"></i>
-                      {{ userProfile().email }}
-                    </p>
-                    <div class="mt-3">
-                      <span class="inline-block px-3 py-1 text-xs font-semibold text-emerald-600 bg-emerald-100 rounded-full">
-                        <i class="fas fa-shield-alt mr-1"></i>
-                        {{ getRoleName(userProfile().role) }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-6 pt-6 border-t border-gray-200">
-                <div class="flex flex-col space-y-3">
-                  <div class="flex items-center text-sm">
-                    <i class="fas fa-calendar-alt text-emerald-500 mr-3 w-5"></i>
-                    <span class="text-slate-600">Membre depuis</span>
-                    <span class="ml-auto font-semibold text-slate-700">{{ formatDate(userProfile().createdAt) }}</span>
-                  </div>
-                  <div class="flex items-center text-sm">
-                    <i class="fas fa-clock text-emerald-500 mr-3 w-5"></i>
-                    <span class="text-slate-600">Dernière connexion</span>
-                    <span class="ml-auto font-semibold text-slate-700">{{ formatDate(userProfile().lastLogin) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Edit Profile Form -->
-        <div class="w-full max-w-full px-3 lg:w-8/12 lg:flex-none mt-6 lg:mt-0">
-          <div class="relative flex flex-col min-w-0 break-words bg-white border-0 shadow-xl rounded-2xl bg-clip-border">
-            <div class="border-b border-gray-200 rounded-t-2xl p-6">
-              <h6 class="mb-0 text-lg font-bold text-slate-700">
-                <i class="fas fa-user-edit mr-2 text-emerald-500"></i>
-                Modifier mon profil
-              </h6>
-            </div>
-            
-            <div class="flex-auto p-6">
-              <form (ngSubmit)="updateProfile()">
-                <div class="flex flex-wrap -mx-3">
-                  <!-- Username -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-user mr-1"></i>
-                      Nom d'utilisateur
-                    </label>
-                    <input 
-                      type="text" 
-                      [(ngModel)]="formData.username" 
-                      name="username"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Nom d'utilisateur">
-                  </div>
-
-                  <!-- Email -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-envelope mr-1"></i>
-                      Email
-                    </label>
-                    <input 
-                      type="email" 
-                      [(ngModel)]="formData.email" 
-                      name="email"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Email">
-                  </div>
-
-                  <!-- First Name -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-id-card mr-1"></i>
-                      Prénom
-                    </label>
-                    <input 
-                      type="text" 
-                      [(ngModel)]="formData.firstName" 
-                      name="firstName"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Prénom">
-                  </div>
-
-                  <!-- Last Name -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-id-card mr-1"></i>
-                      Nom
-                    </label>
-                    <input 
-                      type="text" 
-                      [(ngModel)]="formData.lastName" 
-                      name="lastName"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="Nom">
-                  </div>
-                </div>
-
-                <hr class="h-px mx-0 my-6 bg-transparent border-0 opacity-25 bg-gradient-to-r from-transparent via-black/40 to-transparent">
-
-                <h6 class="mb-4 text-sm font-bold text-slate-700">
-                  <i class="fas fa-lock mr-2 text-emerald-500"></i>
-                  Changer le mot de passe
-                </h6>
-
-                <div class="flex flex-wrap -mx-3">
-                  <!-- Current Password -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-key mr-1"></i>
-                      Mot de passe actuel
-                    </label>
-                    <input 
-                      type="password" 
-                      [(ngModel)]="formData.currentPassword" 
-                      name="currentPassword"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="••••••••">
-                  </div>
-
-                  <!-- New Password -->
-                  <div class="w-full max-w-full px-3 mb-6 md:w-6/12">
-                    <label class="block mb-2 text-xs font-bold uppercase text-slate-600">
-                      <i class="fas fa-lock mr-1"></i>
-                      Nouveau mot de passe
-                    </label>
-                    <input 
-                      type="password" 
-                      [(ngModel)]="formData.newPassword" 
-                      name="newPassword"
-                      class="focus:shadow-primary-outline text-sm leading-5.6 ease block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 outline-none transition-all placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                      placeholder="••••••••">
-                  </div>
-                </div>
-
-                <div class="flex justify-end mt-6">
-                  <button 
-                    type="submit" 
-                    [disabled]="isLoading()"
-                    class="inline-block px-6 py-3 font-bold text-center text-white uppercase align-middle transition-all bg-gradient-to-r from-emerald-500 to-green-600 border-0 rounded-lg cursor-pointer hover:scale-105 active:opacity-85 hover:shadow-lg text-xs ease-in tracking-tight-rem shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                    @if (isLoading()) {
-                      <i class="fas fa-spinner fa-spin mr-2"></i>
-                      Enregistrement...
-                    } @else {
-                      <i class="fas fa-save mr-2"></i>
-                      Enregistrer les modifications
-                    }
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    @keyframes slideInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .animate-fade-in {
-      animation: slideInUp 0.3s ease-out;
-    }
-
-    input:focus {
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
-  `]
+  templateUrl: './admin-profile.component.html',
+  // La carte d'identité et la liste d'informations sont celles de la page /profile
+  styleUrls: ['../../pilote-qualite/pilote-ui.css', '../../shared/projets-ui.css', '../admin-ui.css', '../../profile/profile.component.css']
 })
-export class AdminProfileComponent {
-  authService = inject(AuthService);
-  userService = inject(UserService);
-  http = inject(HttpClient);
+export class AdminProfileComponent implements OnInit {
+  private authService = inject(AuthService);
+  private userService = inject(UserService);
+  private http = inject(HttpClient);
 
-  successMessage = signal('');
-  errorMessage = signal('');
-  isLoading = signal(false);
+  @ViewChild('profilDialog') profilDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('mdpDialog') mdpDialog?: ElementRef<HTMLDialogElement>;
 
-  userProfile = signal({
-    id: '',
-    username: '',
-    email: '',
-    role: '',
-    firstName: '',
-    lastName: '',
-    createdAt: null as string | null,
-    lastLogin: new Date()
+  user = this.authService.currentUser;
+  initiales = computed(() => {
+    const parts = (this.user()?.username || '').split(/[\s._-]+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return (parts.length === 1 ? parts[0].slice(0, 2) : parts[0][0] + parts[1][0]).toUpperCase();
+  });
+  /** Le rôle le plus élevé du compte, dans le même ordre que le tableau de bord. */
+  role = computed(() => {
+    const roles = this.user()?.roles || [];
+    if (roles.includes('ROLE_ADMIN')) return 'Administrateur';
+    if (roles.includes('ROLE_PILOTE_QUALITE')) return 'Pilote qualité';
+    if (roles.includes('ROLE_CHEF_PROJET')) return 'Chef de projet';
+    return roles[0] || 'Non défini';
   });
 
-  formData = {
-    username: '',
-    email: '',
-    firstName: '',
-    lastName: '',
-    currentPassword: '',
-    newPassword: ''
-  };
+  /** La session ne garde pas la date d'inscription : elle est lue sur le compte côté serveur. */
+  membreDepuis = signal<string | null>(null);
+  /** Confirmation affichée après une modification. */
+  message = signal('');
+  private messageTimer?: ReturnType<typeof setTimeout>;
+
+  // Modifier le profil
+  profil = { username: '', email: '' };
+  profilEnCours = signal(false);
+  profilErreur = signal('');
+  profilTentative = signal(false);
+
+  // Changer le mot de passe
+  mdp = { actuel: '', nouveau: '', confirmation: '' };
+  mdpEnCours = signal(false);
+  mdpErreur = signal('');
+  mdpTentative = signal(false);
+  voirActuel = signal(false);
+  voirNouveau = signal(false);
 
   ngOnInit() {
-    this.loadProfile();
-    this.loadDateInscription();
-  }
-
-  /** La session ne garde pas la date d'inscription : on la lit sur le compte côté serveur. */
-  loadDateInscription() {
-    const id = this.authService.currentUser()?.id;
+    const id = this.user()?.id;
     if (!id) return;
-
     this.userService.getUserById(id).subscribe({
-      next: (compte) => this.userProfile.update(p => ({ ...p, createdAt: compte.createdAt || null })),
+      next: (compte) => this.membreDepuis.set(this.formatDate(compte.createdAt)),
       error: (error) => console.error('Erreur lors du chargement de la date d\'inscription:', error)
     });
   }
 
-  loadProfile() {
-    const user = this.authService.currentUser();
-    if (user) {
-      this.userProfile.set({
-        id: user.id || '',
-        username: user.username || '',
-        email: user.email || '',
-        role: this.rolePrincipal(user.roles || []),
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        createdAt: this.userProfile().createdAt,
-        lastLogin: new Date()
-      });
-
-      this.formData = {
-        username: user.username || '',
-        email: user.email || '',
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        currentPassword: '',
-        newPassword: ''
-      };
-    }
+  private formatDate(date?: string): string | null {
+    if (!date) return null;
+    return new Date(date).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 
-  /** Le rôle le plus élevé du compte, dans le même ordre que le tableau de bord. */
-  rolePrincipal(roles: string[]): string {
-    return ['ROLE_ADMIN', 'ROLE_PILOTE_QUALITE', 'ROLE_CHEF_PROJET'].find(r => roles.includes(r)) || roles[0] || '';
+  // ==================== Modifier le profil ====================
+
+  ouvrirProfil() {
+    const user = this.user();
+    this.profil = { username: user?.username || '', email: user?.email || '' };
+    this.profilErreur.set('');
+    this.profilTentative.set(false);
+    this.ouvrir(this.profilDialog, '#p-nom');
   }
 
-  getRoleName(role: string): string {
-    const roles: { [key: string]: string } = {
-      'ROLE_ADMIN': 'Administrateur',
-      'ROLE_PILOTE_QUALITE': 'Pilote qualité',
-      'ROLE_CHEF_PROJET': 'Chef de projet'
-    };
-    return roles[role] || role;
+  erreurNom(): string {
+    const nom = this.profil.username.trim();
+    if (!nom) return 'Saisissez un nom d\'utilisateur.';
+    if (nom.length < 3) return 'Le nom d\'utilisateur doit compter au moins 3 caractères.';
+    return '';
   }
 
-  formatDate(date: Date | string | null): string {
-    if (!date) return 'N/A';
-    const d = new Date(date);
-    return d.toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  erreurEmail(): string {
+    const email = this.profil.email.trim();
+    if (!email) return 'Saisissez une adresse email.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Cette adresse email n\'est pas valide.';
+    return '';
   }
 
-  updateProfile() {
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-    this.successMessage.set('');
+  /** La session est liée à l'email : en le changeant, il faut se reconnecter. */
+  emailModifie(): boolean {
+    const email = this.profil.email.trim();
+    return !!email && email !== this.user()?.email;
+  }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      this.errorMessage.set('Session expirée. Veuillez vous reconnecter.');
-      this.isLoading.set(false);
-      return;
-    }
+  enregistrerProfil() {
+    this.profilTentative.set(true);
+    const user = this.user();
+    if (!user || this.erreurNom() || this.erreurEmail()) return;
 
-    const updateData: any = {
-      username: this.formData.username,
-      email: this.formData.email,
-      firstName: this.formData.firstName,
-      lastName: this.formData.lastName
-    };
+    const corps = { username: this.profil.username.trim(), email: this.profil.email.trim() };
+    const reconnexion = this.emailModifie();
+    this.profilErreur.set('');
+    this.profilEnCours.set(true);
 
-    // Add password fields only if provided
-    if (this.formData.currentPassword && this.formData.newPassword) {
-      updateData.currentPassword = this.formData.currentPassword;
-      updateData.newPassword = this.formData.newPassword;
-    }
-
-    this.http.put(`${environment.apiUrl}/api/users/profile`, updateData, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    }).subscribe({
-      next: (response: any) => {
-        this.isLoading.set(false);
-        this.successMessage.set('Profil mis à jour avec succès !');
-        
-        // Update local user data
-        const currentUser = this.authService.currentUser();
-        if (currentUser) {
-          this.authService.setCurrentUser({
-            ...currentUser,
-            username: this.formData.username,
-            email: this.formData.email,
-            firstName: this.formData.firstName,
-            lastName: this.formData.lastName
-          });
+    // Route de la page Utilisateurs : sans « roles » ni « password », le rôle et le mot de passe ne changent pas
+    this.http.put(`${environment.apiUrl}/api/admin/users/${user.id}`, corps).subscribe({
+      next: () => {
+        this.profilEnCours.set(false);
+        this.fermerProfil();
+        if (reconnexion) {
+          // Le jeton de la session portait l'ancien email : il n'est plus valable
+          this.authService.logout();
+          return;
         }
-
-        // Clear password fields
-        this.formData.currentPassword = '';
-        this.formData.newPassword = '';
-
-        // Reload profile
-        this.loadProfile();
-
-        setTimeout(() => this.successMessage.set(''), 5000);
+        this.authService.setCurrentUser({ ...user, ...corps });
+        this.afficherMessage('Profil mis à jour.');
       },
       error: (error) => {
-        this.isLoading.set(false);
-        let errorMsg = 'Erreur lors de la mise à jour du profil';
-        
-        if (error.status === 401) {
-          errorMsg = 'Mot de passe actuel incorrect';
-        } else if (error.status === 400) {
-          errorMsg = error.error?.message || 'Données invalides';
-        } else if (error.error?.message) {
-          errorMsg = error.error.message;
+        console.error('Erreur lors de la mise à jour du profil:', error);
+        this.profilEnCours.set(false);
+        // Le serveur répond en anglais : on traduit les refus attendus
+        const brut: string = error?.error?.message || '';
+        if (brut.includes('Username already exists')) {
+          this.profilErreur.set('Ce nom d\'utilisateur est déjà pris.');
+        } else if (brut.includes('Email already exists')) {
+          this.profilErreur.set('Cette adresse email est déjà utilisée par un autre compte.');
+        } else {
+          this.profilErreur.set('Le profil n\'a pas pu être mis à jour.');
         }
-        
-        this.errorMessage.set(errorMsg);
-        setTimeout(() => this.errorMessage.set(''), 5000);
       }
     });
+  }
+
+  fermerProfil() {
+    const dialog = this.profilDialog?.nativeElement;
+    if (dialog?.open) dialog.close();
+  }
+
+  // ==================== Changer le mot de passe ====================
+
+  ouvrirMdp() {
+    this.mdp = { actuel: '', nouveau: '', confirmation: '' };
+    this.mdpErreur.set('');
+    this.mdpTentative.set(false);
+    this.voirActuel.set(false);
+    this.voirNouveau.set(false);
+    this.ouvrir(this.mdpDialog, '#m-actuel');
+  }
+
+  // Mêmes règles que le mot de passe de la page d'inscription
+  mdpValide(): boolean {
+    return this.mdp.nouveau.length >= 8 && /^(?=.*[A-Z])(?=.*[0-9]).+$/.test(this.mdp.nouveau);
+  }
+
+  erreurActuel(): string {
+    return this.mdp.actuel ? '' : 'Saisissez votre mot de passe actuel.';
+  }
+
+  erreurNouveau(): string {
+    if (!this.mdp.nouveau) return 'Saisissez un nouveau mot de passe.';
+    return this.mdpValide() ? '' : 'Au moins 8 caractères, dont 1 majuscule et 1 chiffre.';
+  }
+
+  erreurConfirmation(): string {
+    if (!this.mdp.confirmation) return 'Confirmez le nouveau mot de passe.';
+    return this.mdp.confirmation === this.mdp.nouveau ? '' : 'Les deux mots de passe ne correspondent pas.';
+  }
+
+  enregistrerMdp() {
+    this.mdpTentative.set(true);
+    const user = this.user();
+    if (!user || this.erreurActuel() || this.erreurNouveau() || this.erreurConfirmation()) return;
+
+    this.mdpErreur.set('');
+    this.mdpEnCours.set(true);
+    const corps = { currentPassword: this.mdp.actuel, newPassword: this.mdp.nouveau };
+
+    this.http.post(`${environment.apiUrl}/api/auth/change-password`, corps).subscribe({
+      next: () => {
+        this.mdpEnCours.set(false);
+        this.fermerMdp();
+        this.afficherMessage('Mot de passe modifié.');
+      },
+      error: (error) => {
+        console.error('Erreur lors du changement de mot de passe:', error);
+        this.mdpEnCours.set(false);
+        this.mdpErreur.set(error?.error?.message || 'Le mot de passe n\'a pas pu être modifié.');
+      }
+    });
+  }
+
+  fermerMdp() {
+    const dialog = this.mdpDialog?.nativeElement;
+    if (dialog?.open) dialog.close();
+    // Les mots de passe ne restent pas en mémoire une fois la fenêtre fermée
+    this.mdp = { actuel: '', nouveau: '', confirmation: '' };
+  }
+
+  // ==================== Boîtes de dialogue ====================
+
+  private ouvrir(ref: ElementRef<HTMLDialogElement> | undefined, champ: string) {
+    const dialog = ref?.nativeElement;
+    if (dialog && !dialog.open) {
+      dialog.showModal();
+      setTimeout(() => dialog.querySelector<HTMLElement>(champ)?.focus());
+    }
+  }
+
+  /**
+   * Un clic sur le fond assombri (donc sur la boîte elle-même, pas sur son contenu) ferme la fenêtre,
+   * sauf pendant un envoi : une erreur doit rester visible.
+   */
+  onDialogClick(event: MouseEvent, dialog: HTMLDialogElement) {
+    if (event.target !== dialog || this.profilEnCours() || this.mdpEnCours()) return;
+    if (dialog === this.profilDialog?.nativeElement) this.fermerProfil();
+    else this.fermerMdp();
+  }
+
+  private afficherMessage(texte: string) {
+    clearTimeout(this.messageTimer);
+    this.message.set(texte);
+    this.messageTimer = setTimeout(() => this.message.set(''), 5000);
   }
 }

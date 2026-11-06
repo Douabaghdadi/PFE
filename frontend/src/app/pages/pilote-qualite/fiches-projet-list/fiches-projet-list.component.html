@@ -1,367 +1,280 @@
-<div class="min-h-screen py-8" style="background: #f8fafc;">
-  <div class="container mx-auto px-4" style="max-width: 1400px;">
-    
-    <!-- Header -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
-      <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-      <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
-      <div style="position: relative; z-index: 1;">
-        <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 0.75rem;">
-          <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
-          <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">PILOTE QUALITÉ</span>
-        </div>
-        <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">Toutes les Fiches Projet</h1>
-        <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0;">Consultez et gérez toutes les fiches de projet</p>
+<main class="page">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Fiches projet</h1>
+        <p class="page-meta" *ngIf="!loading && !error && fichesProjet.length > 0">
+          {{ pl(fichesProjet.length, 'fiche projet', 'fiches projet') }}, dont {{ stat('en_cours')?.count || 0 }} en cours.
+          <ng-container *ngIf="nbSansPeriodicite > 0">
+            {{ nbSansPeriodicite > 1 ? nbSansPeriodicite + ' projets sont sans' : '1 projet est sans' }} périodicité de suivi.
+          </ng-container>
+        </p>
+      </div>
+    </header>
+
+    <!-- ============ Chargement ============ -->
+    <div *ngIf="loading" aria-busy="true">
+      <div class="skeleton skeleton-strip"></div>
+      <div class="cards">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
       </div>
     </div>
 
-    <!-- Filters -->
-    <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div class="md:col-span-5">
-          <input type="text" 
-                 [(ngModel)]="searchTerm" 
-                 (input)="applyFilters()"
-                 placeholder="🔍 Rechercher un projet..." 
-                 style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease;"
-                 onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
-                 onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-        </div>
-        <div class="md:col-span-3">
-          <select [(ngModel)]="selectedStatut" 
-                  (change)="applyFilters()"
-                  style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease; background: white;"
-                  onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
-                  onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-            <option value="">Tous les statuts</option>
-            <option *ngFor="let statut of statuts" [value]="statut">{{ statut }}</option>
-          </select>
-        </div>
-        <div class="md:col-span-2">
-          <button (click)="toggleSortOrder()"
-                  style="width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; color: #374151; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                  onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';"
-                  onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-            <svg [style]="sortOrder === 'desc' ? 'transform: rotate(0deg);' : 'transform: rotate(180deg);'" style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle; transition: transform 0.3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+    <!-- ============ Erreur ============ -->
+    <div *ngIf="error && !loading" class="error-banner" role="alert">
+      <span>{{ error }}</span>
+      <button type="button" class="btn btn-secondary" (click)="loadFichesProjet()">Réessayer</button>
+    </div>
+
+    <!-- ============ Contenu ============ -->
+    <ng-container *ngIf="!loading && !error">
+
+      <ng-container *ngIf="fichesProjet.length > 0">
+
+        <!-- Indicateurs : une carte par statut, le total en tête -->
+        <section class="kpi-strip" aria-label="Indicateurs des projets">
+          <div class="kpi kpi-lead">
+            <span class="kpi-label">Projets</span>
+            <span class="kpi-value">{{ fichesProjet.length }}</span>
+            <span class="kpi-bar" aria-hidden="true">
+              <i [style.width.%]="stat('termine')?.percent || 0" style="background: #09c82c;"></i>
+            </span>
+            <span class="kpi-hint">{{ stat('termine')?.count || 0 }} terminé{{ (stat('termine')?.count || 0) > 1 ? 's' : '' }} sur {{ fichesProjet.length }}</span>
+          </div>
+          <div class="kpi" *ngFor="let s of stats.slice(0, 4)">
+            <span class="kpi-label"><span class="dot" [style.background]="s.color" aria-hidden="true"></span>{{ s.label }}</span>
+            <span class="kpi-value">{{ s.count }}</span>
+            <span class="kpi-hint">{{ s.percent }}&#8239;% des projets</span>
+          </div>
+        </section>
+
+        <!-- Filtres -->
+        <section class="panel filters" aria-label="Filtrer les projets">
+          <div class="field-search">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+            </svg>
+            <label for="recherche" class="visually-hidden">Rechercher un projet</label>
+            <input id="recherche" type="search" class="control" autocomplete="off"
+                   [(ngModel)]="searchTerm" (input)="applyFilters()"
+                   placeholder="Projet, client ou chef de projet">
+          </div>
+
+          <div class="field-select">
+            <label for="statut" class="visually-hidden">Filtrer par statut</label>
+            <select id="statut" class="control" [(ngModel)]="selectedStatut" (change)="applyFilters()">
+              <option value="">Tous les statuts</option>
+              <option *ngFor="let s of statutOptions" [value]="s.key">{{ s.label }}</option>
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <button type="button" class="btn btn-secondary" (click)="toggleSortOrder()"
+                  [attr.aria-label]="sortOrder === 'desc' ? 'Tri : plus récent d\'abord. Inverser le tri' : 'Tri : plus ancien d\'abord. Inverser le tri'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"
+                 [style.transform]="sortOrder === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)'">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
             </svg>
             {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
           </button>
-        </div>
-        <div class="md:col-span-2">
-          <button (click)="resetFilters()"
-                  style="width: 100%; padding: 0.75rem 1rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                  onmouseover="this.style.background='#e5e7eb';"
-                  onmouseout="this.style.background='#f3f4f6';">
-            <svg style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+
+          <button type="button" class="btn btn-secondary" (click)="resetFilters()" [disabled]="!filtresActifs && sortOrder === 'desc'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
             Réinitialiser
           </button>
+        </section>
+
+      </ng-container>
+
+      <!-- Aucun projet du tout / aucun résultat -->
+      <div *ngIf="filteredFiches.length === 0" class="panel empty">
+        <div class="empty-icon" aria-hidden="true">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+          </svg>
         </div>
+        <h2 class="empty-title">{{ fichesProjet.length === 0 ? 'Aucune fiche projet' : 'Aucun projet trouvé' }}</h2>
+        <p class="empty-text">
+          {{ fichesProjet.length === 0
+            ? 'Les fiches projet créées par les chefs de projet apparaîtront ici.'
+            : 'Aucune fiche projet ne correspond à votre recherche.' }}
+        </p>
+        <button *ngIf="fichesProjet.length > 0" type="button" class="btn btn-primary" (click)="resetFilters()">Réinitialiser les filtres</button>
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-12">
-      <div style="display: inline-block; width: 3rem; height: 3rem; border: 4px solid #d1fae5; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-      <p class="mt-4" style="color: #065f46; font-weight: 600;">Chargement des projets...</p>
-    </div>
+      <!-- Liste des projets -->
+      <section *ngIf="filteredFiches.length > 0" aria-label="Liste des projets">
+        <p class="result-count" role="status">
+          {{ pl(filteredFiches.length, 'projet') }}<ng-container *ngIf="filteredFiches.length !== fichesProjet.length"> sur {{ fichesProjet.length }}</ng-container>
+        </p>
 
-    <!-- Error State -->
-    <div *ngIf="error" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
-      <div style="display: flex; align-items: center; color: #991b1b;">
-        <svg style="width: 1.5rem; height: 1.5rem; margin-right: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span style="font-weight: 600;">{{ error }}</span>
-      </div>
-    </div>
+        <div class="cards">
+          <article *ngFor="let fiche of paginatedFiches" class="pcard" (click)="viewDetails(fiche.id)">
 
-    <!-- Empty State -->
-    <div *ngIf="!loading && filteredFiches.length === 0 && !error" style="background: white; border-radius: 1.5rem; padding: 4rem 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-      <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
-        <svg style="width: 3rem; height: 3rem; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-      </div>
-      <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1rem;">
-        Aucune fiche projet trouvée
-      </h3>
-      <p style="color: #6b7280; font-size: 1.1rem;">
-        Aucune fiche projet ne correspond à vos critères de recherche.
-      </p>
-    </div>
-
-    <!-- Projects Grid -->
-    <div *ngIf="!loading && filteredFiches.length > 0">
-      <div style="margin-bottom: 1rem; color: #6b7280; font-weight: 600;">
-        {{ filteredFiches.length }} fiche(s) trouvée(s)
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" style="align-items: stretch;">
-        <div *ngFor="let fiche of paginatedFiches"
-             class="projet-card"
-             style="background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); border: 1px solid #eef1f4; cursor: pointer; display: flex; flex-direction: column;"
-             (click)="viewDetails(fiche.id)"
-             onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 32px -12px rgba(15,23,42,0.16), 0 4px 10px rgba(15,23,42,0.06)'; this.style.borderColor='#e2e8f0';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03)'; this.style.borderColor='#eef1f4';">
-
-          <!-- Card Body -->
-          <div style="padding: 1.5rem 1.5rem 1.15rem; flex: 1; display: flex; flex-direction: column;">
-
-            <!-- Header -->
-            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.6rem; margin-bottom: 1rem;">
-              <div style="display: flex; align-items: center; gap: 0.7rem; min-width: 0;">
-                <div style="width: 2.5rem; height: 2.5rem; border-radius: 0.85rem; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                  <svg style="width: 1.15rem; height: 1.15rem; color: #475569;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                  </svg>
+            <div class="pcard-body">
+              <div class="pcard-head">
+                <div class="pcard-id">
+                  <span class="pcard-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                  </span>
+                  <div class="pcard-name">
+                    <a class="pcard-title" [routerLink]="['/pilote-qualite/fiches-projet', fiche.id]" (click)="$event.stopPropagation()" [title]="fiche.nomProjet">{{ fiche.nomProjet }}</a>
+                    <span class="pcard-ref">{{ fiche.reference }}</span>
+                  </div>
                 </div>
-                <div style="min-width: 0;">
-                  <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;" [title]="fiche.nomProjet">
-                    {{ fiche.nomProjet }}
-                  </h3>
-                  <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.02em;">{{ fiche.reference }}</span>
-                </div>
+                <span class="pill" [ngClass]="'pill-' + statutKey(fiche.statut)">{{ statutDef(fiche.statut).label }}</span>
               </div>
-              <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.32rem 0.7rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap;"
-                    [style.background]="getStatutColor(fiche.statut) + '1A'"
-                    [style.color]="getStatutColor(fiche.statut)">
-                <span style="width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;" [style.background]="getStatutColor(fiche.statut)"></span>
-                {{ formatStatut(fiche.statut) }}
-              </span>
+
+              <div class="person">
+                <span class="avatar" aria-hidden="true">{{ getInitials(fiche.chefProjetId) }}</span>
+                <span><span class="visually-hidden">Chef de projet : </span>{{ getChefProjetName(fiche.chefProjetId) }}</span>
+              </div>
+
+              <dl class="facts" [class.is-single]="!fiche.designationClient">
+                <div *ngIf="fiche.designationClient">
+                  <dt>Client</dt>
+                  <dd [title]="fiche.designationClient">{{ fiche.designationClient }}</dd>
+                </div>
+                <div>
+                  <dt>Période</dt>
+                  <!-- Les projets enregistrés avant la correction du backend n'ont que les dates de prévision -->
+                  <dd *ngIf="(fiche.dateDebut || fiche.dateDebutPrevision) || (fiche.dateFinPrevue || fiche.dateFinPrevision); else periodeVide">
+                    {{ (fiche.dateDebut || fiche.dateDebutPrevision) | date:'dd/MM/yy' }} – {{ (fiche.dateFinPrevue || fiche.dateFinPrevision) | date:'dd/MM/yy' }}
+                  </dd>
+                  <ng-template #periodeVide><dd class="is-empty">Non renseignée</dd></ng-template>
+                </div>
+              </dl>
             </div>
 
-            <!-- Chef de projet -->
-            <div style="display: flex; align-items: center; gap: 0.55rem; margin-bottom: 1rem;">
-              <div style="width: 1.75rem; height: 1.75rem; border-radius: 50%; background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
-                <span style="color: white; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em;">{{ getInitials(getChefProjetName(fiche.chefProjetId)) }}</span>
-              </div>
-              <span style="font-size: 0.85rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ getChefProjetName(fiche.chefProjetId) }}</span>
-            </div>
-
-            <!-- Bento stat tiles: Désignation Client + Période -->
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; flex: 1;">
-              <div *ngIf="fiche.designationClient" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; padding: 0.75rem 0.85rem; min-width: 0;">
-                <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                  <svg style="width: 0.75rem; height: 0.75rem; color: #b45309; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                  </svg>
-                  <span style="font-size: 0.62rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.05em;">Client</span>
-                </div>
-                <div style="font-size: 0.95rem; font-weight: 800; color: #92400e; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="fiche.designationClient">{{ fiche.designationClient }}</div>
-              </div>
-              <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; padding: 0.75rem 0.85rem; min-width: 0;"
-                   [style.gridColumn]="fiche.designationClient ? 'span 1' : 'span 2'">
-                <div style="display: flex; align-items: center; gap: 0.3rem; margin-bottom: 0.3rem;">
-                  <svg style="width: 0.75rem; height: 0.75rem; color: #1d4ed8; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                  </svg>
-                  <span style="font-size: 0.62rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.05em;">Période</span>
-                </div>
-                <!-- Les projets enregistrés avant la correction du backend n'ont que les dates de prévision -->
-                <div *ngIf="(fiche.dateDebut || fiche.dateDebutPrevision) || (fiche.dateFinPrevue || fiche.dateFinPrevision); else periodeVide"
-                     style="font-size: 0.85rem; font-weight: 800; color: #1e3a8a; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ (fiche.dateDebut || fiche.dateDebutPrevision) | date:'dd/MM/yy' }} – {{ (fiche.dateFinPrevue || fiche.dateFinPrevision) | date:'dd/MM/yy' }}</div>
-                <ng-template #periodeVide>
-                  <div style="font-size: 0.8rem; font-weight: 600; color: #64748b; line-height: 1.25;">Non renseignée</div>
-                </ng-template>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Action Buttons Footer -->
-          <div style="padding: 0 1.5rem 1.5rem;">
-            <!-- Divider -->
-            <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.85rem;"></div>
-
-            <div style="display: grid; grid-template-columns: 2.6rem 2.6rem 2.6rem 1fr; gap: 0.5rem;">
-              <button (click)="viewKPI(fiche.id); $event.stopPropagation()" title="KPI"
-                      style="height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
-                      onmouseover="this.style.background='#fffbeb'; this.style.borderColor='#fde68a'; this.style.color='#b45309';"
-                      onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            <div class="pcard-foot">
+              <button type="button" class="icon-btn" (click)="viewKPI(fiche.id); $event.stopPropagation()"
+                      title="Indicateurs du projet" [attr.aria-label]="'Indicateurs de ' + fiche.nomProjet">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 20V10m6 10V4m6 16v-7m4 7H2"/>
                 </svg>
               </button>
 
-              <button (click)="openPeriodiciteModal(fiche, $event)"
-                      [title]="'Périodicité' + (fiche.periodiciteSuiviMois ? ' (' + fiche.periodiciteSuiviMois + ' mois)' : '')"
-                      style="position: relative; height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
-                      onmouseover="this.style.background='#f5f3ff'; this.style.borderColor='#ddd6fe'; this.style.color='#7c3aed';"
-                      onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <button type="button" class="icon-btn" (click)="openPeriodiciteModal(fiche, $event)"
+                      [title]="'Périodicité de suivi' + (fiche.periodiciteSuiviMois ? ' (' + fiche.periodiciteSuiviMois + ' mois)' : '')"
+                      [attr.aria-label]="'Périodicité de suivi de ' + fiche.nomProjet + (fiche.periodiciteSuiviMois ? ' : ' + fiche.periodiciteSuiviMois + ' mois' : ' : non configurée')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span *ngIf="fiche.periodiciteSuiviMois" style="position: absolute; top: -5px; right: -5px; background: #7c3aed; color: white; font-size: 0.5rem; font-weight: 800; padding: 0.1rem 0.3rem; border-radius: 999px; line-height: 1.2; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">{{ fiche.periodiciteSuiviMois }}m</span>
+                <span *ngIf="fiche.periodiciteSuiviMois" class="mini-badge" aria-hidden="true">{{ fiche.periodiciteSuiviMois }}m</span>
               </button>
 
-              <button (click)="viewFichesSuivi(fiche.id); $event.stopPropagation()" title="Fiches de suivi"
-                      style="height: 2.6rem; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; border-radius: 0.75rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;"
-                      onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#bfdbfe'; this.style.color='#2563eb';"
-                      onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#eef1f4'; this.style.color='#64748b';">
-                <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <button type="button" class="icon-btn" (click)="viewFichesSuivi(fiche.id); $event.stopPropagation()"
+                      title="Fiches de suivi" [attr.aria-label]="'Fiches de suivi de ' + fiche.nomProjet">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                 </svg>
               </button>
 
-              <button (click)="viewDetails(fiche.id); $event.stopPropagation()"
-                      style="height: 2.6rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3);"
-                      onmouseover="this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'; this.style.transform='translateY(-1px)';"
-                      onmouseout="this.style.boxShadow='0 4px 10px rgba(16,185,129,0.3)'; this.style.transform='translateY(0)';">
+              <button type="button" class="btn btn-primary btn-details" (click)="viewDetails(fiche.id); $event.stopPropagation()"
+                      [attr.aria-label]="'Détails de ' + fiche.nomProjet">
                 Détails
-                <svg style="width: 0.9rem; height: 0.9rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                 </svg>
               </button>
             </div>
-          </div>
+          </article>
         </div>
-      </div>
 
-      <!-- Pagination -->
-      <div *ngIf="totalPages > 1" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
-        <button (click)="goToPage(currentPage - 1)" 
-                [disabled]="currentPage === 1"
-                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                [style.opacity]="currentPage === 1 ? '0.5' : '1'"
-                [style.cursor]="currentPage === 1 ? 'not-allowed' : 'pointer'"
-                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
-          </svg>
-        </button>
-
-        <ng-container *ngFor="let page of getPageNumbers()">
-          <span *ngIf="page === -1" style="padding: 0.5rem 1rem; color: #6b7280;">...</span>
-          <button *ngIf="page !== -1" (click)="goToPage(page)"
-                  [style.background]="currentPage === page ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'white'"
-                  [style.color]="currentPage === page ? 'white' : '#374151'"
-                  [style.border]="currentPage === page ? '2px solid #10b981' : '2px solid #e5e7eb'"
-                  style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 40px;"
-                  onmouseover="if(this.style.background === 'white') { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                  onmouseout="if(this.style.color !== 'white') { this.style.borderColor='#e5e7eb'; this.style.background='white'; }">
-            {{ page }}
+        <!-- Pagination -->
+        <nav *ngIf="totalPages > 1" class="pager" aria-label="Pagination">
+          <button type="button" class="pager-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Page précédente">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
           </button>
-        </ng-container>
 
-        <button (click)="goToPage(currentPage + 1)" 
-                [disabled]="currentPage === totalPages"
-                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                [style.opacity]="currentPage === totalPages ? '0.5' : '1'"
-                [style.cursor]="currentPage === totalPages ? 'not-allowed' : 'pointer'"
-                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </button>
-      </div>
-    </div>
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <span *ngIf="page === -1" class="pager-gap" aria-hidden="true">…</span>
+            <button *ngIf="page !== -1" type="button" class="pager-btn" [class.is-current]="currentPage === page"
+                    [attr.aria-current]="currentPage === page ? 'page' : null" [attr.aria-label]="'Page ' + page"
+                    (click)="goToPage(page)">{{ page }}</button>
+          </ng-container>
+
+          <button type="button" class="pager-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Page suivante">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </nav>
+      </section>
+    </ng-container>
   </div>
-</div>
+</main>
 
-<style>
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-</style>
+<!-- ============ Boîte de dialogue : périodicité de suivi ============ -->
+<dialog #periodiciteDialog class="dlg" aria-labelledby="periodicite-titre"
+        (click)="onDialogClick($event)" (close)="onPeriodiciteClosed()">
+  <div class="dlg-inner" *ngIf="selectedProjetForPeriodicite">
 
-<!-- Modal Périodicité -->
-<div *ngIf="showPeriodiciteModal" style="position: fixed; inset: 0; background: rgba(15,23,42,0.55); backdrop-filter: blur(3px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem;" (click)="closePeriodiciteModal()">
-  <div style="background: white; border-radius: 1.5rem; width: 100%; max-width: 440px; box-shadow: 0 24px 70px rgba(15,23,42,0.35); overflow: hidden; position: relative;" (click)="$event.stopPropagation()">
-
-    <!-- Accent top bar -->
-    <div style="height: 5px; background: linear-gradient(90deg, #10b981 0%, #059669 100%);"></div>
-
-    <button (click)="closePeriodiciteModal()"
-            style="position: absolute; top: 1.1rem; right: 1.1rem; width: 2rem; height: 2rem; border-radius: 50%; background: #f8fafc; border: 1px solid #eef1f4; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;"
-            onmouseover="this.style.background='#fef2f2'; this.style.color='#dc2626'; this.style.borderColor='#fecaca';"
-            onmouseout="this.style.background='#f8fafc'; this.style.color='#64748b'; this.style.borderColor='#eef1f4';">
-      <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+    <button type="button" class="icon-btn dlg-close" (click)="closePeriodiciteModal()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
       </svg>
     </button>
 
-    <div style="padding: 1.75rem 1.75rem 1.5rem;">
-
-      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem;">
-        <div style="background: linear-gradient(135deg, #34d399 0%, #059669 100%); width: 3rem; height: 3rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 18px rgba(5,150,105,0.35);">
-          <svg style="width: 1.5rem; height: 1.5rem; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-        </div>
-        <div style="min-width: 0;">
-          <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.01em;">Configurer la périodicité</h3>
-          <p style="font-size: 0.82rem; color: #94a3b8; margin: 0.15rem 0 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ selectedProjetForPeriodicite?.nomProjet }}</p>
-        </div>
-      </div>
-
-      <p style="color: #64748b; margin: 0 0 1.5rem; font-size: 0.9rem; line-height: 1.5;">
-        Définissez la fréquence à laquelle le chef de projet doit remplir la fiche de suivi.
-      </p>
-
-      <div style="margin-bottom: 1.25rem;">
-        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 0.6rem; font-size: 0.85rem;">Fréquence personnalisée</label>
-        <div style="display: flex; align-items: stretch; gap: 0.5rem;">
-          <button (click)="periodiciteValue = periodiciteValue > 1 ? periodiciteValue - 1 : 1"
-                  style="width: 2.75rem; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 0.75rem; color: #475569; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.15s ease;"
-                  onmouseover="this.style.background='#ecfdf5'; this.style.borderColor='#a7f3d0'; this.style.color='#059669';"
-                  onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e5e7eb'; this.style.color='#475569';">−</button>
-          <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; border: 2px solid #a7f3d0; background: #ecfdf5; border-radius: 0.75rem; padding: 0.6rem;">
-            <input type="number" [(ngModel)]="periodiciteValue" min="1" max="24"
-                   style="width: 3rem; border: none; background: transparent; font-size: 1.4rem; font-weight: 800; color: #047857; text-align: center; outline: none;">
-            <span style="color: #059669; font-weight: 700; font-size: 0.85rem;">mois</span>
-          </div>
-          <button (click)="periodiciteValue = periodiciteValue < 24 ? periodiciteValue + 1 : 24"
-                  style="width: 2.75rem; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 0.75rem; color: #475569; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: all 0.15s ease;"
-                  onmouseover="this.style.background='#ecfdf5'; this.style.borderColor='#a7f3d0'; this.style.color='#059669';"
-                  onmouseout="this.style.background='#f8fafc'; this.style.borderColor='#e5e7eb'; this.style.color='#475569';">+</button>
-        </div>
-
-        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.4rem; margin-top: 0.75rem;">
-          <button *ngFor="let v of [1, 2, 3, 6, 12]" (click)="periodiciteValue = v"
-                  [style.background]="periodiciteValue === v ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#f8fafc'"
-                  [style.color]="periodiciteValue === v ? 'white' : '#475569'"
-                  [style.border]="periodiciteValue === v ? '1px solid transparent' : '1px solid #eef1f4'"
-                  [style.boxShadow]="periodiciteValue === v ? '0 4px 10px rgba(5,150,105,0.3)' : 'none'"
-                  style="padding: 0.5rem 0.3rem; border-radius: 0.6rem; font-weight: 700; cursor: pointer; font-size: 0.78rem; transition: all 0.15s ease;">
-            {{ v }}m
-          </button>
-        </div>
-      </div>
-
-      <div *ngIf="periodiciteSuccess" style="display: flex; align-items: center; gap: 0.6rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.7rem 0.9rem; border-radius: 0.75rem; margin-bottom: 1rem; font-weight: 600; font-size: 0.85rem;">
-        <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        {{ periodiciteSuccess }}
-      </div>
-      <div *ngIf="periodiciteError" style="display: flex; align-items: center; gap: 0.6rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.7rem 0.9rem; border-radius: 0.75rem; margin-bottom: 1rem; font-weight: 600; font-size: 0.85rem;">
-        <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        {{ periodiciteError }}
-      </div>
-
-      <div style="display: flex; gap: 0.7rem; margin-top: 1.5rem;">
-        <button (click)="closePeriodiciteModal()"
-                style="flex: 1; padding: 0.8rem; background: #f8fafc; color: #475569; border: 1px solid #eef1f4; border-radius: 0.75rem; font-weight: 700; cursor: pointer; font-size: 0.9rem; transition: all 0.15s ease;"
-                onmouseover="this.style.background='#f1f5f9';"
-                onmouseout="this.style.background='#f8fafc';">
-          Annuler
-        </button>
-        <button (click)="savePeriodicite()" [disabled]="savingPeriodicite || periodiciteValue < 1"
-                style="flex: 1.4; padding: 0.8rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.75rem; font-weight: 700; cursor: pointer; font-size: 0.9rem; box-shadow: 0 6px 16px rgba(5,150,105,0.35); transition: all 0.15s ease;"
-                [style.opacity]="savingPeriodicite ? '0.7' : '1'"
-                onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 8px 20px rgba(5,150,105,0.45)';"
-                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(5,150,105,0.35)';">
-          <span *ngIf="!savingPeriodicite">Enregistrer</span>
-          <span *ngIf="savingPeriodicite">Sauvegarde...</span>
-        </button>
+      </span>
+      <div>
+        <h2 id="periodicite-titre" class="dlg-title">Périodicité de suivi</h2>
+        <p class="dlg-sub" [title]="selectedProjetForPeriodicite.nomProjet">{{ selectedProjetForPeriodicite.nomProjet }}</p>
       </div>
     </div>
+
+    <p class="dlg-text">Définissez la fréquence à laquelle le chef de projet doit remplir la fiche de suivi.</p>
+
+    <label for="periodicite-valeur" class="dlg-label">Fréquence personnalisée</label>
+    <div class="stepper">
+      <button type="button" class="icon-btn" (click)="ajusterPeriodicite(-1)" aria-label="Diminuer d'un mois" [disabled]="periodiciteValue <= 1">−</button>
+      <div class="stepper-value">
+        <input id="periodicite-valeur" data-autofocus type="number" min="1" max="24" inputmode="numeric" [(ngModel)]="periodiciteValue">
+        <span>mois</span>
+      </div>
+      <button type="button" class="icon-btn" (click)="ajusterPeriodicite(1)" aria-label="Augmenter d'un mois" [disabled]="periodiciteValue >= 24">+</button>
+    </div>
+
+    <div class="presets" role="group" aria-label="Fréquences courantes">
+      <button type="button" *ngFor="let v of [1, 2, 3, 6, 12]" class="preset" [class.is-active]="periodiciteValue === v"
+              [attr.aria-pressed]="periodiciteValue === v" (click)="periodiciteValue = v">{{ v }}&#8239;m</button>
+    </div>
+
+    <div *ngIf="periodiciteSuccess" class="notice notice-ok" role="status">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      {{ periodiciteSuccess }}
+    </div>
+    <div *ngIf="periodiciteError" class="notice notice-error" role="alert">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      {{ periodiciteError }}
+    </div>
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-secondary" (click)="closePeriodiciteModal()">Annuler</button>
+      <button type="button" class="btn btn-primary" (click)="savePeriodicite()" [disabled]="savingPeriodicite || periodiciteValue < 1">
+        {{ savingPeriodicite ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
   </div>
-</div>
+</dialog>

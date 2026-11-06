@@ -1,44 +1,48 @@
-<!-- Bouton flottant -->
 <div class="chat-root">
 
-  <!-- Fenêtre du chat -->
-  <div *ngIf="isOpen" class="chat-window">
+  <!-- Fenêtre de l'assistant -->
+  <section *ngIf="isOpen" id="chat-window" class="chat-window" role="dialog" aria-labelledby="chat-title"
+           (keydown.escape)="closeChat()">
 
-    <!-- Header -->
-    <div class="chat-header">
+    <!-- En-tête : fin, sur fond blanc ; la marque Qualinet remplace le robot -->
+    <header class="chat-header">
       <div class="chat-header-info">
-        <div class="chat-avatar">🤖</div>
+        <img class="chat-mark" src="assets/images/branding/qualinet-icon.png" alt="" width="26" height="20" />
         <div>
-          <p class="chat-title">Assistant IA</p>
-          <p class="chat-subtitle">
-            <span class="chat-status-dot"></span>
-            {{ context === 'chef_projet' ? 'Chef de Projet' : 'Pilote Qualité' }}
-          </p>
+          <p id="chat-title" class="chat-title">Assistant Qualité</p>
+          <p class="chat-subtitle">{{ context === 'chef_projet' ? 'Chef de projet' : 'Pilote qualité' }}</p>
         </div>
       </div>
       <div class="chat-header-actions">
-        <button class="chat-icon-btn" (click)="clearChat()" title="Nouvelle conversation">🗑️</button>
-        <button class="chat-icon-btn" (click)="toggleChat()" title="Fermer">✕</button>
+        <button type="button" class="chat-icon-btn" (click)="clearChat()" [disabled]="messages.length <= 1 || isLoading"
+                title="Effacer l'historique" aria-label="Effacer l'historique de la conversation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </button>
+        <button type="button" class="chat-icon-btn" (click)="toggleChat()" title="Fermer" aria-label="Fermer l'assistant">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Messages -->
-    <div #messagesContainer class="chat-messages">
+    <!-- Conversation -->
+    <div #messagesContainer class="chat-messages" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation" tabindex="0">
 
       <div *ngFor="let msg of messages" class="chat-row" [class.assistant]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
-
-        <div *ngIf="msg.role === 'assistant'" class="chat-bubble-avatar">🤖</div>
-
         <div class="chat-bubble" [class.assistant]="msg.role === 'assistant'" [class.user]="msg.role === 'user'">
+          <span class="visually-hidden">{{ msg.role === 'assistant' ? 'Assistant :' : 'Vous :' }}</span>
           <div *ngIf="msg.role === 'assistant'" class="chat-bubble-text chat-bubble-rich" [innerHTML]="msg.content | chatMarkdown"></div>
           <p *ngIf="msg.role === 'user'" class="chat-bubble-text">{{ msg.content }}</p>
           <p class="chat-bubble-time">{{ msg.timestamp | date:'HH:mm' }}</p>
         </div>
       </div>
 
-      <!-- Questions suggérées -->
-      <div *ngIf="messages.length === 1 && !isLoading" class="chat-suggestions">
-        <button *ngFor="let question of suggestedQuestions"
+      <!-- Questions suggérées : petites étiquettes cliquables -->
+      <div *ngIf="messages.length === 1 && !isLoading" class="chat-suggestions" role="group" aria-label="Questions suggérées">
+        <button type="button" *ngFor="let question of suggestedQuestions"
                 class="chat-suggestion-chip"
                 (click)="askSuggestion(question)">
           {{ question }}
@@ -46,9 +50,8 @@
       </div>
 
       <!-- Indicateur de chargement -->
-      <div *ngIf="isLoading" class="chat-typing">
-        <div class="chat-bubble-avatar">🤖</div>
-        <div class="chat-typing-bubble">
+      <div *ngIf="isLoading" class="chat-typing" role="status" aria-label="L'assistant prépare sa réponse">
+        <div class="chat-typing-bubble" aria-hidden="true">
           <span class="chat-typing-dot"></span>
           <span class="chat-typing-dot"></span>
           <span class="chat-typing-dot"></span>
@@ -56,23 +59,38 @@
       </div>
     </div>
 
-    <!-- Input -->
+    <!-- Saisie : le bouton d'envoi est intégré au champ -->
     <div class="chat-input-bar">
-      <textarea class="chat-textarea"
-                [(ngModel)]="userInput"
-                (keydown)="onKeyDown($event)"
-                placeholder="Posez votre question... (Entrée pour envoyer)"
-                rows="1"
-                [disabled]="isLoading">
-      </textarea>
-      <button class="chat-send-btn" (click)="sendMessage()" [disabled]="!userInput.trim() || isLoading">
-        ➤
-      </button>
+      <div class="chat-field">
+        <label for="chat-input" class="visually-hidden">Votre question</label>
+        <textarea #champSaisie id="chat-input" class="chat-textarea"
+                  [(ngModel)]="userInput"
+                  (keydown)="onKeyDown($event)"
+                  placeholder="Posez votre question…"
+                  rows="1"
+                  aria-describedby="chat-aide"
+                  [disabled]="isLoading"></textarea>
+        <button type="button" class="chat-send-btn" (click)="sendMessage()" [disabled]="!userInput.trim() || isLoading"
+                title="Envoyer" aria-label="Envoyer le message">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+          </svg>
+        </button>
+      </div>
+      <p id="chat-aide" class="visually-hidden">Entrée pour envoyer, Maj et Entrée pour passer à la ligne.</p>
     </div>
-  </div>
+  </section>
 
-  <!-- Bouton toggle -->
-  <button class="chat-fab" (click)="toggleChat()">
-    {{ isOpen ? '✕' : '🤖' }}
+  <!-- Bouton d'ouverture : discret, sans halo -->
+  <button #fab type="button" class="chat-fab" (click)="toggleChat()"
+          [attr.aria-expanded]="isOpen" aria-controls="chat-window"
+          [attr.aria-label]="isOpen ? 'Fermer l\'assistant' : 'Ouvrir l\'assistant qualité'"
+          [title]="isOpen ? 'Fermer l\'assistant' : 'Assistant qualité'">
+    <svg *ngIf="!isOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+    </svg>
+    <svg *ngIf="isOpen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6"/>
+    </svg>
   </button>
 </div>

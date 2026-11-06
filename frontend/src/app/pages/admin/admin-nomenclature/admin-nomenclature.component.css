@@ -1,0 +1,70 @@
+/* Nomenclature (administration) : ce qui n'appartient qu'à cette page.
+   La base du tableau et du formulaire vient de admin/admin-ui.css. */
+
+/* ============ Tableau : une ligne d'en-tête par liste, puis ses valeurs ============ */
+.tbl-nom .c-lib { width: 45%; }
+.tbl-nom .c-code { width: 30%; }
+.tbl-nom .c-etat { width: 130px; }
+
+/* En-tête de liste : nom, nombre de valeurs et formulaire concerné, « Ajouter » à droite */
+.tbl-nom tr.groupe th, .tbl-nom tr.groupe td { padding-top: 0.65rem; padding-bottom: 0.65rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #f6faf8; }
+.tbl-nom tbody:first-of-type tr.groupe th, .tbl-nom tbody:first-of-type tr.groupe td { border-top: 0; }
+.tbl-nom tr.groupe th { font-weight: 400; text-align: left; }
+.groupe-nom { font-size: 0.82rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #2f5a45; }
+.groupe-nb { margin-left: 0.6rem; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.groupe-usage { display: block; margin-top: 0.15rem; font-size: 0.8rem; color: var(--muted); }
+
+.tbl-nom td.c-lib { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.tbl-nom td.c-code { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
+/* La description, rarement remplie, se lit sous le libellé plutôt que dans une colonne presque vide */
+.tbl-nom td.c-lib .desc { display: block; margin-top: 0.15rem; font-size: 0.85rem; font-weight: 400; line-height: 1.5; color: var(--ink-2); }
+.tbl-nom .ligne.is-inactive td.c-lib { color: var(--muted); }
+
+.control.is-code { font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace; font-size: 0.88rem; }
+
+/* Interrupteur « Proposée dans les formulaires » : une vraie case à cocher, dessinée en interrupteur */
+.switch { position: relative; display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; }
+.switch input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.switch-track {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: #c3d4ca;
+  transition: background-color 0.15s;
+}
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(10, 50, 40, 0.25);
+  transition: transform 0.15s;
+}
+.switch input:checked + .switch-track { background: #059669; }
+.switch input:checked + .switch-track::after { transform: translateX(16px); }
+.switch input:focus-visible + .switch-track { outline: 2px solid #059669; outline-offset: 2px; }
+.switch-label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--ink); }
+
+/* ============ Adaptation ============ */
+/* Écran étroit : une carte par valeur (libellé, code et état à gauche, actions à droite) */
+@media (max-width: 640px) {
+  .tbl-nom tr.groupe { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; padding: 0.7rem 1rem; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #f6faf8; }
+  .tbl-nom tbody:first-of-type tr.groupe { border-top: 0; }
+  .tbl-nom tr.groupe th, .tbl-nom tr.groupe td, .tbl-nom tr.groupe th:first-child, .tbl-nom tr.groupe td:last-child { display: block; padding: 0; border: 0; background: transparent; }
+  /* Le texte se replie, « Ajouter » garde sa place à droite */
+  .tbl-nom tr.groupe th { flex: 1 1 auto; min-width: 0; }
+  .tbl-nom tr.groupe td { flex-shrink: 0; width: auto; }
+  .tbl-nom tr.ligne .c-lib, .tbl-nom tr.ligne .c-code { grid-column: 1; }
+  .tbl-nom tr.ligne .c-etat { grid-column: 1; margin-top: 0.3rem; }
+  .tbl-nom tr.ligne .c-actions { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .switch-track, .switch-track::after { transition: none; }
+}

@@ -1,0 +1,77 @@
+<section class="panel" aria-labelledby="g-titre">
+  <div class="panel-head">
+    <div>
+      <h2 id="g-titre" class="panel-title">Avancement des tâches</h2>
+      @if (periode()) {
+        <p class="panel-sub">{{ periodeTexte() }}</p>
+      }
+    </div>
+
+    @if (periode()) {
+      <ul class="legend" aria-label="Légende">
+        @for (s of legende; track s.cle) {
+          <li><span class="sw" [ngClass]="'s-' + s.cle" aria-hidden="true"></span>{{ s.libelle }}</li>
+        }
+        @if (aujourdhui() !== null) {
+          <li><span class="sw-today" aria-hidden="true"></span>Aujourd'hui</li>
+        }
+      </ul>
+    }
+  </div>
+
+  @if (periode(); as p) {
+    <div class="gantt-scroll">
+      <div class="gantt" role="group" aria-label="Diagramme de Gantt : une ligne par action ou tâche"
+           [class.has-today]="aujourdhui() !== null" [style.--today]="aujourdhui() === null ? null : aujourdhui() + '%'">
+
+        <div class="g-head">
+          <div class="g-label g-corner">Action / tâche</div>
+          <div class="g-scale" aria-hidden="true">
+            <div class="g-years">
+              @for (a of p.annees; track a.label) {
+                <div [style.width.%]="a.percent">{{ a.label }}</div>
+              }
+            </div>
+            <div class="g-months">
+              @for (m of p.mois; track $index) {
+                <div [style.width.%]="m.percent" [title]="m.titre">{{ m.label }}</div>
+              }
+            </div>
+          </div>
+        </div>
+
+        @for (l of lignes(); track $index) {
+          <div class="g-row" [class.is-titre]="l.titre">
+            <div class="g-label">
+              <span class="g-name" [title]="l.nom">{{ l.nom }}</span>
+              @if (!l.titre) {
+                <span class="g-meta">{{ l.pct }}&#8239;%@if (l.statutLibelle) { · {{ l.statutLibelle }}}</span>
+              }
+              @if (l.avecBarre) {
+                <span class="visually-hidden">, {{ l.plage }}</span>
+              }
+            </div>
+            <div class="g-track">
+              <div class="g-grid" aria-hidden="true">
+                @for (m of p.mois; track $index) {
+                  <span [style.width.%]="m.percent"></span>
+                }
+              </div>
+              @if (l.avecBarre) {
+                <div class="g-bar" [ngClass]="'s-' + l.statut" aria-hidden="true"
+                     [style.left.%]="l.left" [style.width.%]="l.width"
+                     [title]="l.nom + ' : ' + l.pct + ' %'">
+                  <i [style.width.%]="l.pct"></i>
+                </div>
+              } @else if (!l.titre) {
+                <span class="g-nodates">Dates non renseignées</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <p class="items-empty">Aucune date de début ou d'échéance n'est renseignée sur les tâches : le diagramme de Gantt ne peut pas être tracé.</p>
+  }
+</section>

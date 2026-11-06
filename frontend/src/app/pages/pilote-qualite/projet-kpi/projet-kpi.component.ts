@@ -1,8 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { initiales, pl, statutDef, statutKey } from '../../shared/projet-stats';
 
 /** Lecture d'un axe de pilotage par l'IA. */
 interface AxeAnalyseIA {
@@ -142,7 +143,7 @@ interface ProjetKPI {
   chargeParMembre: ChargeMembre[];
 
   scoreSante: number;
-  niveauSante: 'EXCELLENT' | 'BON' | 'ATTENTION' | 'CRITIQUE';
+  niveauSante: 'EXCELLENT' | 'BON' | 'ATTENTION' | 'CRITIQUE' | 'NON_EVALUE';
   detailScore: ComposanteScore[];
   alertes: AlerteKPI[];
   historique: PointHistorique[];
@@ -166,22 +167,29 @@ interface TrendPoint {
   label: string;
 }
 
+/**
+ * Tonalité d'un indicateur. Elle colore un point, un texte ou une barre, mais le sens est toujours
+ * écrit aussi (libellé, valeur) : la couleur ne porte jamais l'information seule.
+ */
+type Tone = 'ok' | 'warn' | 'danger' | 'neutral';
+
 @Component({
   selector: 'app-projet-kpi',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './projet-kpi.component.html',
-  styleUrls: ['./projet-kpi.component.css']
+  styleUrls: ['../pilote-ui.css', '../../shared/detail-ui.css', '../../shared/lecture-ui.css', './projet-kpi.component.css']
 })
 export class ProjetKPIComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
 
+  projetId = '';
   kpiData: ProjetKPI | null = null;
   loading = true;
   error: string | null = null;
-  downloading = false;
+  downloading: 'pdf' | 'excel' | null = null;
   downloadSuccess = false;
   downloadError: string | null = null;
 
@@ -201,14 +209,21 @@ export class ProjetKPIComponent implements OnInit {
   trendPoints: TrendPoint[] = [];
   trendLine = '';
   trendArea = '';
+  trendSummary = '';
   readonly chartWidth = 640;
   readonly chartHeight = 220;
-  readonly chartPadding = { top: 16, right: 20, bottom: 34, left: 40 };
+  readonly chartPadding = { top: 20, right: 44, bottom: 34, left: 48 };
+  /** Écart entre l'axe et le premier point (et entre le dernier point et le bord) : les étiquettes ne se chevauchent pas. */
+  private readonly chartInset = 16;
   readonly gridLevels = [100, 75, 50, 25, 0];
+
+  readonly pl = pl;
+  readonly initiales = initiales;
 
   ngOnInit() {
     const projetId = this.route.snapshot.paramMap.get('id');
     if (projetId) {
+      this.projetId = projetId;
       this.loadKPIData(projetId);
     } else {
       this.error = 'ID du projet non fourni';
@@ -239,6 +254,10 @@ export class ProjetKPIComponent implements OnInit {
     });
   }
 
+  retry() {
+    if (this.projetId) this.loadKPIData(this.projetId);
+  }
+
   /** Les listes absentes de la réponse sont normalisées pour simplifier le template. */
   private withDefaults(data: ProjetKPI): ProjetKPI {
     return {
@@ -264,9 +283,9 @@ export class ProjetKPIComponent implements OnInit {
 
   private buildDonut(data: ProjetKPI): DonutSegment[] {
     const parts = [
-      { label: 'Terminées', value: data.tachesTerminees, color: '#09C82C' },
-      { label: 'En cours', value: data.tachesEnCours, color: '#3b82f6' },
-      { label: 'Non démarrées', value: data.tachesNonDemarrees, color: '#cbd5e1' }
+      { label: 'Terminées', value: data.tachesTerminees, color: '#09c82c' },
+      { label: 'En cours', value: data.tachesEnCours, color: '#3b6cc4' },
+      { label: 'Non démarrées', value: data.tachesNonDemarrees, color: '#c3d4ca' }
     ].filter(part => part.value > 0);
 
     const total = parts.reduce((sum, part) => sum + part.value, 0);
@@ -292,6 +311,7 @@ export class ProjetKPIComponent implements OnInit {
     this.trendPoints = [];
     this.trendLine = '';
     this.trendArea = '';
+    this.trendSummary = '';
     if (!historique || historique.length === 0) return;
 
     const { top, right, bottom, left } = this.chartPadding;
@@ -299,10 +319,11 @@ export class ProjetKPIComponent implements OnInit {
     const innerHeight = this.chartHeight - top - bottom;
     const baseline = top + innerHeight;
 
+    const trackWidth = innerWidth - 2 * this.chartInset;
     this.trendPoints = historique.map((point, index) => ({
       x: historique.length === 1
         ? left + innerWidth / 2
-        : left + (index / (historique.length - 1)) * innerWidth,
+        : left + this.chartInset + (index / (historique.length - 1)) * trackWidth,
       y: baseline - (Math.max(0, Math.min(100, point.tauxAvancement)) / 100) * innerHeight,
       value: point.tauxAvancement,
       label: this.formatShortDate(point.date) || point.numeroRapport || `#${index + 1}`
@@ -315,6 +336,8 @@ export class ProjetKPIComponent implements OnInit {
     this.trendArea = `M ${premier.x.toFixed(1)} ${baseline} L `
       + this.trendPoints.map(p => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ')
       + ` L ${dernier.x.toFixed(1)} ${baseline} Z`;
+
+    this.trendSummary = `Courbe d'avancement sur ${this.trendPoints.length} relevés, de ${Math.round(premier.value)} % à ${Math.round(dernier.value)} %.`;
   }
 
   gridY(level: number): number {
@@ -335,7 +358,7 @@ export class ProjetKPIComponent implements OnInit {
 
   getHealthRingDashArray(): string {
     const circumference = this.getHealthRingCircumference();
-    const filled = ((this.kpiData?.scoreSante || 0) / 100) * circumference;
+    const filled = (this.clampPercent(this.kpiData?.scoreSante || 0) / 100) * circumference;
     return `${filled} ${circumference}`;
   }
 
@@ -343,29 +366,37 @@ export class ProjetKPIComponent implements OnInit {
     return composante.pointsMax > 0 ? (composante.points / composante.pointsMax) * 100 : 0;
   }
 
-  scoreColor(composante: ComposanteScore): string {
+  /* ---------------- Tonalités et libellés d'état ---------------- */
+
+  /** Classe de pastille (celles des statuts de projet) correspondant à une tonalité. */
+  pillTone(tone: Tone): string {
+    switch (tone) {
+      case 'ok': return 'pill-termine';
+      case 'warn': return 'pill-en_attente';
+      case 'danger': return 'pill-annule';
+      default: return 'pill-autre';
+    }
+  }
+
+  composanteTone(composante: ComposanteScore): Tone {
     const ratio = this.scoreRatio(composante);
-    if (ratio >= 80) return '#09C82C';
-    if (ratio >= 50) return '#f59e0b';
-    return '#ef4444';
+    if (ratio >= 80) return 'ok';
+    if (ratio >= 50) return 'warn';
+    return 'danger';
   }
 
-  /* ---------------- Libellés et couleurs d'état ---------------- */
-
-  getHealthScoreColor(): string {
-    const score = this.kpiData?.scoreSante || 0;
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#3b82f6';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
+  /** Sans fiche de suivi, le projet n'a pas de score : on affiche « Non évalué » plutôt qu'une note. */
+  scoreEvalue(): boolean {
+    return this.kpiData?.niveauSante !== 'NON_EVALUE';
   }
 
-  getHealthIcon(): string {
+  healthTone(): Tone {
     switch (this.kpiData?.niveauSante) {
-      case 'EXCELLENT': return '🚀';
-      case 'BON': return '👍';
-      case 'ATTENTION': return '⚠️';
-      default: return '🚨';
+      case 'EXCELLENT':
+      case 'BON': return 'ok';
+      case 'ATTENTION': return 'warn';
+      case 'NON_EVALUE': return 'neutral';
+      default: return 'danger';
     }
   }
 
@@ -374,6 +405,7 @@ export class ProjetKPIComponent implements OnInit {
       case 'EXCELLENT': return 'Excellent';
       case 'BON': return 'Bon';
       case 'ATTENTION': return 'Attention';
+      case 'NON_EVALUE': return 'Non évalué';
       default: return 'Critique';
     }
   }
@@ -383,6 +415,7 @@ export class ProjetKPIComponent implements OnInit {
       case 'EXCELLENT': return 'Les indicateurs sont au vert sur les quatre axes de pilotage.';
       case 'BON': return 'Le projet avance correctement, avec quelques points de vigilance.';
       case 'ATTENTION': return 'Plusieurs indicateurs se dégradent : un arbitrage est nécessaire.';
+      case 'NON_EVALUE': return 'Aucune fiche de suivi : le score sera calculé dès le premier dépôt.';
       default: return 'Le projet est en difficulté, une intervention rapide est recommandée.';
     }
   }
@@ -397,32 +430,52 @@ export class ProjetKPIComponent implements OnInit {
     return 'Retard significatif';
   }
 
-  getSpiColor(): string {
-    if (!this.kpiData || this.kpiData.tauxAvancementPlanifie <= 0) return '#64748b';
-    if (this.kpiData.spi >= 0.9) return '#09C82C';
-    if (this.kpiData.spi >= 0.8) return '#f59e0b';
-    return '#ef4444';
+  spiTone(): Tone {
+    if (!this.kpiData || this.kpiData.tauxAvancementPlanifie <= 0) return 'neutral';
+    if (this.kpiData.spi >= 0.9) return 'ok';
+    if (this.kpiData.spi >= 0.8) return 'warn';
+    return 'danger';
   }
 
-  getEcartColor(): string {
+  ecartTone(): Tone {
     const ecart = this.kpiData?.ecartPlanning || 0;
-    if (ecart >= 0) return '#09C82C';
-    if (ecart >= -10) return '#f59e0b';
-    return '#ef4444';
+    if (ecart >= 0) return 'ok';
+    if (ecart >= -10) return 'warn';
+    return 'danger';
   }
 
-  getEfficaciteColor(): string {
+  /** Évolution depuis la fiche précédente : un recul inquiète, une absence de changement n'a pas de couleur. */
+  deltaTone(): Tone {
+    const delta = this.kpiData?.deltaAvancement || 0;
+    if (delta > 0) return 'ok';
+    return delta < 0 ? 'warn' : 'neutral';
+  }
+
+  efficaciteTone(): Tone {
     const cpi = this.kpiData?.indiceEfficacite || 0;
-    if (cpi >= 1) return '#09C82C';
-    if (cpi >= 0.8) return '#f59e0b';
-    return '#ef4444';
+    if (cpi >= 1) return 'ok';
+    if (cpi >= 0.8) return 'warn';
+    return 'danger';
   }
 
-  getAlerteIcon(niveau: string): string {
+  /** Une consommation (charge ou budget) qui dépasse l'avancement de plus de 15 points inquiète. */
+  consommationTone(taux: number): Tone {
+    return taux > (this.kpiData?.tauxAvancement || 0) + 15 ? 'danger' : 'ok';
+  }
+
+  alerteTone(niveau: string): Tone {
     switch (niveau) {
-      case 'CRITIQUE': return '🚨';
-      case 'MAJEUR': return '⚠️';
-      default: return 'ℹ️';
+      case 'CRITIQUE': return 'danger';
+      case 'MAJEUR': return 'warn';
+      default: return 'neutral';
+    }
+  }
+
+  alerteLabel(niveau: string): string {
+    switch (niveau) {
+      case 'CRITIQUE': return 'Critique';
+      case 'MAJEUR': return 'Majeure';
+      default: return 'Mineure';
     }
   }
 
@@ -431,33 +484,12 @@ export class ProjetKPIComponent implements OnInit {
     return this.kpiData.alertes.filter(a => a.niveau === 'CRITIQUE' || a.niveau === 'MAJEUR').length;
   }
 
-  getStatusStyle(statut: string): string {
-    let bg = '';
-    switch (statut?.toUpperCase()) {
-      case 'EN_COURS': bg = 'background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);'; break;
-      case 'TERMINE': bg = 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);'; break;
-      case 'EN_ATTENTE': bg = 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);'; break;
-      case 'ANNULE': bg = 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);'; break;
-      default: bg = 'background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);';
-    }
-    return bg + ' color: white;';
+  statutPill(statut: string): string {
+    return 'pill-' + statutKey(statut);
   }
 
   formatStatut(statut: string): string {
-    switch (statut?.toUpperCase()) {
-      case 'EN_COURS': return 'En cours';
-      case 'TERMINE': return 'Terminé';
-      case 'EN_ATTENTE': return 'En attente';
-      case 'ANNULE': return 'Annulé';
-      default: return statut || '-';
-    }
-  }
-
-  getProgressStyle(percentage: number): string {
-    if (percentage >= 75) return 'background: linear-gradient(135deg, #10b981 0%, #059669 100%);';
-    if (percentage >= 50) return 'background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);';
-    if (percentage >= 25) return 'background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);';
-    return 'background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);';
+    return statut ? statutDef(statut).label : '-';
   }
 
   getProgressLabel(percentage: number): string {
@@ -465,15 +497,6 @@ export class ProjetKPIComponent implements OnInit {
     if (percentage >= 50) return 'Bon avancement';
     if (percentage >= 25) return 'En cours';
     return 'Démarrage';
-  }
-
-  getInitials(nom: string): string {
-    if (!nom) return '?';
-    const parts = nom.trim().split(/\s+/);
-    const initials = parts.length > 1
-      ? parts[0][0] + parts[parts.length - 1][0]
-      : parts[0].slice(0, 2);
-    return initials.toUpperCase();
   }
 
   /* ---------------- Calendrier ---------------- */
@@ -525,7 +548,8 @@ export class ProjetKPIComponent implements OnInit {
   /** Les budgets sont saisis en MD (millions de dinars) ; l'affichage détaillé se fait en dinars. */
   formatBudget(budgetMD: number): string {
     if (!budgetMD) return '0';
-    return (budgetMD * 1000000).toLocaleString('fr-FR', { maximumFractionDigits: 0 });
+    // L'espace fine insécable de fr-FR est presque invisible à grande taille : une espace insécable ordinaire se lit mieux
+    return (budgetMD * 1000000).toLocaleString('fr-FR', { maximumFractionDigits: 0 }).replace(/ /g, ' ');
   }
 
   /* ---------------- Export ---------------- */
@@ -539,9 +563,9 @@ export class ProjetKPIComponent implements OnInit {
   }
 
   private downloadReport(format: 'pdf' | 'excel') {
-    if (!this.kpiData) return;
+    if (!this.kpiData || this.downloading) return;
 
-    this.downloading = true;
+    this.downloading = format;
     this.downloadSuccess = false;
     this.downloadError = null;
     const url = `${environment.apiUrl}/api/pilote-qualite/rapports/projet/${this.kpiData.projetId}/kpi/download/${format}`;
@@ -571,13 +595,13 @@ export class ProjetKPIComponent implements OnInit {
           window.URL.revokeObjectURL(url);
         }
 
-        this.downloading = false;
+        this.downloading = null;
         this.downloadSuccess = true;
         setTimeout(() => this.downloadSuccess = false, 3000);
       },
       error: (err) => {
         console.error('Erreur lors du téléchargement:', err);
-        this.downloading = false;
+        this.downloading = null;
         this.downloadError = 'Erreur lors du téléchargement';
         setTimeout(() => this.downloadError = null, 3000);
       }
@@ -627,13 +651,13 @@ export class ProjetKPIComponent implements OnInit {
     };
   }
 
-  getAIRiskStyle(niveau: string): string {
+  aiRiskTone(niveau: string): Tone {
     switch (niveau) {
-      case 'FAIBLE': return 'background:#d1fae5; color:#065f46; border:1px solid #6ee7b7;';
-      case 'MOYEN': return 'background:#fef3c7; color:#92400e; border:1px solid #fcd34d;';
-      case 'ELEVE': return 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;';
-      case 'CRITIQUE': return 'background:#4c0519; color:#fecdd3; border:1px solid #e11d48;';
-      default: return 'background:#f3f4f6; color:#374151;';
+      case 'FAIBLE': return 'ok';
+      case 'MOYEN': return 'warn';
+      case 'ELEVE':
+      case 'CRITIQUE': return 'danger';
+      default: return 'neutral';
     }
   }
 
@@ -657,45 +681,35 @@ export class ProjetKPIComponent implements OnInit {
     }
   }
 
-  getAIConfianceColor(niveau: string): string {
+  aiConfianceTone(niveau: string): Tone {
     switch (niveau) {
-      case 'ELEVE': return '#09C82C';
-      case 'MOYEN': return '#f59e0b';
-      case 'FAIBLE': return '#ef4444';
-      default: return '#64748b';
+      case 'ELEVE': return 'ok';
+      case 'MOYEN': return 'warn';
+      case 'FAIBLE': return 'danger';
+      default: return 'neutral';
     }
   }
 
-  getAIScoreColor(score: number): string {
-    if (score >= 80) return '#10b981';
-    if (score >= 60) return '#3b82f6';
-    if (score >= 40) return '#f59e0b';
-    return '#ef4444';
+  aiScoreTone(score: number): Tone {
+    if (score >= 60) return 'ok';
+    if (score >= 40) return 'warn';
+    return 'danger';
   }
 
-  getTendanceIcon(tendance: string): string {
+  tendanceLabel(tendance: string): string {
     switch (tendance) {
-      case 'POSITIVE': return '▲';
-      case 'NEGATIVE': return '▼';
-      default: return '▬';
+      case 'POSITIVE': return 'En amélioration';
+      case 'NEGATIVE': return 'En dégradation';
+      default: return 'Stable';
     }
   }
 
-  getTendanceColor(tendance: string): string {
+  tendanceTone(tendance: string): Tone {
     switch (tendance) {
-      case 'POSITIVE': return '#09C82C';
-      case 'NEGATIVE': return '#ef4444';
-      default: return '#64748b';
+      case 'POSITIVE': return 'ok';
+      case 'NEGATIVE': return 'danger';
+      default: return 'neutral';
     }
-  }
-
-  getAxeIcon(axe: string): string {
-    const normalise = (axe || '').toLowerCase();
-    if (normalise.includes('délai') || normalise.includes('delai')) return '⏱️';
-    if (normalise.includes('charge')) return '⚙️';
-    if (normalise.includes('qualité') || normalise.includes('qualite')) return '🛡️';
-    if (normalise.includes('budget')) return '💰';
-    return '📌';
   }
 
   /** Compare le verdict de l'IA au score calculé par les règles déterministes. */

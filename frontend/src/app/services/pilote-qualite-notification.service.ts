@@ -24,6 +24,14 @@ export class PiloteQualiteNotificationService {
   }
 
   /**
+   * Envoie un email personnalisé (même contrat que l'API existante) :
+   * chefId vide = tous les chefs de projet, sinon un seul chef.
+   */
+  envoyerEmailPersonnalise(chefId: string, subject: string, message: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/send-custom-email`, { chefId, subject, message });
+  }
+
+  /**
    * Envoie au chef de projet l'email de relance d'un projet en retard
    */
   relancerProjet(projetId: string): Observable<{ message: string }> {

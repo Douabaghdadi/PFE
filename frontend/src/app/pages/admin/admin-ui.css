@@ -1,0 +1,99 @@
+/* Pages de l'administration (utilisateurs, nomenclature) : ce qu'elles partagent.
+   Les jetons, l'en-tête, les boutons, la recherche, les pastilles, les états vides et les boîtes
+   de dialogue viennent de pilote-qualite/pilote-ui.css et shared/projets-ui.css. */
+
+/* La page s'insère dans la mise en page admin (barre latérale) : le fond reste celui de la mise en page */
+.page.is-admin { min-height: 0; padding-top: 0.75rem; background: transparent; }
+
+.message-zone .notice.is-banner { margin: 0 0 1.25rem; }
+.notice-warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+
+/* Rôles : texte dans une pastille, la couleur aide à les distinguer sans porter le sens seule */
+.role-chef { background: #e6f6ec; color: #0b5d43; box-shadow: inset 0 0 0 1px #bfe6cf; }
+.role-pilote { background: #e8eef9; color: #1a4394; box-shadow: inset 0 0 0 1px #c7d4ea; }
+.role-admin { background: #eef0f5; color: #0f2447; box-shadow: inset 0 0 0 1px #d5dbe7; }
+.role-sans { background: #f1f5f4; color: #475569; box-shadow: inset 0 0 0 1px #dbe3df; }
+
+.skeleton-filters { height: 72px; margin-bottom: 1.25rem; }
+.skeleton-table { height: 560px; }
+.btn-small svg { width: 15px; height: 15px; }
+
+/* ============ Tableau : en-tête teinté sur toute la largeur, lignes séparées par un filet ============ */
+.panel.is-table { padding: 0; overflow: hidden; }
+.table-wrap { position: relative; }
+.tbl-admin { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tbl-admin thead th {
+  padding: 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+  background: #f1f7f4;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: left;
+  white-space: nowrap;
+}
+.tbl-admin td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--line-soft); vertical-align: middle; color: var(--ink-2); }
+.tbl-admin thead th:first-child, .tbl-admin tbody th:first-child, .tbl-admin td:first-child { padding-left: 1.5rem; }
+.tbl-admin thead th:last-child, .tbl-admin tbody th:last-child, .tbl-admin td:last-child { padding-right: 1.5rem; }
+.tbl-admin tbody:last-child tr:last-child td { border-bottom: 0; }
+.tbl-admin .c-actions { width: 1%; text-align: right; white-space: nowrap; }
+.tbl-admin .ligne:hover td { background: #fafcfb; }
+.actions { display: inline-flex; gap: 0.4rem; }
+.actions .icon-btn { width: 34px; height: 34px; }
+.actions .icon-btn:disabled:hover { border-color: var(--line); background: var(--surface); color: var(--muted); }
+.ligne-vide td { padding-top: 0.9rem; padding-bottom: 0.9rem; font-size: 0.88rem; color: var(--muted); }
+
+/* ============ Formulaire d'une boîte de dialogue ============ */
+.dlg.is-form { width: min(560px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; }
+.dlg.is-form .dlg-sub { max-width: none; white-space: normal; }
+.champs { display: flex; flex-direction: column; gap: 1rem; }
+.champ-label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--ink-2); }
+.champ-option { font-weight: 400; color: var(--muted); }
+.req { margin-left: 0.2rem; color: #b91c1c; }
+.champ-hint { display: block; margin: 0.35rem 0 0; font-size: 0.8rem; color: var(--muted); }
+.champ-error { margin: 0.35rem 0 0; font-size: 0.8rem; font-weight: 500; color: #b91c1c; }
+.champ .field-select { flex: none; }
+textarea.control { height: auto; min-height: 70px; padding: 0.6rem 0.9rem; line-height: 1.5; resize: vertical; }
+.control.is-invalid { border-color: #dc2626; background: #fffafa; }
+.control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16); }
+.champ .notice { margin-top: 0.6rem; }
+
+/* Mot de passe : le bouton œil est posé dans le champ */
+.mdp { position: relative; }
+.mdp .control { padding-right: 2.9rem; }
+.mdp-voir {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.mdp-voir svg { width: 18px; height: 18px; }
+.mdp-voir:hover { background: #f1f7f4; color: #047857; }
+.mdp-voir:focus-visible { outline: 2px solid #059669; outline-offset: 1px; }
+.champ-hint.is-ok { color: #047857; }
+
+/* ============ Adaptation ============ */
+/* Écran étroit : le tableau devient une liste de cartes (chaque page place ses cellules) */
+@media (max-width: 640px) {
+  .tbl-admin, .tbl-admin tbody { display: block; }
+  .tbl-admin thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .tbl-admin tr.ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.2rem 0.75rem; padding: 0.7rem 1rem; border-bottom: 1px solid var(--line-soft); }
+  .tbl-admin tr.ligne td, .tbl-admin tr.ligne td:first-child, .tbl-admin tr.ligne td:last-child { display: block; width: auto; padding: 0; border: 0; }
+  .tbl-admin tr.ligne-vide { display: block; padding: 0.8rem 1rem; }
+  .tbl-admin tr.ligne-vide td, .tbl-admin tr.ligne-vide td:first-child { display: block; padding: 0; border: 0; }
+  .tbl-admin .ligne:hover td { background: transparent; }
+}
+@media (max-width: 600px) {
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1; }
+}

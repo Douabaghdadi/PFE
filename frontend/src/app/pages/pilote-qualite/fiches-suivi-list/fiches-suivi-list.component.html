@@ -1,219 +1,210 @@
-<div class="min-h-screen py-8" style="background: #f8fafc;">
-  <div class="container mx-auto px-4" style="max-width: 1400px;">
-    
-    <!-- Header -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
-      <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-      <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
-      <div style="position: relative; z-index: 1;">
-        <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 0.75rem;">
-          <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
-          <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">PILOTE QUALITÉ</span>
-        </div>
-        <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">Toutes les Fiches de Suivi</h1>
-        <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0;">Consultez et gérez toutes les fiches de suivi</p>
+<main class="page">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Fiches de suivi</h1>
+        <p class="page-meta" *ngIf="!loading && !error && portee.length > 0">
+          {{ pl(totaux.fiches, 'fiche de suivi', 'fiches de suivi') }} sur {{ pl(totaux.projets, 'projet') }}.
+          Dernière fiche le {{ derniereFiche | date:'dd/MM/yyyy' }}.
+        </p>
+      </div>
+    </header>
+
+    <!-- ============ Chargement ============ -->
+    <div *ngIf="loading" aria-busy="true">
+      <div class="skeleton skeleton-strip"></div>
+      <div class="cards">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
       </div>
     </div>
 
-    <!-- Filters -->
-    <div style="background: white; border-radius: 1rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-        <div class="md:col-span-8">
-          <input type="text" 
-                 [(ngModel)]="searchTerm" 
-                 (ngModelChange)="applyFilters()"
-                 placeholder="🔍 Rechercher par numéro de rapport, chef de projet, état d'avancement..." 
-                 style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-size: 0.95rem; transition: all 0.3s ease;"
-                 onfocus="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
-                 onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-        </div>
-        <div class="md:col-span-2">
-          <button (click)="toggleSortOrder()"
-                  style="width: 100%; padding: 0.75rem 1rem; background: white; border: 2px solid #e5e7eb; color: #374151; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                  onmouseover="this.style.borderColor='#10b981'; this.style.background='#f0fdf4';"
-                  onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-            <svg [style]="sortOrder === 'desc' ? 'transform: rotate(0deg);' : 'transform: rotate(180deg);'" style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle; transition: transform 0.3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
-            </svg>
-            {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
-          </button>
-        </div>
-        <div class="md:col-span-2">
-          <button (click)="resetFilters()"
-                  style="width: 100%; padding: 0.75rem 1rem; background: #f3f4f6; color: #374151; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                  onmouseover="this.style.background='#e5e7eb';"
-                  onmouseout="this.style.background='#f3f4f6';">
-            <svg style="width: 1rem; height: 1rem; display: inline-block; margin-right: 0.5rem; vertical-align: middle;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Réinitialiser
-          </button>
-        </div>
-      </div>
+    <!-- ============ Erreur ============ -->
+    <div *ngIf="error && !loading" class="error-banner" role="alert">
+      <span>{{ error }}</span>
+      <button type="button" class="btn btn-secondary" (click)="loadFichesSuivi()">Réessayer</button>
     </div>
 
-    <!-- Loading State -->
-    <div *ngIf="loading" class="text-center py-12">
-      <div style="display: inline-block; width: 3rem; height: 3rem; border: 4px solid #d1fae5; border-top-color: #10b981; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-      <p class="mt-4" style="color: #065f46; font-weight: 600;">Chargement des fiches de suivi...</p>
-    </div>
+    <!-- ============ Contenu ============ -->
+    <ng-container *ngIf="!loading && !error">
 
-    <!-- Error State -->
-    <div *ngIf="error" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 2rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
-      <div style="display: flex; align-items: center; color: #991b1b;">
-        <svg style="width: 1.5rem; height: 1.5rem; margin-right: 0.75rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <span style="font-weight: 600;">{{ error }}</span>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!loading && filteredFiches.length === 0 && !error" style="background: white; border-radius: 1.5rem; padding: 4rem 2rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.08);">
-      <div style="width: 120px; height: 120px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem;">
-        <svg style="width: 3rem; height: 3rem; color: #10b981;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-        </svg>
-      </div>
-      <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 1rem;">
-        Aucune fiche de suivi trouvée
-      </h3>
-      <p style="color: #6b7280; font-size: 1.1rem;">
-        Aucune fiche de suivi ne correspond à vos critères de recherche.
-      </p>
-    </div>
-
-    <!-- Fiches Grid -->
-    <div *ngIf="!loading && filteredFiches.length > 0">
-      <div style="margin-bottom: 1rem; color: #6b7280; font-weight: 600;">
-        {{ filteredFiches.length }} fiche(s) de suivi trouvée(s)
-      </div>
-      
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: stretch;">
-        <div *ngFor="let fiche of paginatedFiches"
-             style="background: white; border-radius: 1.5rem; overflow: hidden; box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); border: 1px solid #eef1f4; cursor: pointer; display: flex; flex-direction: column;"
-             (click)="viewDetails(fiche.id)"
-             onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 20px 32px -12px rgba(15,23,42,0.16), 0 4px 10px rgba(15,23,42,0.06)'; this.style.borderColor='#e2e8f0';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.03)'; this.style.borderColor='#eef1f4';">
-
-          <!-- Card Body -->
-          <div style="padding: 1.25rem 1.25rem 1rem; flex: 1; display: flex; flex-direction: column;">
-
-            <!-- Header -->
-            <div style="display: flex; align-items: flex-start; gap: 0.65rem; margin-bottom: 0.9rem;">
-              <div style="width: 2.3rem; height: 2.3rem; border-radius: 0.8rem; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <svg style="width: 1.05rem; height: 1.05rem; color: #475569;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-              </div>
-              <div style="min-width: 0;">
-                <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em;" [title]="fiche.numeroRapport || 'Sans numéro'">
-                  {{ fiche.numeroRapport || 'Sans numéro' }}
-                </h3>
-                <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 600; letter-spacing: 0.02em;">{{ fiche.dateRapport | date:'dd/MM/yyyy' }}</span>
-              </div>
-            </div>
-
-            <!-- Projet -->
-            <div style="display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.25rem 0.55rem; border-radius: 0.5rem; margin-bottom: 0.6rem; align-self: flex-start;">
-              <svg style="width: 0.68rem; height: 0.68rem; color: #059669; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-              </svg>
-              <span style="font-size: 0.72rem; font-weight: 700; color: #059669; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 12rem;">{{ getProjetName(fiche.ficheProjetId) }}</span>
-            </div>
-
-            <!-- Chef de projet -->
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.9rem;">
-              <div style="width: 1.6rem; height: 1.6rem; border-radius: 50%; background: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(37,99,235,0.25);">
-                <span style="color: white; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.02em;">{{ getInitials(fiche.ficheSignaletique?.chefProjet?.nom) }}</span>
-              </div>
-              <span style="font-size: 0.8rem; color: #334155; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ fiche.ficheSignaletique?.chefProjet?.nom || '—' }}</span>
-            </div>
-
-            <!-- Bento stat tiles: Tâches + Problèmes + Risques -->
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: auto;">
-              <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
-                <div style="font-size: 1.2rem; font-weight: 800; color: #1d4ed8; line-height: 1;">{{ (fiche.tachesSuivi || []).length }}</div>
-                <div style="font-size: 0.55rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Tâches</div>
-              </div>
-              <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
-                <div style="font-size: 1.2rem; font-weight: 800; color: #b45309; line-height: 1;">{{ (fiche.constatGlobal.problemesRencontres || []).length }}</div>
-                <div style="font-size: 0.55rem; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Problèmes</div>
-              </div>
-              <div style="background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%); border: 1px solid #fca5a5; border-radius: 1rem; padding: 0.6rem 0.4rem; text-align: center;">
-                <div style="font-size: 1.2rem; font-weight: 800; color: #b91c1c; line-height: 1;">{{ (fiche.constatGlobal.principauxRisques || []).length }}</div>
-                <div style="font-size: 0.55rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.25rem;">Risques</div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Action Button -->
-          <div style="padding: 0 1.25rem 1.25rem;">
-            <div style="height: 1px; background: #f1f5f9; margin-bottom: 0.75rem;"></div>
-            <button (click)="viewDetails(fiche.id); $event.stopPropagation()"
-                    style="width: 100%; height: 2.4rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 0.7rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; box-shadow: 0 4px 10px rgba(16,185,129,0.3);"
-                    onmouseover="this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'; this.style.transform='translateY(-1px)';"
-                    onmouseout="this.style.boxShadow='0 4px 10px rgba(16,185,129,0.3)'; this.style.transform='translateY(0)';">
-              Voir les détails
-              <svg style="width: 0.85rem; height: 0.85rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-              </svg>
-            </button>
-          </div>
+      <!-- Indicateurs : le nombre de fiches en tête, puis ce qu'elles contiennent -->
+      <section *ngIf="portee.length > 0" class="kpi-strip is-4" aria-label="Indicateurs des fiches de suivi">
+        <div class="kpi kpi-lead">
+          <span class="kpi-label">Fiches de suivi</span>
+          <span class="kpi-value">{{ totaux.fiches }}</span>
         </div>
-      </div>
+        <div class="kpi">
+          <span class="kpi-label"><span class="dot" style="background: #3b6cc4;" aria-hidden="true"></span>Tâches suivies</span>
+          <span class="kpi-value">{{ totaux.taches }}</span>
+          <span class="kpi-hint">sur {{ pl(totaux.fiches, 'fiche') }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><span class="dot" style="background: #f59e0b;" aria-hidden="true"></span>Problèmes signalés</span>
+          <span class="kpi-value">{{ totaux.problemes }}</span>
+          <span class="kpi-hint">dans {{ pl(totaux.fichesAvecProblemes, 'fiche') }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><span class="dot" style="background: #ef4444;" aria-hidden="true"></span>Risques identifiés</span>
+          <span class="kpi-value">{{ totaux.risques }}</span>
+          <span class="kpi-hint">dans {{ pl(totaux.fichesAvecRisques, 'fiche') }}</span>
+        </div>
+      </section>
 
-      <!-- Pagination -->
-      <div *ngIf="totalPages > 1" style="margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
-        <button (click)="goToPage(currentPage - 1)" 
-                [disabled]="currentPage === 1"
-                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                [style.opacity]="currentPage === 1 ? '0.5' : '1'"
-                [style.cursor]="currentPage === 1 ? 'not-allowed' : 'pointer'"
-                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+      <!-- Filtres -->
+      <section *ngIf="fichesSuivi.length > 0" class="panel filters" aria-label="Filtrer les fiches de suivi">
+        <div class="field-search">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
           </svg>
+          <label for="recherche" class="visually-hidden">Rechercher une fiche de suivi</label>
+          <input id="recherche" type="search" class="control" autocomplete="off"
+                 [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()"
+                 placeholder="Rapport, projet ou chef de projet">
+        </div>
+
+        <div class="field-select">
+          <label for="projet" class="visually-hidden">Filtrer par projet</label>
+          <select id="projet" class="control" [(ngModel)]="selectedProjetId" (ngModelChange)="onProjetChange()">
+            <option value="">Tous les projets</option>
+            <option *ngFor="let p of projetOptions" [value]="p.id">{{ p.name }}</option>
+          </select>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+
+        <button type="button" class="btn btn-secondary" (click)="toggleSortOrder()"
+                [attr.aria-label]="sortOrder === 'desc' ? 'Tri : plus récent d\'abord. Inverser le tri' : 'Tri : plus ancien d\'abord. Inverser le tri'">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"
+               [style.transform]="sortOrder === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)'">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+          </svg>
+          {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
         </button>
 
-        <ng-container *ngFor="let page of getPageNumbers()">
-          <span *ngIf="page === -1" style="padding: 0.5rem 1rem; color: #6b7280;">...</span>
-          <button *ngIf="page !== -1" (click)="goToPage(page)"
-                  [style.background]="currentPage === page ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'white'"
-                  [style.color]="currentPage === page ? 'white' : '#374151'"
-                  [style.border]="currentPage === page ? '2px solid #10b981' : '2px solid #e5e7eb'"
-                  style="padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; min-width: 40px;"
-                  onmouseover="if(this.style.background === 'white') { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                  onmouseout="if(this.style.color !== 'white') { this.style.borderColor='#e5e7eb'; this.style.background='white'; }">
-            {{ page }}
-          </button>
+        <button type="button" class="btn btn-secondary" (click)="resetFilters()" [disabled]="!filtresActifs && sortOrder === 'desc'">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Réinitialiser
+        </button>
+      </section>
+
+      <!-- Aucune fiche du tout / aucun résultat -->
+      <div *ngIf="filteredFiches.length === 0" class="panel empty">
+        <div class="empty-icon" aria-hidden="true">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+          </svg>
+        </div>
+        <ng-container *ngIf="portee.length === 0; else aucunResultat">
+          <h2 class="empty-title">Aucune fiche de suivi</h2>
+          <p class="empty-text">
+            {{ selectedProjetId ? 'Ce projet n\'a pas encore de fiche de suivi.' : 'Les fiches de suivi déposées par les chefs de projet apparaîtront ici.' }}
+          </p>
+          <button *ngIf="selectedProjetId" type="button" class="btn btn-primary" (click)="resetFilters()">Voir toutes les fiches</button>
         </ng-container>
-
-        <button (click)="goToPage(currentPage + 1)" 
-                [disabled]="currentPage === totalPages"
-                style="padding: 0.5rem 1rem; background: white; border: 2px solid #e5e7eb; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;"
-                [style.opacity]="currentPage === totalPages ? '0.5' : '1'"
-                [style.cursor]="currentPage === totalPages ? 'not-allowed' : 'pointer'"
-                onmouseover="if(this.disabled === false) { this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; }"
-                onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='white';">
-          <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-          </svg>
-        </button>
+        <ng-template #aucunResultat>
+          <h2 class="empty-title">Aucune fiche trouvée</h2>
+          <p class="empty-text">Aucune fiche de suivi ne correspond à votre recherche.</p>
+          <button type="button" class="btn btn-primary" (click)="resetFilters()">Réinitialiser les filtres</button>
+        </ng-template>
       </div>
-    </div>
+
+      <!-- Liste des fiches -->
+      <section *ngIf="filteredFiches.length > 0" aria-label="Liste des fiches de suivi">
+        <p class="result-count" role="status">
+          {{ pl(filteredFiches.length, 'fiche de suivi', 'fiches de suivi') }}<ng-container *ngIf="filteredFiches.length !== portee.length"> sur {{ portee.length }}</ng-container>
+        </p>
+
+        <div class="cards">
+          <article *ngFor="let fiche of paginatedFiches" class="pcard" (click)="viewDetails(fiche.id)">
+
+            <div class="pcard-body">
+              <div class="pcard-head">
+                <div class="pcard-id">
+                  <span class="pcard-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                  </span>
+                  <div class="pcard-name">
+                    <a class="pcard-title" [routerLink]="['/pilote-qualite/fiches-suivi', fiche.id]" (click)="$event.stopPropagation()"
+                       [title]="fiche.numeroRapport || 'Sans numéro'">{{ fiche.numeroRapport || 'Sans numéro' }}</a>
+                    <span class="pcard-ref">{{ fiche.dateRapport | date:'dd/MM/yyyy' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <ul class="context">
+                <li class="person">
+                  <span class="mini-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                    </svg>
+                  </span>
+                  <span [title]="getProjetName(fiche.ficheProjetId)"><span class="visually-hidden">Projet : </span>{{ getProjetName(fiche.ficheProjetId) }}</span>
+                </li>
+                <li class="person">
+                  <span class="avatar" aria-hidden="true">{{ initiales(fiche.ficheSignaletique?.chefProjet?.nom) }}</span>
+                  <span><span class="visually-hidden">Chef de projet : </span>{{ fiche.ficheSignaletique?.chefProjet?.nom || 'Non renseigné' }}</span>
+                </li>
+              </ul>
+
+              <dl class="facts is-3">
+                <div>
+                  <dt>Tâches</dt>
+                  <dd>{{ resume(fiche).taches }}</dd>
+                </div>
+                <div>
+                  <dt>Problèmes</dt>
+                  <dd [class.is-warn]="resume(fiche).problemes > 0">{{ resume(fiche).problemes }}</dd>
+                </div>
+                <div>
+                  <dt>Risques</dt>
+                  <dd [class.is-danger]="resume(fiche).risques > 0">{{ resume(fiche).risques }}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="pcard-foot">
+              <a class="btn btn-primary btn-details" [routerLink]="['/pilote-qualite/fiches-suivi', fiche.id]" (click)="$event.stopPropagation()"
+                 [attr.aria-label]="'Détails de la fiche ' + (fiche.numeroRapport || 'sans numéro')">
+                Détails
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                </svg>
+              </a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Pagination -->
+        <nav *ngIf="totalPages > 1" class="pager" aria-label="Pagination">
+          <button type="button" class="pager-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Page précédente">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+
+          <ng-container *ngFor="let page of getPageNumbers()">
+            <span *ngIf="page === -1" class="pager-gap" aria-hidden="true">…</span>
+            <button *ngIf="page !== -1" type="button" class="pager-btn" [class.is-current]="currentPage === page"
+                    [attr.aria-current]="currentPage === page ? 'page' : null" [attr.aria-label]="'Page ' + page"
+                    (click)="goToPage(page)">{{ page }}</button>
+          </ng-container>
+
+          <button type="button" class="pager-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Page suivante">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </nav>
+      </section>
+    </ng-container>
   </div>
-</div>
-
-<style>
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
-}
-</style>
+</main>

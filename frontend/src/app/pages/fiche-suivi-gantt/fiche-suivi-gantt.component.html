@@ -1,76 +1,49 @@
-<div class="gantt-page" *ngIf="!loading && !error && ficheSuivi">
-  <!-- Back Button -->
-  <div class="back-btn-wrap">
-    <button (click)="goBack()" class="back-btn">← Retour à la fiche de suivi</button>
-  </div>
+<main class="page">
+  <div class="page-container">
 
-  <!-- Header -->
-  <div class="header-card">
-    <div class="header-badge">📊 DIAGRAMME DE GANTT</div>
-    <h1 class="header-title">{{ ficheSuivi.numeroRapport || 'Sans numéro' }}</h1>
-    <p class="header-date">État d'avancement global du projet</p>
-  </div>
-
-  <div class="section" *ngIf="ganttMonths.length > 0">
-    <div class="gantt-wrapper">
-      <div class="gantt-header-row">
-        <div class="gantt-label-col">Action / Tâche</div>
-        <div class="gantt-timeline">
-          <div class="gantt-month" *ngFor="let m of ganttMonths" [style.width.%]="m.percent">{{ m.label }}</div>
-        </div>
+    <!-- ============ Chargement ============ -->
+    @if (loading) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-meta"></div>
+        <div class="skeleton skeleton-panel"></div>
       </div>
+    }
 
-      <ng-container *ngFor="let t of ficheSuivi.tachesSuivi">
-        <!-- Ligne de titre (action de la fiche de projet) : pas de barre -->
-        <div class="gantt-row gantt-row-titre" *ngIf="isTitre(t)">
-          <div class="gantt-label-col">
-            <span class="gantt-task-name gantt-titre-name" [title]="t.sujet">{{ t.sujet }}</span>
-          </div>
-          <div class="gantt-timeline-row">
-            <div class="gantt-grid"><span *ngFor="let m of ganttMonths" [style.width.%]="m.percent"></span></div>
-          </div>
-        </div>
-        <!-- Ligne de sous-tâche détaillée -->
-        <div class="gantt-row" *ngIf="!isTitre(t)">
-          <div class="gantt-label-col">
-            <span class="gantt-task-name" [title]="t.sujet">{{ t.sujet || '-' }}</span>
-            <span class="gantt-pct">{{ t.pourcentageRealise || 0 }}%</span>
-          </div>
-          <div class="gantt-timeline-row">
-            <div class="gantt-grid"><span *ngFor="let m of ganttMonths" [style.width.%]="m.percent"></span></div>
-            <div class="gantt-bar-wrap" *ngIf="t.debut || t.echeance"
-                 [style.left.%]="getBarLeft(t.debut || t.echeance)"
-                 [style.width.%]="getBarWidth(t.debut, t.echeance)"
-                 [title]="(t.sujet || '') + ' : ' + (t.pourcentageRealise || 0) + ' %'">
-              <div class="gantt-bar" [style]="getBarStyle(t.statut)">
-                <div class="gantt-bar-progress" [style.width.%]="t.pourcentageRealise || 0"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-
-      <div class="gantt-legend">
-        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;"></span> En cours</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Terminé</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> En retard</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Bloqué</span>
+    <!-- ============ Erreur ============ -->
+    @if (error && !loading) {
+      <div class="error-banner" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" class="btn btn-secondary" (click)="goBack()">Retour à la fiche de suivi</button>
       </div>
-    </div>
-  </div>
-  <div class="empty-state" *ngIf="ganttMonths.length === 0">
-    <p>Aucune date de début/échéance renseignée sur les sous-tâches pour générer le diagramme de Gantt.</p>
-  </div>
-</div>
+    }
 
-<!-- Loading -->
-<div class="loading-state" *ngIf="loading">
-  <div class="spinner"></div>
-  <p>Chargement du diagramme de Gantt...</p>
-</div>
+    <!-- ============ Diagramme ============ -->
+    @if (ficheSuivi; as f) {
+      @if (!loading && !error) {
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">Diagramme de Gantt</h1>
+            <p class="meta-line">
+              <span class="meta-text">{{ f.numeroRapport || 'Sans numéro' }}</span>
+              @if (projetNom) {
+                <span class="meta-text">Projet : <a class="meta-link" [routerLink]="['/projets', f.ficheProjetId]">{{ projetNom }}</a></span>
+              }
+            </p>
+          </div>
 
-<!-- Error -->
-<div class="error-state" *ngIf="error">
-  <p>⚠️ {{ error }}</p>
-  <button (click)="goBack()">Retour</button>
-</div>
+          <div class="page-actions">
+            <button type="button" class="btn btn-secondary" (click)="goBack()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+              </svg>
+              Retour à la fiche de suivi
+            </button>
+          </div>
+        </header>
+
+        <app-fiche-suivi-gantt-chart [taches]="f.tachesSuivi || []" />
+      }
+    }
+  </div>
+</main>

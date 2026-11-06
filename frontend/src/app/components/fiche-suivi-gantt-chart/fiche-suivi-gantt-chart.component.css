@@ -1,0 +1,109 @@
+/* Diagramme de Gantt : ce qui n'appartient qu'à lui (frise, lignes, barres, légende).
+   Le panneau et les jetons viennent de pages/shared/lecture-ui.css. */
+
+/* Couleurs d'un statut : --c pour le trait et l'avancement, --t pour la part restant à faire */
+.s-cours { --c: #3b6cc4; --t: #dbe6f7; }
+.s-termine { --c: #09c82c; --t: #d3f5dc; }
+.s-retard { --c: #f59e0b; --t: #fdeccc; }
+.s-bloque { --c: #ef4444; --t: #fcd9d9; }
+.s-autre { --c: #94a3b8; --t: #e5e9ef; }
+
+/* ============ Légende ============ */
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; margin: 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--ink-2); }
+.legend li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.sw { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+.sw-today { width: 2px; height: 14px; border-radius: 1px; background: #059669; }
+
+/* ============ Diagramme ============ */
+.gantt-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.gantt { --label: 280px; min-width: 760px; }
+.g-head, .g-row { display: flex; background: var(--row-bg, var(--surface)); }
+.g-head { --row-bg: #f1f7f4; position: relative; z-index: 3; }
+.g-row { --row-bg: var(--surface); min-height: 46px; border-top: 1px solid var(--line-soft); }
+.g-row:hover { --row-bg: #f7faf8; }
+.g-row.is-titre, .g-row.is-titre:hover { --row-bg: #eef6f1; min-height: 42px; }
+
+/* La colonne des tâches reste visible quand la frise défile */
+.g-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 var(--label);
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  max-width: var(--label);
+  box-sizing: border-box;
+  padding: 0.5rem 1rem;
+  border-right: 1px solid var(--line);
+  background: var(--row-bg);
+}
+.g-corner { justify-content: center; font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.g-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.g-row.is-titre .g-name { font-size: 0.9rem; font-weight: 600; }
+.g-meta { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Frise : années au-dessus, mois en dessous, largeurs proportionnelles aux jours */
+.g-scale { flex: 1; min-width: 0; }
+.g-years, .g-months { display: flex; }
+.g-years { border-bottom: 1px solid var(--line); }
+.g-years div, .g-months div { flex-shrink: 0; overflow: hidden; white-space: nowrap; }
+.g-years div { padding: 0.3rem 0.5rem; border-right: 1px solid var(--line); font-size: 0.75rem; font-weight: 600; color: var(--ink); }
+.g-months div { padding: 0.3rem 0; border-right: 1px solid var(--line-soft); font-size: 0.72rem; text-align: center; text-overflow: ellipsis; text-transform: capitalize; color: var(--muted); }
+.g-years div:last-child, .g-months div:last-child { border-right: 0; }
+
+.g-track { position: relative; flex: 1; min-width: 0; }
+.g-grid { position: absolute; inset: 0; display: flex; pointer-events: none; }
+.g-grid span { flex-shrink: 0; height: 100%; border-right: 1px solid var(--line-soft); }
+.g-grid span:last-child { border-right: 0; }
+
+/* Ligne « aujourd'hui » : un trait vertical par ligne, à la même position */
+.gantt.has-today .g-track::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--today);
+  width: 2px;
+  margin-left: -1px;
+  background: #059669;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+/* Barre : la part restant à faire en teinte claire, l'avancement en couleur pleine */
+.g-bar {
+  position: absolute;
+  top: 50%;
+  height: 20px;
+  min-width: 6px;
+  border-radius: 6px;
+  background: var(--t);
+  box-shadow: inset 0 0 0 1px var(--c);
+  overflow: hidden;
+  transform: translateY(-50%);
+}
+.g-bar i { display: block; height: 100%; background: var(--c); }
+.g-nodates { position: absolute; top: 50%; left: 0.9rem; font-size: 0.78rem; color: var(--muted); transform: translateY(-50%); }
+
+@media (max-width: 720px) {
+  .gantt { --label: 150px; min-width: 640px; }
+  .g-label { padding: 0.5rem 0.7rem; }
+}
+@media print {
+  .gantt-scroll { overflow: visible; }
+  .gantt { min-width: 0; }
+  .g-label { position: static; }
+  .g-row { break-inside: avoid; }
+}

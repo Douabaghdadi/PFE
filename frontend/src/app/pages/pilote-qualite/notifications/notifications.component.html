@@ -1,0 +1,305 @@
+<div class="page">
+  <div class="page-container">
+
+    <header class="page-header mail-hero">
+      <div class="hero-main">
+        <span class="hero-icon" aria-hidden="true">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <rect x="3" y="5" width="18" height="14" rx="2.5"/><path stroke-linecap="round" stroke-linejoin="round" d="m3.5 7.5 8.5 6 8.5-6"/>
+          </svg>
+        </span>
+        <div>
+          <h1 class="page-title">Messagerie</h1>
+          <p class="page-meta">Rédigez et envoyez des communications personnalisées à vos chefs de projet.</p>
+        </div>
+      </div>
+      <p class="hero-sender">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6l7-3z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 12 2 2 4-4"/>
+        </svg>
+        Envoyé au nom de <strong>Qualinet</strong>
+      </p>
+    </header>
+
+    <!-- Retour après envoi -->
+    @if (retour(); as r) {
+      <div class="flash" [class.flash-ok]="r.type === 'ok'" [class.flash-warn]="r.type === 'partiel'" [class.flash-error]="r.type === 'erreur'"
+           [attr.role]="r.type === 'ok' ? 'status' : 'alert'">
+        @if (r.type === 'ok') {
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        } @else {
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        }
+        <span>{{ r.texte }}</span>
+        <button type="button" class="flash-close" aria-label="Fermer ce message" (click)="retour.set(null)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+    }
+
+    <form class="mail-layout" (ngSubmit)="demanderEnvoi()" novalidate>
+
+      <!-- ============ Rédaction ============ -->
+      <section class="panel composer" aria-label="Rédaction du message">
+
+        <!-- Destinataires -->
+        <fieldset class="block block-dest">
+          <legend class="block-title dest-legend">
+            <span class="sec-icon sec-blue" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                <circle cx="9" cy="8" r="3.2"/><path stroke-linecap="round" d="M3 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path stroke-linecap="round" d="M15.5 5.3a3.2 3.2 0 0 1 0 5.4M17.5 14.4c1.8.6 3.1 2.2 3.5 4.6"/>
+              </svg>
+            </span>
+            Destinataires
+          </legend>
+
+          <div class="segmented dest-switch">
+            <label class="seg-option" [class.is-checked]="mode() === 'tous'">
+              <input type="radio" name="mode" value="tous" class="visually-hidden" [checked]="mode() === 'tous'" (change)="choisirMode('tous')" />
+              Tous les chefs de projet
+              <span class="seg-count">{{ chefs().length }}</span>
+            </label>
+            <label class="seg-option" [class.is-checked]="mode() === 'selection'">
+              <input type="radio" name="mode" value="selection" class="visually-hidden" [checked]="mode() === 'selection'" (change)="choisirMode('selection')" />
+              Choisir
+              @if (selection().size) { <span class="seg-count">{{ selection().size }}</span> }
+            </label>
+          </div>
+
+          <div class="dest-body">
+            @if (chargementChefs()) {
+              <div class="skeleton skeleton-picker" aria-busy="true"></div>
+            } @else if (erreurChefs()) {
+              <div class="inline-error">
+                <span>Impossible de charger la liste des chefs de projet.</span>
+                <button type="button" class="link-btn" (click)="chargerChefs()">Réessayer</button>
+              </div>
+            } @else if (mode() === 'tous') {
+              <div class="all-recipients">
+                <div class="avatar-stack" aria-hidden="true">
+                  @for (chef of chefs().slice(0, 5); track chef.id) {
+                    <span class="avatar" [title]="chef.username">{{ initiales(chef.username) }}</span>
+                  }
+                  @if (chefs().length > 5) { <span class="avatar avatar-more">+{{ chefs().length - 5 }}</span> }
+                </div>
+                <p>
+                  Le message partira à <strong>{{ pl(nbDestinataires(), 'chef de projet', 'chefs de projet') }}</strong>, chacun dans un email individuel.
+                  @if (sansEmail()) { <span class="muted">{{ pl(sansEmail(), 'compte') }} sans email ne recevra rien.</span> }
+                </p>
+              </div>
+            } @else {
+              <!-- Sélection : étiquettes des destinataires, liste dans un panneau qui s'ouvre par-dessus le formulaire -->
+              <div #zoneDestinataires class="recipients-field" [class.is-open]="pickerOuvert()">
+                <div class="chips-field">
+                  @for (chef of chefsSelectionnes(); track chef.id) {
+                    <span class="chip">
+                      {{ chef.username }}
+                      <button type="button" [attr.aria-label]="'Retirer ' + chef.username" (click)="retirer(chef.id)">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" d="M7 7l10 10M17 7 7 17"/></svg>
+                      </button>
+                    </span>
+                  } @empty {
+                    <span class="chips-placeholder">Aucun destinataire sélectionné</span>
+                  }
+                  <button #boutonAjouter type="button" class="add-btn" aria-controls="picker-panel"
+                          [attr.aria-expanded]="pickerOuvert()" (click)="basculerPicker()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    {{ chefsSelectionnes().length ? 'Modifier' : 'Ajouter' }}
+                  </button>
+                </div>
+
+                @if (pickerOuvert()) {
+                  <div id="picker-panel" class="picker picker-pop" (keydown.escape)="fermerPicker(true)">
+                    <div class="search">
+                      <label for="recherche" class="visually-hidden">Rechercher un chef de projet</label>
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="m20 20-3.5-3.5"/>
+                      </svg>
+                      <input #champRecherche id="recherche" name="recherche" type="search" autocomplete="off" spellcheck="false"
+                             placeholder="Rechercher par nom ou email…" [(ngModel)]="recherche" (keydown.enter)="$event.preventDefault()"
+                             [attr.aria-describedby]="tentative() && erreurDestinataires() ? 'err-dest' : null" />
+                    </div>
+
+                    <div class="picker-tools">
+                      <span>{{ pl(chefsFiltres().length, 'résultat') }}</span>
+                      <span class="picker-tools-actions">
+                        @if (chefsFiltres().length) {
+                          <button type="button" class="link-btn" (click)="toutSelectionnerVisibles()">Tout sélectionner</button>
+                        }
+                        @if (selection().size) {
+                          <button type="button" class="link-btn" (click)="viderSelection()">Tout retirer</button>
+                        }
+                      </span>
+                    </div>
+
+                    <ul class="chef-list">
+                      @for (chef of chefsFiltres(); track chef.id) {
+                        <li>
+                          <label class="chef-row" [class.is-selected]="selection().has(chef.id)" [class.is-disabled]="!chef.email">
+                            <input type="checkbox" [checked]="selection().has(chef.id)" [disabled]="!chef.email" (change)="basculer(chef.id)" />
+                            <span class="avatar" aria-hidden="true">{{ initiales(chef.username) }}</span>
+                            <span class="chef-id">
+                              <span class="chef-name">{{ chef.username }}</span>
+                              <span class="chef-mail">{{ chef.email || 'Email non renseigné' }}</span>
+                            </span>
+                          </label>
+                        </li>
+                      } @empty {
+                        <li class="chef-empty">Aucun chef de projet ne correspond à «&nbsp;{{ recherche() }}&nbsp;».</li>
+                      }
+                    </ul>
+
+                    <div class="picker-foot">
+                      <span>{{ pl(selection().size, 'destinataire sélectionné', 'destinataires sélectionnés') }}</span>
+                      <button type="button" class="btn btn-small" (click)="fermerPicker(true)">Terminé</button>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (tentative() && erreurDestinataires()) {
+              <p class="field-error" id="err-dest" role="alert">{{ erreurDestinataires() }}</p>
+            }
+          </div>
+        </fieldset>
+
+        <!-- Objet -->
+        <div class="block">
+          <div class="label-row">
+            <label for="objet" class="block-title">
+              <span class="sec-icon sec-green" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h10M4 17h7"/>
+                </svg>
+              </span>
+              Objet
+            </label>
+            <span class="counter" [class.is-near]="objet().length > objetMax - 20" aria-live="polite">{{ objet().length }}/{{ objetMax }}</span>
+          </div>
+          <input #champObjet id="objet" name="objet" type="text" class="input" autocomplete="off"
+                 placeholder="Ex. Rappel : dépôt de la fiche de suivi périodique"
+                 [(ngModel)]="objet" [maxlength]="objetMax" (keydown.enter)="$event.preventDefault()"
+                 [class.is-invalid]="tentative() && erreurObjet()"
+                 [attr.aria-invalid]="tentative() && !!erreurObjet()"
+                 [attr.aria-describedby]="tentative() && erreurObjet() ? 'err-objet' : null" />
+          @if (tentative() && erreurObjet()) {
+            <p class="field-error" id="err-objet">{{ erreurObjet() }}</p>
+          }
+        </div>
+
+        <!-- Message -->
+        <div class="block block-last">
+          <div class="label-row">
+            <label for="message" class="block-title">
+              <span class="sec-icon sec-green" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M4 20l1.2-4.2L16.5 4.5a2.1 2.1 0 0 1 3 3L8.2 18.8 4 20z"/><path stroke-linecap="round" d="M14.5 6.5l3 3"/>
+                </svg>
+              </span>
+              Message
+            </label>
+            <span class="counter">{{ pl(message().length, 'caractère') }}</span>
+          </div>
+          <textarea #champMessage id="message" name="message" class="input textarea" rows="12"
+                    placeholder="Bonjour,&#10;&#10;Rédigez ici votre message…"
+                    [(ngModel)]="message"
+                    [class.is-invalid]="tentative() && erreurMessage()"
+                    [attr.aria-invalid]="tentative() && !!erreurMessage()"
+                    [attr.aria-describedby]="tentative() && erreurMessage() ? 'err-message' : null"></textarea>
+          @if (tentative() && erreurMessage()) {
+            <p class="field-error" id="err-message">{{ erreurMessage() }}</p>
+          }
+        </div>
+      </section>
+
+      <!-- ============ Récapitulatif et envoi ============ -->
+      <aside class="panel recap" aria-labelledby="titre-recap">
+        <h2 id="titre-recap" class="panel-title">
+          <span class="sec-icon sec-green-solid" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>
+            </svg>
+          </span>
+          Récapitulatif
+        </h2>
+
+        <dl class="recap-list">
+          <div>
+            <dt>Destinataires</dt>
+            <dd>{{ libelleDestinataires() }}</dd>
+          </div>
+          <div>
+            <dt>Objet</dt>
+            <dd class="recap-objet" [class.muted]="!objet().trim()">{{ objet().trim() || 'Non renseigné' }}</dd>
+          </div>
+          <div>
+            <dt>Message</dt>
+            <dd [class.muted]="!message().trim()">{{ message().trim() ? pl(message().trim().length, 'caractère') : 'Non rédigé' }}</dd>
+          </div>
+        </dl>
+
+        <ul class="checklist" aria-label="Vérification avant envoi">
+          <li [class.done]="!erreurDestinataires()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            Destinataires choisis
+            <span class="visually-hidden">{{ erreurDestinataires() ? '(à faire)' : '(fait)' }}</span>
+          </li>
+          <li [class.done]="!erreurObjet()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            Objet renseigné
+            <span class="visually-hidden">{{ erreurObjet() ? '(à faire)' : '(fait)' }}</span>
+          </li>
+          <li [class.done]="!erreurMessage()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            Message rédigé
+            <span class="visually-hidden">{{ erreurMessage() ? '(à faire)' : '(fait)' }}</span>
+          </li>
+        </ul>
+
+        <div class="recap-actions">
+          <button type="submit" class="btn btn-primary btn-block" [disabled]="envoiEnCours()">
+            @if (envoiEnCours()) {
+              <span class="spinner" aria-hidden="true"></span>
+              Envoi en cours…
+            } @else {
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+              </svg>
+              Envoyer le message
+            }
+          </button>
+          <button type="button" class="btn btn-secondary btn-block" [disabled]="envoiEnCours() || !formulaireModifie()" (click)="demanderEffacement()">
+            Effacer
+          </button>
+        </div>
+      </aside>
+    </form>
+  </div>
+</div>
+
+<!-- Confirmation (envoi collectif, effacement) : boîte de dialogue native, focus piégé et touche Échap gérés par le navigateur -->
+<dialog #dialog class="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-text" (close)="confirmation.set(null)">
+  @if (confirmation() === 'envoi') {
+    <h2 id="confirm-title" class="confirm-title">Confirmer l'envoi</h2>
+    <p id="confirm-text" class="confirm-text">
+      Ce message sera envoyé à <strong>{{ pl(nbDestinataires(), 'chef de projet', 'chefs de projet') }}</strong>, chacun dans un email individuel.
+    </p>
+    <p class="confirm-subject">{{ objet().trim() }}</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-secondary" autofocus (click)="fermerConfirmation()">Annuler</button>
+      <button type="button" class="btn btn-primary" (click)="confirmer()">Envoyer à {{ pl(nbDestinataires(), 'destinataire') }}</button>
+    </div>
+  } @else if (confirmation() === 'effacer') {
+    <h2 id="confirm-title" class="confirm-title">Effacer le message&nbsp;?</h2>
+    <p id="confirm-text" class="confirm-text">L'objet, le message et les destinataires choisis seront effacés.</p>
+    <div class="confirm-actions">
+      <button type="button" class="btn btn-secondary" autofocus (click)="fermerConfirmation()">Annuler</button>
+      <button type="button" class="btn btn-danger" (click)="confirmer()">Effacer</button>
+    </div>
+  }
+</dialog>

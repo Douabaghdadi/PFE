@@ -1,6 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../services/auth.service';
 import { UserNotificationService, Notification } from '../../services/user-notification.service';
 
@@ -13,8 +15,8 @@ import { UserNotificationService, Notification } from '../../services/user-notif
       <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
         <div class="d-flex justify-content-between align-items-center" style="height: 70px;">
           <!-- Logo -->
-          <a class="d-flex align-items-center text-decoration-none" routerLink="/" aria-label="Qualinet - Accueil">
-            <img src="assets/images/branding/qualinet-logo-horizontal.png" alt="Qualinet" style="height: 42px; width: auto; display: block;" />
+          <a class="d-flex align-items-center text-decoration-none brand-link" routerLink="/" aria-label="Qualinet - Accueil">
+            <img class="brand-logo" src="assets/images/branding/qualinet-logo-horizontal.png" alt="Qualinet" />
           </a>
 
           <!-- Menu Desktop -->
@@ -25,7 +27,7 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                  onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
                 Accueil
               </a>
-              <a href="#features" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+              <a routerLink="/" fragment="features" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                  onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
                  onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
                 Fonctionnalités
@@ -55,13 +57,13 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                 <a routerLink="/pilote-qualite/notifications" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
-                  <i class="fas fa-bell mr-1"></i>Notifications
+                  Messagerie
                 </a>
               } @else {
                 <a routerLink="/dashboard" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
-                  Tableau de bord
+                  Accueil
                 </a>
               }
               
@@ -92,8 +94,13 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                     </li>
                     <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
                     <li>
-                      <a class="dropdown-item d-flex align-items-center" routerLink="/team-suggestion" style="padding: 0.5rem 1rem; border-radius: 0.375rem; color: #7c3aed; font-weight: 600;">
-                        🤖 Suggestion d'équipe IA
+                      <a class="dropdown-item d-flex align-items-center" routerLink="/team-suggestion" style="padding: 0.5rem 1rem; border-radius: 0.375rem;">
+                        <svg style="width: 16px; height: 16px; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                          <circle cx="9" cy="7" r="4"/>
+                          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Suggestion d'équipe IA
                       </a>
                     </li>
                   </ul>
@@ -142,15 +149,18 @@ import { UserNotificationService, Notification } from '../../services/user-notif
           <!-- Actions -->
           <div class="d-flex align-items-center gap-3">
             @if (!authService.isAuthenticated()) {
-              <a routerLink="/login" class="btn text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s;"
-                 onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)';" 
-                 onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)';">
-                Connexion
-              </a>
+              <!-- Sur Connexion / Inscription, le formulaire porte déjà le lien vers l'autre page -->
+              @if (!isAuthRoute()) {
+                <a routerLink="/login" class="btn text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; padding: 0.5rem 1.5rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s;"
+                   onmouseover="this.style.background='linear-gradient(135deg, #059669 0%, #047857 100%)';"
+                   onmouseout="this.style.background='linear-gradient(135deg, #10b981 0%, #059669 100%)';">
+                  Connexion
+                </a>
+              }
             } @else {
               <!-- Notification Bell Icon -->
-              <div class="dropdown position-relative">
-                <button class="btn position-relative" type="button" data-bs-toggle="dropdown" 
+              <div class="dropdown position-relative cloche">
+                <button class="btn position-relative" type="button" data-bs-toggle="dropdown"
                         style="background: transparent; border: none; padding: 0.5rem; color: #6b7280;"
                         (click)="loadNotifications()">
                   <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -189,7 +199,13 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                            [style.background]="notification.read ? 'transparent' : '#f0fdf4'"
                            style="padding: 0.75rem 1rem; border-bottom: 1px solid #f3f4f6; cursor: pointer; transition: background 0.2s;">
                           <div class="flex-shrink-0 me-2">
-                            @if (notification.type.includes('CREATED')) {
+                            @if (notification.type.startsWith('RELANCE')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fef3c7;">
+                                <svg style="width: 16px; height: 16px; color: #d97706;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                </svg>
+                              </div>
+                            } @else if (notification.type.includes('CREATED')) {
                               <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #dcfce7;">
                                 <svg style="width: 16px; height: 16px; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
                                   <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
@@ -242,7 +258,7 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                   <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                   </svg>
-                  {{ authService.currentUser()?.username }}
+                  <span class="user-name">{{ authService.currentUser()?.username }}</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 0.5rem; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); min-width: 200px;">
                   <li>
@@ -268,8 +284,9 @@ import { UserNotificationService, Notification } from '../../services/user-notif
             
             <!-- Mobile Menu Toggle -->
             <button class="btn d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu" 
-                    style="border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 0.375rem;">
-              <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    style="border: 1px solid #e5e7eb; padding: 0.5rem; border-radius: 0.375rem;"
+                    aria-label="Menu de navigation" aria-controls="mobileMenu" aria-expanded="false">
+              <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
               </svg>
             </button>
@@ -280,7 +297,7 @@ import { UserNotificationService, Notification } from '../../services/user-notif
         <div class="collapse d-lg-none" id="mobileMenu" style="padding-bottom: 1rem;">
           @if (!authService.isAuthenticated()) {
             <a routerLink="/" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Accueil</a>
-            <a href="#features" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Fonctionnalités</a>
+            <a routerLink="/" fragment="features" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Fonctionnalités</a>
             <a href="#about" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">À propos</a>
           } @else {
             @if (authService.hasRole('ROLE_PILOTE_QUALITE')) {
@@ -294,10 +311,10 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                 Fiches de Suivi
               </a>
               <a routerLink="/pilote-qualite/notifications" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
-                <i class="fas fa-bell mr-1"></i>Notifications
+                Messagerie
               </a>
             } @else {
-              <a routerLink="/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Tableau de bord</a>
+              <a routerLink="/dashboard" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">Accueil</a>
             }
             
             @if (authService.hasRole('ROLE_CHEF_PROJET') || authService.hasRole('ROLE_ADMIN')) {
@@ -345,6 +362,29 @@ import { UserNotificationService, Notification } from '../../services/user-notif
     </nav>
   `,
   styles: [`
+    /* Le logo garde ses proportions : il ne rétrécit pas dans la barre flexible (il était écrasé sur mobile),
+       et passe à une hauteur plus petite sur téléphone pour laisser la place au compte et au menu. */
+    .brand-link { flex-shrink: 0; }
+    /* max-width: none annule la règle globale « img { max-width: 100% } » qui comprimait le logo avec son lien */
+    .brand-logo { display: block; flex-shrink: 0; height: 42px; width: auto; max-width: none; }
+    .user-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* La cloche est tenue à distance du menu du compte : le badge de notifications déborde à sa droite */
+    .cloche { margin-right: 0.5rem; }
+    @media (min-width: 992px) {
+      .cloche { margin-right: 2rem; }
+    }
+    @media (max-width: 575.98px) {
+      .brand-logo { height: 30px; }
+      .user-name { max-width: 4.5rem; }
+    }
+    /* Très petits écrans : le nom disparaît de la barre (il reste dans le menu du compte) */
+    @media (max-width: 439.98px) {
+      .user-name { display: none; }
+    }
+    @media (max-width: 359.98px) {
+      .brand-logo { height: 26px; }
+    }
+
     /* La barre de navigation (notifications, compte, menu) n'a pas sa place dans un PDF imprimé. */
     @media print {
       :host { display: none !important; }
@@ -356,14 +396,26 @@ export class NavbarComponent implements OnInit {
   notificationService = inject(UserNotificationService);
   notifications: Notification[] = [];
 
+  private router = inject(Router);
+  isAuthRoute = signal(false);
+
+  constructor() {
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      takeUntilDestroyed()
+    ).subscribe(event => this.isAuthRoute.set(/^\/(login|register)(?=[?#]|$)/.test(event.urlAfterRedirects)));
+
+    // Notification poussée par le serveur : elle s'ajoute en tête de la liste, sans rechargement
+    this.notificationService.incoming$.pipe(takeUntilDestroyed()).subscribe(notification => {
+      this.notifications = [notification, ...this.notifications.filter(n => n.id !== notification.id)];
+    });
+  }
+
   ngOnInit() {
     // Charger les notifications au démarrage si l'utilisateur est connecté
+    // (le compteur et la connexion temps réel sont gérés par UserNotificationService)
     if (this.authService.isAuthenticated()) {
-      console.log('User is authenticated, starting notification service...');
-      this.notificationService.startPolling();
       this.loadNotifications();
-    } else {
-      console.log('User is not authenticated');
     }
   }
 

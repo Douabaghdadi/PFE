@@ -1,0 +1,77 @@
+/* Utilisateurs (administration) : ce qui n'appartient qu'à cette page.
+   La base du tableau et du formulaire vient de admin/admin-ui.css. */
+
+.filters .field-select { flex-basis: 220px; }
+
+/* ============ Tableau des comptes ============ */
+.tbl-users .c-compte { width: 55%; }
+.tbl-users .c-role { width: 25%; }
+.tbl-users .c-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.compte { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.compte-texte { display: flex; flex-direction: column; min-width: 0; }
+.compte-nom { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.moi { margin-left: 0.3rem; font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+.compte-email { overflow: hidden; font-size: 0.83rem; color: var(--muted); text-overflow: ellipsis; white-space: nowrap; }
+
+.roles { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
+
+/* Pied du tableau : nombre de comptes affichés et pagination */
+.table-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; padding: 0.8rem 1.5rem; border-top: 1px solid var(--line); background: #f8fbf9; }
+.table-range { margin: 0; font-size: 0.88rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.table-foot .pager { margin-top: 0; }
+.ligne-vide .link-btn { margin-left: 0.4rem; }
+
+/* ============ Formulaire ============ */
+
+/* Choix des rôles : une vraie case à cocher par rôle, avec ce qu'il permet */
+.roles-choix { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; padding: 0; border: 0; }
+.roles-choix legend { padding: 0; }
+.role-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.role-option:hover { border-color: #b9d6c7; background: #f8fbf9; }
+.role-option.is-checked { border-color: #9fd3b8; background: #f0faf4; }
+.role-option input { flex-shrink: 0; width: 17px; height: 17px; margin: 0.15rem 0 0; accent-color: #059669; cursor: pointer; }
+.role-option input:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.role-nom { display: block; font-size: 0.9rem; font-weight: 600; color: var(--ink); }
+.role-aide { display: block; font-size: 0.8rem; color: var(--muted); }
+
+/* ============ Adaptation ============ */
+@media (max-width: 720px) {
+  .filters .field-select { flex-basis: 100%; }
+}
+/* Écran étroit : une carte par compte (identité, rôles et date à gauche, actions à droite) */
+@media (max-width: 640px) {
+  .tbl-users tr.ligne .c-compte, .tbl-users tr.ligne .c-role, .tbl-users tr.ligne .c-date { grid-column: 1; }
+  .tbl-users tr.ligne .c-role { margin-top: 0.35rem; }
+  .tbl-users tr.ligne .c-date { font-size: 0.8rem; color: var(--muted); }
+  .tbl-users tr.ligne .c-date .visually-hidden {
+    position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal;
+  }
+  .tbl-users tr.ligne .c-actions { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
+  .table-foot { justify-content: center; padding: 0.8rem 1rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .role-option { transition: none; }
+}

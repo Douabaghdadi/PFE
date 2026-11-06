@@ -1,0 +1,80 @@
+/* Corps d'une fiche projet : ce qui n'appartient qu'à elle (équipe, tableaux des charges et du planning).
+   Le reste (résumé, panneaux, informations, textes, base des tableaux) vient de pages/shared/lecture-ui.css. */
+
+/* ============ Équipe ============ */
+.members { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0.6rem 0 0; padding: 0; list-style: none; }
+.member { display: flex; align-items: flex-start; gap: 0.8rem; min-width: 0; padding: 0.85rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: #fbfdfc; }
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.member-text { min-width: 0; }
+.member-text p { margin: 0; max-width: none; }
+.member-name { font-size: 0.95rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.member-role { margin-top: 0.1rem; font-size: 0.85rem; color: var(--ink-2); }
+.member-mail { display: inline-block; margin-top: 0.15rem; font-size: 0.82rem; color: #047857; overflow-wrap: anywhere; text-underline-offset: 3px; }
+.member-mail:focus-visible { outline: 2px solid #059669; outline-offset: 2px; border-radius: 3px; }
+
+/* ============ Tableaux ============ */
+.tbl-charges { min-width: 720px; }
+.tbl-planning { min-width: 900px; }
+.tbl .col-intitule { min-width: 200px; }
+.tbl .col-profil { min-width: 150px; }
+.tbl .col-charge { width: 90px; }
+.tbl th.col-mois { width: 38px; padding-right: 0; padding-left: 0; text-align: center; }
+.tbl td.cell-month { padding-right: 0; padding-left: 0; text-align: center; }
+
+/* Un mois planifié : pastille verte avec une coche (le texte « planifié » est lu par les lecteurs d'écran) */
+.mois { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1px solid transparent; border-radius: 50%; }
+.mois.is-on { border-color: #bfe6cf; background: #e6f6ec; color: #047857; }
+.mois svg { width: 12px; height: 12px; }
+
+/* Tableau des charges : 5 colonnes, tient jusqu'à 820 px ; en dessous, une carte par ligne */
+@media (max-width: 820px) {
+  .table-wrap.is-charges { overflow: visible; border: 0; background: transparent; }
+  .tbl-charges { display: block; min-width: 0; }
+  .tbl-charges thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .tbl-charges tbody { display: flex; flex-direction: column; gap: 0.75rem; }
+  .tbl-charges tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem 1rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .tbl-charges td, .tbl-charges td:first-child, .tbl-charges td:last-child { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .tbl-charges tbody tr:hover td { background: transparent; }
+  .tbl-charges td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.15rem; font-size: 0.78rem; font-weight: 400; color: var(--muted); }
+  .tbl-charges td.cell-main { grid-column: 1 / -1; }
+}
+
+/* Tableau du planning : en cartes, les 12 mois forment une rangée de pastilles (6 par rangée sur mobile) */
+@media (max-width: 1140px) {
+  .table-wrap.is-planning { overflow: visible; border: 0; background: transparent; }
+  .tbl-planning { display: block; min-width: 0; }
+  .tbl-planning thead { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  .tbl-planning tbody { display: flex; flex-direction: column; gap: 0.75rem; }
+  .tbl-planning tr { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.7rem 0.4rem; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  .tbl-planning td, .tbl-planning td:first-child, .tbl-planning td:last-child { display: block; min-width: 0; padding: 0; border: 0; overflow-wrap: anywhere; }
+  .tbl-planning tbody tr:hover td { background: transparent; }
+  .tbl-planning td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.15rem; font-size: 0.78rem; font-weight: 400; color: var(--muted); }
+  .tbl-planning .cell-intitule { grid-column: 1 / -1; }
+  .tbl-planning .cell-profil, .tbl-planning .cell-charge { grid-column: span 6; }
+  .tbl-planning td.cell-month { grid-column: span 1; text-align: center; }
+  .tbl-planning .mois { border-color: var(--line); }
+  .tbl-planning .mois.is-on { border-color: #bfe6cf; }
+}
+@media (max-width: 720px) {
+  .members { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 600px) {
+  .tbl-planning tr { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .tbl-planning .cell-profil, .tbl-planning .cell-charge { grid-column: 1 / -1; }
+  .tbl-charges tr { grid-template-columns: minmax(0, 1fr); }
+}
+@media print {
+  .member { break-inside: avoid; }
+}

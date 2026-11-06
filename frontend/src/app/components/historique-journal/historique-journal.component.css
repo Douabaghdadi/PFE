@@ -1,0 +1,114 @@
+/* Historique d'un projet : ce qui n'appartient qu'à cette page (journal, détail avant/après).
+   Les jetons, filtres, pastilles, états vides et pagination viennent de shared/projets-ui.css et pilote-qualite/pilote-ui.css. */
+
+/* Une colonne de lecture : le journal n'a pas besoin de la largeur des listes */
+.page-container.is-journal { max-width: 1100px; }
+
+.skeleton-filters { height: 72px; margin-bottom: 1.25rem; }
+.skeleton-entry { height: 112px; margin-bottom: 0.9rem; }
+
+/* Trois listes et deux dates : la recherche garde la place restante, « Réinitialiser » ferme la dernière ligne à droite */
+.filters .field-select { flex-basis: 210px; }
+.filters .btn { margin-left: auto; }
+.field-date { display: flex; align-items: center; gap: 0.45rem; flex: 0 1 190px; min-width: 0; }
+.field-date label { flex-shrink: 0; font-size: 0.85rem; color: var(--muted); }
+.field-date .control { min-width: 0; padding-right: 0.6rem; }
+
+/* ============ Journal ============ */
+/* Un fil vertical relie les entrées ; le point de chaque entrée reprend la couleur de son action */
+.timeline { position: relative; margin: 0; padding: 0 0 0 30px; list-style: none; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 14px;
+  bottom: 14px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--line);
+}
+.tl-item { position: relative; margin-bottom: 0.9rem; }
+.tl-item:last-child { margin-bottom: 0; }
+.tl-dot {
+  position: absolute;
+  left: -30px;
+  top: 1.15rem;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: #09c82c;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.tl-dot.is-modification { background: #3b6cc4; }
+.tl-dot.is-suppression { background: #ef4444; }
+
+.entry { margin: 0; padding: 1.1rem 1.25rem; }
+.entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.65rem; }
+.entry-type { font-size: 0.82rem; font-weight: 500; color: var(--muted); }
+.entry-name { min-width: 0; font-size: 0.85rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.entry-name::before { content: '·'; margin-right: 0.65rem; font-weight: 400; color: #8aa396; }
+.entry-desc { margin: 0.6rem 0 0; font-size: 0.98rem; font-weight: 600; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+
+.entry-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.9rem; margin-top: 0.8rem; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+@media (min-width: 601px) {
+  .entry-role::before, .entry-date::before { content: '·'; margin-right: 0.9rem; color: #8aa396; }
+}
+
+/* ============ Détail avant / après ============ */
+.details-toggle { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.8rem; }
+.details-toggle svg { width: 14px; height: 14px; transition: transform 0.15s; }
+.details-toggle svg.is-open { transform: rotate(180deg); }
+
+.changes { margin: 0.8rem 0 0; padding-top: 0.4rem; border-top: 1px solid var(--line-soft); }
+.change { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 0.4rem 1.25rem; padding: 0.75rem 0; border-top: 1px solid var(--line-soft); }
+.change:first-child { border-top: 0; }
+.change dt { margin: 0; font-size: 0.85rem; font-weight: 600; color: var(--ink-2); overflow-wrap: anywhere; }
+.change dd { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem; min-width: 0; margin: 0; }
+
+/* Avant en rouge, après en vert : toujours accompagnés de leur légende en toutes lettres */
+.val { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; padding: 0.55rem 0.75rem; border: 1px solid; border-radius: 10px; }
+.val-cap { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.val-text { font-size: 0.9rem; line-height: 1.5; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+.val-avant { background: #fef2f2; border-color: #fecaca; }
+.val-avant .val-cap { color: #b91c1c; }
+.val-apres { background: #ecfdf5; border-color: #a7f3d0; }
+.val-apres .val-cap { color: #047857; }
+
+@media (max-width: 720px) {
+  .timeline { padding-left: 24px; }
+  .timeline::before { left: 5px; }
+  .tl-dot { left: -24px; width: 12px; height: 12px; border-width: 2px; top: 1.3rem; }
+  .entry { padding: 1rem; }
+  .change { grid-template-columns: minmax(0, 1fr); }
+  /* Sur écran étroit le nom de la fiche passe à la ligne : un séparateur resterait seul en début de ligne */
+  .entry-name::before { display: none; }
+  /* Listes en pleine largeur (libellés lisibles), les deux dates côte à côte, « Réinitialiser » pleine largeur */
+  .filters .field-select { flex-basis: 100%; }
+  .field-date { flex: 1 1 calc(50% - 0.3rem); }
+  .filters .btn { flex-basis: 100%; margin-left: 0; }
+}
+@media (max-width: 600px) {
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .details-toggle svg { transition: none; }
+}
+@media print {
+  .page-actions, .filters, .pager, .details-toggle { display: none; }
+  .panel { break-inside: avoid; box-shadow: none; }
+}

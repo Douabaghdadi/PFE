@@ -7,11 +7,20 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  /** Réponse d'erreur : affichée, mais jamais renvoyée à Gemini. */
+  error?: boolean;
+}
+
+/** Un échange précédent, tel que le backend le transmet à Gemini. */
+export interface ChatTurn {
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export interface ChatRequestPayload {
   message: string;
   context: 'chef_projet' | 'pilote_qualite';
+  history: ChatTurn[];
 }
 
 export interface ChatResponsePayload {
@@ -25,11 +34,12 @@ export class ChatbotService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/api/chat`;
 
-  sendMessage(message: string, context: 'chef_projet' | 'pilote_qualite'): Observable<ChatResponsePayload> {
+  sendMessage(message: string, context: 'chef_projet' | 'pilote_qualite', history: ChatTurn[] = []): Observable<ChatResponsePayload> {
     const token = localStorage.getItem('token');
+    const payload: ChatRequestPayload = { message, context, history };
     return this.http.post<ChatResponsePayload>(
       this.apiUrl,
-      { message, context },
+      payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
   }

@@ -1,789 +1,749 @@
+<main class="page">
+  <div class="page-container is-form">
 
-<div class="min-h-screen py-8" style="background: #f8fafc;">
-  <div class="container mx-auto px-4" style="max-width: 1400px;">
-    
-    <!-- Header -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
-      <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-      <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
-      <div style="display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1;">
-        <div>
-          <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 0.75rem;">
-            <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
-            <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">FICHE DE PROJET</span>
-          </div>
-          <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">
-            {{ isEditMode() ? 'Modifier la Fiche de Projet' : 'Créer une Fiche de Projet' }}
-          </h1>
-          <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0 0 0.75rem;">Système de Management de la Qualité</p>
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">{{ isEditMode() ? 'Modifier la fiche de projet' : 'Créer une fiche de projet' }}</h1>
+        <p class="page-meta">
+          Système de management de la qualité.
           @if (chefProjetName()) {
-            <div style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); padding: 0.4rem 1rem; border-radius: 2rem; display: inline-flex; align-items: center;">
-              <i class="fas fa-user-tie mr-2" style="color: white; font-size: 0.8rem;"></i>
-              <span style="color: white; font-size: 0.85rem; font-weight: 600;">Chef de projet: {{ chefProjetName() }}</span>
-            </div>
+            Chef de projet : {{ chefProjetName() }}.
           }
-        </div>
-        <a routerLink="/dashboard" style="background: white; color: #09C82C; border: none; padding: 0.75rem 1.5rem; border-radius: 0.875rem; font-weight: 700; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; font-size: 0.95rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+          Les champs marqués d'un <span class="req" aria-hidden="true">*</span><span class="visually-hidden">astérisque</span> sont obligatoires.
+        </p>
+      </div>
+
+      <div class="page-actions">
+        <a class="btn btn-secondary" routerLink="/dashboard">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
           Retour
         </a>
       </div>
-    </div>
+    </header>
 
-    <!-- Messages -->
+    <!-- ============ Messages ============ -->
     @if (errorMessage()) {
-      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
-        <div style="display: flex; align-items: center; color: #991b1b;">
-          <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem;"></i>
-          <span style="font-weight: 600;">{{ errorMessage() }}</span>
-        </div>
+      <div class="error-banner" role="alert">
+        <span>{{ errorMessage() }}</span>
       </div>
     }
-
+    @if (nbErreurs > 0) {
+      <div class="error-banner" role="alert">
+        <span>
+          @if (nbErreurs > 1) {
+            {{ nbErreurs }} champs sont à corriger avant de continuer : ils sont signalés en rouge.
+          } @else {
+            1 champ est à corriger avant de continuer : il est signalé en rouge.
+          }
+        </span>
+      </div>
+    }
     @if (successMessage()) {
-      <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-        <div style="display: flex; align-items: center; color: #065f46;">
-          <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>
-          <span style="font-weight: 600;">{{ successMessage() }}</span>
-        </div>
+      <div class="notice notice-ok is-banner" role="status">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ successMessage() }}
       </div>
     }
 
-    <!-- Form Card with Luxury Design -->
-    <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden;">
-      
-      <!-- Tabs Navigation with Modern Design -->
-      <div style="background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%); border-bottom: 2px solid #e5e7eb; position: relative;">
-        <!-- Decorative top border -->
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #10b981 0%, #059669 50%, #10b981 100%);"></div>
-        
-        <nav class="flex space-x-2 px-8 py-2" style="overflow-x: auto;">
-          <button 
-            (click)="setTab('identification')"
-            [style.background]="currentTab() === 'identification' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-            [style.color]="currentTab() === 'identification' ? 'white' : '#6b7280'"
-            [style.box-shadow]="currentTab() === 'identification' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-            <i class="fas fa-id-card mr-2"></i>
-            I. Identification & Organisation
+    <!-- ============ Étapes ============ -->
+    <nav class="panel steps" aria-label="Étapes de la fiche de projet">
+      <ol>
+        <li [class.is-current]="currentTab() === 'identification'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'identification'"
+                  [attr.aria-current]="currentTab() === 'identification' ? 'step' : null"
+                  aria-label="Étape 1 : Identification et organisation" (click)="setTab('identification')">
+            <span class="step-num" aria-hidden="true">1</span>
+            <span class="step-label">Identification et organisation</span>
           </button>
-          
-          <button 
-            (click)="setTab('estimations')"
-            [style.background]="currentTab() === 'estimations' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-            [style.color]="currentTab() === 'estimations' ? 'white' : '#6b7280'"
-            [style.box-shadow]="currentTab() === 'estimations' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-            <i class="fas fa-calculator mr-2"></i>
-            II. Estimations & Planning
+        </li>
+        <li [class.is-current]="currentTab() === 'estimations'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'estimations'"
+                  [attr.aria-current]="currentTab() === 'estimations' ? 'step' : null"
+                  aria-label="Étape 2 : Estimations et planning" (click)="setTab('estimations')">
+            <span class="step-num" aria-hidden="true">2</span>
+            <span class="step-label">Estimations et planning</span>
           </button>
-          
-          <button 
-            (click)="setTab('risques')"
-            [style.background]="currentTab() === 'risques' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-            [style.color]="currentTab() === 'risques' ? 'white' : '#6b7280'"
-            [style.box-shadow]="currentTab() === 'risques' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-            <i class="fas fa-shield-alt mr-2"></i>
-            III. Risques & Validation
+        </li>
+        <li [class.is-current]="currentTab() === 'risques'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'risques'"
+                  [attr.aria-current]="currentTab() === 'risques' ? 'step' : null"
+                  aria-label="Étape 3 : Risques et validation" (click)="setTab('risques')">
+            <span class="step-num" aria-hidden="true">3</span>
+            <span class="step-label">Risques et validation</span>
           </button>
-        </nav>
-      </div>
+        </li>
+      </ol>
+    </nav>
 
-      <!-- Form Content -->
-      <form (ngSubmit)="onSubmit()" style="padding: 2.5rem;">
-        
-        <!-- En-tête Projet/Client -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-              <i class="fas fa-project-diagram mr-2" style="color: #10b981;"></i>Désignation Projet
-            </label>
-            <input type="text" [(ngModel)]="formData.designationProjet" name="designationProjet" 
-                   class="form-control" placeholder="Nom du projet"
-                   [style.border]="errors['designationProjet'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                   style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
-            @if (errors['designationProjet']) {
-              <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['designationProjet'] }}</p>
-            }
-          </div>
-          <div>
-            <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-              <i class="fas fa-user-tie mr-2" style="color: #10b981;"></i>Désignation Client
-            </label>
-            <input type="text" [(ngModel)]="formData.designationClient" name="designationClient" 
-                   class="form-control" placeholder="Nom du client"
-                   [style.border]="errors['designationClient'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                   style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;">
-            @if (errors['designationClient']) {
-              <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['designationClient'] }}</p>
-            }
-          </div>
-        </div>
+    <form (ngSubmit)="onSubmit()" (input)="revalider()" (change)="revalider()">
 
-        <!-- Section I: Identification & Organisation -->
-        @if (currentTab() === 'identification') {
-          <div class="space-y-6">
-            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-                <i class="fas fa-id-card mr-3" style="color: #10b981;"></i>I. Identification & Organisation
-              </h2>
+      <!-- ============ Étape 1 : identification et organisation ============ -->
+      @if (currentTab() === 'identification') {
+
+        <!-- Projet et client -->
+        <section class="panel" aria-labelledby="t-projet-client">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-projet-client" class="panel-title">Projet et client</h2>
+              <p class="panel-sub">Les deux désignations qui figurent en tête de la fiche.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-desig-projet">Désignation projet<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-desig-projet" type="text" class="control" [(ngModel)]="formData.designationProjet" name="designationProjet"
+                     placeholder="Nom du projet" required
+                     [class.is-invalid]="errors['designationProjet']"
+                     [attr.aria-invalid]="errors['designationProjet'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['designationProjet'] ? 'e-desig-projet' : null">
+              @if (errors['designationProjet']) {
+                <p id="e-desig-projet" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['designationProjet'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-desig-client">Désignation client<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-desig-client" type="text" class="control" [(ngModel)]="formData.designationClient" name="designationClient"
+                     placeholder="Nom du client" required
+                     [class.is-invalid]="errors['designationClient']"
+                     [attr.aria-invalid]="errors['designationClient'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['designationClient'] ? 'e-desig-client' : null">
+              @if (errors['designationClient']) {
+                <p id="e-desig-client" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['designationClient'] }}</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Identification -->
+        <section class="panel" aria-labelledby="t-identification">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-identification" class="panel-title">Identification</h2>
+              <p class="panel-sub">Nom, cadre contractuel, nature et statut du projet.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-nom">Nom du projet<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-nom" type="text" class="control" [(ngModel)]="formData.nomProjet" name="nomProjet" required
+                     placeholder="Entrez le nom du projet"
+                     [class.is-invalid]="errors['nomProjet']"
+                     [attr.aria-invalid]="errors['nomProjet'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['nomProjet'] ? 'e-nom' : null">
+              @if (errors['nomProjet']) {
+                <p id="e-nom" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['nomProjet'] }}</p>
+              }
             </div>
 
-            <!-- Identification -->
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
-              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
-                <i class="fas fa-fingerprint mr-2"></i>Identification
-              </h3>
-              
-              <div class="mb-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Nom du Projet <span style="color: #ef4444;">*</span>
-                </label>
-                <input type="text" [(ngModel)]="formData.nomProjet" name="nomProjet" required
-                       class="form-control" placeholder="Entrez le nom du projet"
-                       [style.border]="errors['nomProjet'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
-                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                @if (errors['nomProjet']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['nomProjet'] }}</p>
-                }
-              </div>
-
-              <div class="mb-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Cadre contractuel Projet <span style="color: #ef4444;">*</span>
-                </label>
-                <input type="text" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet"
-                       class="form-control" placeholder="Ex: convention en cours"
-                       [style.border]="errors['cadreContractuelProjet'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
-                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                @if (errors['cadreContractuelProjet']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['cadreContractuelProjet'] }}</p>
-                }
-              </div>
-
-              <div class="mb-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                  Caractère Projet <span style="color: #ef4444;">*</span>
-                </label>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="national" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">National</span>
-                  </label>
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="commune_administration" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">Commune à l'Administration</span>
-                  </label>
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" value="cni" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">CNI</span>
-                  </label>
-                </div>
-                @if (errors['caractereProjet']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['caractereProjet'] }}</p>
-                }
-              </div>
-
-              <div class="mb-0">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.75rem;">
-                  Type Projet <span style="color: #ef4444;">*</span>
-                </label>
-                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="nouveau" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">Nouveau</span>
-                  </label>
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="evolution" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">Evolution</span>
-                  </label>
-                  <label style="display: flex; align-items: center; background: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; border: 2px solid #d1fae5; cursor: pointer; transition: all 0.3s ease;">
-                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" value="refonte" style="margin-right: 0.5rem;">
-                    <span style="font-weight: 500;">Refonte</span>
-                  </label>
-                </div>
-                @if (errors['typeProjet']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['typeProjet'] }}</p>
-                }
-              </div>
-
-              <!-- Dates du projet et Statut -->
-              <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mt-4">
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-flag mr-2" style="color: #10b981;"></i>Statut du projet
-                  </label>
-                  <select [(ngModel)]="formData.statut" name="statut"
-                          [style.border]="errors['statut'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
-                          style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
-                    <option value="" disabled>-- Sélectionnez un statut --</option>
-                    @if (statuts.length === 0) {
-                      <option value="EN_COURS">En cours</option>
-                      <option value="TERMINE">Terminé</option>
-                      <option value="EN_ATTENTE">En attente</option>
-                    } @else {
-                      @for (statut of statuts; track statut.code) {
-                        <option [value]="statut.code">{{ statut.libelle }}</option>
-                      }
+            <div class="field">
+              <label class="field-label" for="f-statut">Statut du projet<span class="req" aria-hidden="true">*</span></label>
+              <div class="select-wrap">
+                <select id="f-statut" class="control" [(ngModel)]="formData.statut" name="statut"
+                        [class.is-invalid]="errors['statut']"
+                        [attr.aria-invalid]="errors['statut'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['statut'] ? 'e-statut' : null">
+                  <option value="" disabled>-- Sélectionnez un statut --</option>
+                  @if (statuts.length === 0) {
+                    <option value="EN_COURS">En cours</option>
+                    <option value="TERMINE">Terminé</option>
+                    <option value="EN_ATTENTE">En attente</option>
+                  } @else {
+                    @for (statut of statuts; track statut.code) {
+                      <option [value]="statut.code">{{ statut.libelle }}</option>
                     }
-                  </select>
-                  @if (errors['statut']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['statut'] }}</p>
                   }
-                </div>
+                </select>
+                <ng-container *ngTemplateOutlet="chevron"/>
               </div>
-            </div>
-
-            <!-- Présentation -->
-            <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Présentation <span style="color: #ef4444;">*</span>
-              </label>
-              <textarea [(ngModel)]="formData.presentation" name="presentation" rows="5"
-                        class="form-control" placeholder="Décrivez la présentation du projet..."
-                        [style.border]="errors['presentation'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
-              @if (errors['presentation']) {
-                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['presentation'] }}</p>
+              @if (errors['statut']) {
+                <p id="e-statut" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['statut'] }}</p>
               }
             </div>
 
-            <!-- Historique -->
-            <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-history mr-2" style="color: #10b981;"></i>Historique
-                <small style="color: #6b7280; font-weight: 400;">(En cas de refonte ou amélioration)</small>
-              </label>
-              <textarea [(ngModel)]="formData.historique" name="historique" rows="4"
-                        class="form-control" placeholder="Historique du projet..."
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
-            </div>
-
-            <!-- Périmètre -->
-            <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-border-all mr-2" style="color: #10b981;"></i>Périmètre <span style="color: #ef4444;">*</span>
-              </label>
-              <textarea [(ngModel)]="formData.perimetre" name="perimetre" rows="4"
-                        class="form-control" placeholder="Définissez le périmètre du projet..."
-                        [style.border]="errors['perimetre'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.3s ease;"></textarea>
-              @if (errors['perimetre']) {
-                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['perimetre'] }}</p>
+            <div class="field span-all">
+              <label class="field-label" for="f-cadre">Cadre contractuel du projet<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-cadre" type="text" class="control" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet"
+                     placeholder="Ex : convention en cours" required
+                     [class.is-invalid]="errors['cadreContractuelProjet']"
+                     [attr.aria-invalid]="errors['cadreContractuelProjet'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['cadreContractuelProjet'] ? 'e-cadre' : null">
+              @if (errors['cadreContractuelProjet']) {
+                <p id="e-cadre" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['cadreContractuelProjet'] }}</p>
               }
             </div>
 
-            <!-- Organisation -->
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
-              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
-                <i class="fas fa-sitemap mr-2"></i>Organisation et conduite de projet
-              </h3>
-              
-              <div class="mb-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Maître d'ouvrage <span style="color: #ef4444;">*</span>
-                </label>
-                <input type="text" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage"
-                       class="form-control" placeholder="Nom du maître d'ouvrage"
-                       [style.border]="errors['maitreOuvrage'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                @if (errors['maitreOuvrage']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['maitreOuvrage'] }}</p>
-                }
-              </div>
-
-              <div class="mb-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  Maître d'œuvre <span style="color: #ef4444;">*</span>
-                </label>
-                <input type="text" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre"
-                       class="form-control" placeholder="Nom du maître d'œuvre"
-                       [style.border]="errors['maitreOeuvre'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%; background: white;">
-                @if (errors['maitreOeuvre']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['maitreOeuvre'] }}</p>
-                }
-              </div>
-
-              <div class="mb-0">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                    <i class="fas fa-users mr-2" style="color: #1e40af;"></i>Équipe du projet
+            <fieldset class="choice-group field" [class.is-invalid]="errors['caractereProjet']"
+                      [attr.aria-describedby]="errors['caractereProjet'] ? 'e-caractere' : null">
+              <legend class="field-label">Caractère du projet<span class="req" aria-hidden="true">*</span></legend>
+              <div class="choices">
+                @for (c of caracteres; track c.code) {
+                  <label class="choice">
+                    <input type="radio" [(ngModel)]="formData.caractereProjet" name="caractereProjet" [value]="c.code">
+                    <span>{{ c.libelle }}</span>
                   </label>
-                  <button type="button" (click)="addMembreEquipe()" 
-                          style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3); transition: all 0.3s ease;">
-                    <i class="fas fa-user-plus mr-2"></i> Ajouter un membre
+                } @empty {
+                  @if (nomenclaturesChargees()) {
+                    <p class="field-hint">Aucun choix disponible : l'administrateur doit l'ajouter dans Nomenclature.</p>
+                  }
+                }
+              </div>
+              @if (errors['caractereProjet']) {
+                <p id="e-caractere" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['caractereProjet'] }}</p>
+              }
+            </fieldset>
+
+            <fieldset class="choice-group field" [class.is-invalid]="errors['typeProjet']"
+                      [attr.aria-describedby]="errors['typeProjet'] ? 'e-type' : null">
+              <legend class="field-label">Type de projet<span class="req" aria-hidden="true">*</span></legend>
+              <div class="choices">
+                @for (t of types; track t.code) {
+                  <label class="choice">
+                    <input type="radio" [(ngModel)]="formData.typeProjet" name="typeProjet" [value]="t.code">
+                    <span>{{ t.libelle }}</span>
+                  </label>
+                } @empty {
+                  @if (nomenclaturesChargees()) {
+                    <p class="field-hint">Aucun choix disponible : l'administrateur doit l'ajouter dans Nomenclature.</p>
+                  }
+                }
+              </div>
+              @if (errors['typeProjet']) {
+                <p id="e-type" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['typeProjet'] }}</p>
+              }
+            </fieldset>
+          </div>
+        </section>
+
+        <!-- Présentation, historique, périmètre -->
+        <section class="panel" aria-labelledby="t-contexte">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-contexte" class="panel-title">Contexte du projet</h2>
+              <p class="panel-sub">Ce que le projet est, d'où il vient, jusqu'où il va.</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field">
+              <label class="field-label" for="f-presentation">Présentation<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-presentation" class="control" rows="5" [(ngModel)]="formData.presentation" name="presentation"
+                        placeholder="Décrivez la présentation du projet…"
+                        [class.is-invalid]="errors['presentation']"
+                        [attr.aria-invalid]="errors['presentation'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['presentation'] ? 'e-presentation' : null"></textarea>
+              @if (errors['presentation']) {
+                <p id="e-presentation" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['presentation'] }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="f-historique">Historique</label>
+              <textarea id="f-historique" class="control" rows="4" [(ngModel)]="formData.historique" name="historique"
+                        placeholder="Historique du projet…" aria-describedby="h-historique"></textarea>
+              <p id="h-historique" class="field-hint">À renseigner en cas de refonte ou d'amélioration.</p>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="f-perimetre">Périmètre<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-perimetre" class="control" rows="4" [(ngModel)]="formData.perimetre" name="perimetre"
+                        placeholder="Définissez le périmètre du projet…"
+                        [class.is-invalid]="errors['perimetre']"
+                        [attr.aria-invalid]="errors['perimetre'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['perimetre'] ? 'e-perimetre' : null"></textarea>
+              @if (errors['perimetre']) {
+                <p id="e-perimetre" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['perimetre'] }}</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Organisation -->
+        <section class="panel" aria-labelledby="t-organisation">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-organisation" class="panel-title">Organisation et conduite de projet</h2>
+              <p class="panel-sub">Les maîtres d'ouvrage et d'œuvre du projet.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-moa">Maître d'ouvrage<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-moa" type="text" class="control" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage"
+                     placeholder="Nom du maître d'ouvrage" required
+                     [class.is-invalid]="errors['maitreOuvrage']"
+                     [attr.aria-invalid]="errors['maitreOuvrage'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['maitreOuvrage'] ? 'e-moa' : null">
+              @if (errors['maitreOuvrage']) {
+                <p id="e-moa" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['maitreOuvrage'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-moe">Maître d'œuvre<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-moe" type="text" class="control" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre"
+                     placeholder="Nom du maître d'œuvre" required
+                     [class.is-invalid]="errors['maitreOeuvre']"
+                     [attr.aria-invalid]="errors['maitreOeuvre'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['maitreOeuvre'] ? 'e-moe' : null">
+              @if (errors['maitreOeuvre']) {
+                <p id="e-moe" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['maitreOeuvre'] }}</p>
+              }
+            </div>
+          </div>
+        </section>
+
+        <!-- Équipe -->
+        <section class="panel" aria-labelledby="t-equipe">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-equipe" class="panel-title">Équipe du projet</h2>
+              <p class="panel-sub">Nom, rôle et, si besoin, adresse email de chaque membre.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addMembreEquipe()">
+              <ng-container *ngTemplateOutlet="plusIcon"/>
+              Ajouter un membre
+            </button>
+          </div>
+
+          @if (formData.equipeProjet.length === 0) {
+            <p class="items-empty">Aucun membre ajouté.</p>
+          } @else {
+            <div class="members">
+              @for (membre of formData.equipeProjet; track $index) {
+                <div class="member">
+                  <div class="field">
+                    <label class="field-label" [for]="'membre-nom-' + $index">Nom complet</label>
+                    <input [id]="'membre-nom-' + $index" type="text" class="control" [(ngModel)]="membre.nom" [name]="'membreNom' + $index"
+                           placeholder="Ex : Ahmed Ben Ali">
+                  </div>
+                  <div class="field">
+                    <label class="field-label" [for]="'membre-role-' + $index">Rôle / fonction</label>
+                    <input [id]="'membre-role-' + $index" type="text" class="control" [(ngModel)]="membre.role" [name]="'membreRole' + $index"
+                           placeholder="Ex : Développeur backend">
+                  </div>
+                  <div class="field">
+                    <label class="field-label" [for]="'membre-email-' + $index">Email (optionnel)</label>
+                    <input [id]="'membre-email-' + $index" type="email" class="control" [(ngModel)]="membre.email" [name]="'membreEmail' + $index"
+                           placeholder="email@exemple.com">
+                  </div>
+                  <button type="button" class="icon-btn is-danger" (click)="removeMembreEquipe($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer le membre ' + ($index + 1)">
+                    <ng-container *ngTemplateOutlet="trashIcon"/>
                   </button>
                 </div>
+              }
+            </div>
+          }
+        </section>
+      }
 
-                @if (formData.equipeProjet.length === 0) {
-                  <div style="background: #f8f9fa; border: 2px dashed #bfdbfe; border-radius: 0.75rem; padding: 2rem; text-align: center; color: #6b7280;">
-                    <i class="fas fa-users" style="font-size: 2rem; color: #bfdbfe; margin-bottom: 0.5rem;"></i>
-                    <p style="margin: 0; font-size: 0.95rem;">Aucun membre ajouté. Cliquez sur "Ajouter un membre" pour commencer.</p>
-                  </div>
-                }
+      <!-- ============ Étape 2 : estimations et planning ============ -->
+      @if (currentTab() === 'estimations') {
 
-                @for (membre of formData.equipeProjet; track $index) {
-                  <div style="background: white; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
-                          <i class="fas fa-user mr-1" style="color: #3b82f6;"></i>Nom complet
-                        </label>
-                        <input type="text" [(ngModel)]="membre.nom" [name]="'membreNom' + $index" 
-                               placeholder="Ex: Ahmed Ben Ali"
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
-                      </div>
-                      <div>
-                        <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
-                          <i class="fas fa-briefcase mr-1" style="color: #3b82f6;"></i>Rôle / Fonction
-                        </label>
-                        <input type="text" [(ngModel)]="membre.role" [name]="'membreRole' + $index" 
-                               placeholder="Ex: Développeur Backend"
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
-                      </div>
-                      <div style="display: flex; gap: 0.5rem; align-items: end;">
-                        <div style="flex: 1;">
-                          <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">
-                            <i class="fas fa-envelope mr-1" style="color: #3b82f6;"></i>Email (optionnel)
-                          </label>
-                          <input type="email" [(ngModel)]="membre.email" [name]="'membreEmail' + $index" 
-                                 placeholder="email@exemple.com"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem; background: white;">
-                        </div>
-                        <button type="button" (click)="removeMembreEquipe($index)" 
-                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); height: 38px;">
-                          <i class="fas fa-trash"></i>
+        <!-- Estimation des charges -->
+        <section class="panel" aria-labelledby="t-charges">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-charges" class="panel-title">Estimation des charges</h2>
+              <p class="panel-sub">Prestations, profils, période et charge en homme-mois.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addCharge()">
+              <ng-container *ngTemplateOutlet="plusIcon"/>
+              Ajouter une ligne
+            </button>
+          </div>
+
+          @if (formData.estimationsCharges.length === 0) {
+            <p class="items-empty">Aucune charge ajoutée.</p>
+          } @else {
+            <div class="table-wrap is-charges">
+              <table class="tbl tbl-charges">
+                <caption class="visually-hidden">Estimation des charges</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Prestations</th>
+                    <th scope="col">Profil</th>
+                    <th scope="col">Période</th>
+                    <th scope="col">Charge (HM)</th>
+                    <th scope="col">Livrables</th>
+                    <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (charge of formData.estimationsCharges; track $index) {
+                    <tr>
+                      <td class="cell-prestations" data-label="Prestations">
+                        <input type="text" class="control" [(ngModel)]="charge.prestations" [name]="'prestations_' + $index"
+                               [attr.aria-label]="'Prestations de la ligne ' + ($index + 1)">
+                      </td>
+                      <td data-label="Profil">
+                        <input type="text" class="control" [(ngModel)]="charge.profil" [name]="'profil_' + $index"
+                               [attr.aria-label]="'Profil de la ligne ' + ($index + 1)">
+                      </td>
+                      <td data-label="Période">
+                        <input type="text" class="control" [(ngModel)]="charge.periode" [name]="'periode_' + $index"
+                               [attr.aria-label]="'Période de la ligne ' + ($index + 1)">
+                      </td>
+                      <td data-label="Charge (HM)">
+                        <input type="text" class="control" [(ngModel)]="charge.chargeHM" [name]="'chargeHM_' + $index"
+                               [attr.aria-label]="'Charge en homme-mois de la ligne ' + ($index + 1)">
+                      </td>
+                      <td data-label="Livrables">
+                        <input type="text" class="control" [(ngModel)]="charge.livrables" [name]="'livrables_' + $index"
+                               [attr.aria-label]="'Livrables de la ligne ' + ($index + 1)">
+                      </td>
+                      <td class="cell-actions">
+                        <button type="button" class="icon-btn is-danger" (click)="removeCharge($index)"
+                                title="Supprimer" [attr.aria-label]="'Supprimer la ligne ' + ($index + 1)">
+                          <ng-container *ngTemplateOutlet="trashIcon"/>
                         </button>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+
+        <!-- Modalité de développement -->
+        <section class="panel" aria-labelledby="t-modalite">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-modalite" class="panel-title">Modalité de développement</h2>
+              <p class="panel-sub">Qui réalise le développement du projet.</p>
             </div>
           </div>
-        }
 
-        <!-- Section II: Estimations & Planning -->
-        @if (currentTab() === 'estimations') {
-          <div class="space-y-6">
-            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-                <i class="fas fa-calculator mr-3" style="color: #10b981;"></i>II. Estimations & Planning
-              </h2>
-            </div>
-
-            <!-- Estimation des charges -->
-            <div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                  <i class="fas fa-tasks mr-2" style="color: #10b981;"></i>Estimation des charges
-                </label>
-                <button type="button" (click)="addCharge()" 
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-                  <i class="fas fa-plus mr-2"></i> Ajouter une ligne
-                </button>
-              </div>
-
-              <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-                <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
-                  <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-                    <tr>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Prestations</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Profil</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Période</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Charge/HM</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Livrables</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (charge of formData.estimationsCharges; track $index) {
-                      <tr style="transition: all 0.2s ease;">
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="charge.prestations" [name]="'prestations_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="charge.profil" [name]="'profil_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="charge.periode" [name]="'periode_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="charge.chargeHM" [name]="'chargeHM_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="charge.livrables" [name]="'livrables_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <button type="button" (click)="removeCharge($index)" 
-                                  style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                    @if (formData.estimationsCharges.length === 0) {
-                      <tr>
-                        <td colspan="6" style="padding: 2rem; text-align: center; color: #6b7280;">
-                          Aucune charge ajoutée. Cliquez sur "Ajouter une ligne" pour commencer.
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="mt-4">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Modalité de développement <span style="color: #ef4444;">*</span>
-                  <span style="color: #6b7280; font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem;">(Sélectionnez le mode)</span>
-                </label>
-                <select [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement"
-                        [style.border]="errors['modaliteDeveloppement'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;">
-                  <option value="" disabled selected style="color: #9ca3af;">-- Sélectionnez une modalité --</option>
-                  <option value="I" style="color: #374151; font-weight: 500;">
-                    I - Interne (Développement en interne)
-                  </option>
-                  <option value="ST" style="color: #374151; font-weight: 500;">
-                    ST - Sous-traitance (Développement externalisé)
-                  </option>
-                  <option value="CO" style="color: #374151; font-weight: 500;">
-                    CO - Co-traitance (Développement mixte)
-                  </option>
+          <div class="fields">
+            <div class="field">
+              <label class="field-label" for="f-modalite">Modalité<span class="req" aria-hidden="true">*</span></label>
+              <div class="select-wrap">
+                <select id="f-modalite" class="control" [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement"
+                        [class.is-invalid]="errors['modaliteDeveloppement']"
+                        [attr.aria-invalid]="errors['modaliteDeveloppement'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['modaliteDeveloppement'] ? 'e-modalite' : null">
+                  <option value="" disabled>-- Sélectionnez une modalité --</option>
+                  @for (m of modalites; track m.code) {
+                    <option [value]="m.code">{{ m.libelle }}</option>
+                  }
                 </select>
-                @if (errors['modaliteDeveloppement']) {
-                  <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['modaliteDeveloppement'] }}</p>
-                }
-                <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
-                  <i class="fas fa-info-circle mr-1"></i>
-                  I: Interne | ST: Sous-traitance | CO: Co-traitance
-                </small>
+                <ng-container *ngTemplateOutlet="chevron"/>
               </div>
+              @if (errors['modaliteDeveloppement']) {
+                <p id="e-modalite" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['modaliteDeveloppement'] }}</p>
+              }
+              @if (nomenclaturesChargees() && modalites.length === 0) {
+                <p class="field-hint">Aucun choix disponible : l'administrateur doit l'ajouter dans Nomenclature.</p>
+              }
             </div>
+          </div>
+        </section>
 
-            <!-- Estimation du budget -->
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
-              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
-                <i class="fas fa-dollar-sign mr-2"></i>Estimation du budget
-              </h3>
-              
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-user-tie mr-1" style="color: #10b981;"></i>CP (Chef de Projet)
-                  </label>
-                  <input type="number" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp" 
-                         (change)="calculateBudget()" placeholder="Ex: 50000"
-                         [style.border]="errors['budget_cp'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
-                  @if (errors['budget_cp']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['budget_cp'] }}</p>
-                  }
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-code mr-1" style="color: #10b981;"></i>ID (Ingénieur Développeur)
-                  </label>
-                  <input type="number" [(ngModel)]="formData.estimationBudget.id" name="budget_id" 
-                         (change)="calculateBudget()" placeholder="Ex: 120000"
-                         [style.border]="errors['budget_id'] ? '2px solid #ef4444' : '2px solid #d1fae5'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;">
-                  @if (errors['budget_id']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['budget_id'] }}</p>
-                  }
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                    <i class="fas fa-calculator mr-1" style="color: #10b981;"></i>Total (Calculé)
-                  </label>
-                  <input type="number" [(ngModel)]="formData.estimationBudget.total" name="budget_total" readonly
-                         style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f0fdf4; cursor: not-allowed; font-weight: 600; color: #065f46;">
-                </div>
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                  <i class="fas fa-coins mr-1" style="color: #10b981;"></i>Budget (en MD/HT) - Calculé automatiquement
-                </label>
-                <input type="text" [(ngModel)]="formData.estimationBudget.budgetMDHT" name="budgetMDHT" readonly
-                       style="width: 100%; border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f0fdf4; cursor: not-allowed; font-weight: 600; color: #065f46; font-size: 1.1rem;">
-              </div>
-            </div>
-
-            <!-- Délais -->
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
-              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
-                <i class="fas fa-clock mr-2"></i>Délais
-              </h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision) <span style="color:#ef4444">*</span></label>
-                  <input type="date" [(ngModel)]="formData.dateDebutPrevision" name="dateDebutPrevision"
-                         [style.border]="errors['dateDebutPrevision'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                  @if (errors['dateDebutPrevision']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateDebutPrevision'] }}</p>
-                  }
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision) <span style="color:#ef4444">*</span></label>
-                  <input type="date" [(ngModel)]="formData.dateFinPrevision" name="dateFinPrevision"
-                         [style.border]="errors['dateFinPrevision'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                  @if (errors['dateFinPrevision']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateFinPrevision'] }}</p>
-                  }
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Durée (Mois)</label>
-                  <input type="number" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois" min="0"
-                         [style.border]="errors['dureeEnMois'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                  @if (errors['dureeEnMois']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dureeEnMois'] }}</p>
-                  }
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Réalisation)</label>
-                  <input type="date" [(ngModel)]="formData.dateDebutRealisation" name="dateDebutRealisation"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Réalisation)</label>
-                  <input type="date" [(ngModel)]="formData.dateFinRealisation" name="dateFinRealisation"
-                         [style.border]="errors['dateFinRealisation'] ? '2px solid #ef4444' : '2px solid #bfdbfe'"
-                         style="width: 100%; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                  @if (errors['dateFinRealisation']) {
-                    <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['dateFinRealisation'] }}</p>
-                  }
-                </div>
-                <div>
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart Conv. (jours)</label>
-                  <input type="number" [(ngModel)]="formData.ecartConventionnel" name="ecartConventionnel"
-                         style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-                </div>
-              </div>
-            </div>
-
-            <!-- Délais prévisionnels -->
+        <!-- Estimation du budget -->
+        <section class="panel" aria-labelledby="t-budget">
+          <div class="panel-head">
             <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-clock mr-2" style="color: #10b981;"></i>Délais prévisionnels <span style="color: #ef4444;">*</span>
-              </label>
-              <textarea [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels" rows="3"
-                        class="form-control" placeholder="Ex: Le délai prévisionnel du projet est de 6 mois (hors délais de validation)"
-                        [style.border]="errors['delaisPrevisionnels'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+              <h2 id="t-budget" class="panel-title">Estimation du budget</h2>
+              <p class="panel-sub">Saisissez les montants en dinars : le total et le budget en MD/HT (millions de dinars hors taxes) se calculent seuls.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-cp">CP (chef de projet)<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-cp" type="number" class="control" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp"
+                     (change)="calculateBudget()" placeholder="Ex : 50000"
+                     [class.is-invalid]="errors['budget_cp']"
+                     [attr.aria-invalid]="errors['budget_cp'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['budget_cp'] ? 'e-cp' : null">
+              @if (errors['budget_cp']) {
+                <p id="e-cp" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['budget_cp'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-id">ID (ingénieur développeur)<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-id" type="number" class="control" [(ngModel)]="formData.estimationBudget.id" name="budget_id"
+                     (change)="calculateBudget()" placeholder="Ex : 120000"
+                     [class.is-invalid]="errors['budget_id']"
+                     [attr.aria-invalid]="errors['budget_id'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['budget_id'] ? 'e-id' : null">
+              @if (errors['budget_id']) {
+                <p id="e-id" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['budget_id'] }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-total">Total (calculé)</label>
+              <input id="f-total" type="number" class="control is-result" [(ngModel)]="formData.estimationBudget.total" name="budget_total" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-budget-mdht">Budget en MD/HT (calculé)</label>
+              <input id="f-budget-mdht" type="text" class="control is-result is-big" [(ngModel)]="formData.estimationBudget.budgetMDHT" name="budgetMDHT" readonly>
+            </div>
+          </div>
+        </section>
+
+        <!-- Délais -->
+        <section class="panel" aria-labelledby="t-delais">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-delais" class="panel-title">Délais</h2>
+              <p class="panel-sub">Dates prévues pour le projet, et dates réelles une fois connues.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-3">
+            <div class="field">
+              <label class="field-label" for="f-debut-prev">Début (prévision)<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-debut-prev" type="date" class="control" [(ngModel)]="formData.dateDebutPrevision" name="dateDebutPrevision"
+                     [class.is-invalid]="errors['dateDebutPrevision']"
+                     [attr.aria-invalid]="errors['dateDebutPrevision'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['dateDebutPrevision'] ? 'e-debut-prev' : null">
+              @if (errors['dateDebutPrevision']) {
+                <p id="e-debut-prev" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['dateDebutPrevision'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-fin-prev">Fin (prévision)<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-fin-prev" type="date" class="control" [(ngModel)]="formData.dateFinPrevision" name="dateFinPrevision"
+                     [class.is-invalid]="errors['dateFinPrevision']"
+                     [attr.aria-invalid]="errors['dateFinPrevision'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['dateFinPrevision'] ? 'e-fin-prev' : null">
+              @if (errors['dateFinPrevision']) {
+                <p id="e-fin-prev" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['dateFinPrevision'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-duree">Durée (mois)<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-duree" type="number" class="control" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois" min="0"
+                     [class.is-invalid]="errors['dureeEnMois']"
+                     [attr.aria-invalid]="errors['dureeEnMois'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['dureeEnMois'] ? 'e-duree' : null">
+              @if (errors['dureeEnMois']) {
+                <p id="e-duree" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['dureeEnMois'] }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="fields cols-3">
+            <div class="field">
+              <label class="field-label" for="f-debut-real">Début (réalisation)</label>
+              <input id="f-debut-real" type="date" class="control" [(ngModel)]="formData.dateDebutRealisation" name="dateDebutRealisation">
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-fin-real">Fin (réalisation)</label>
+              <input id="f-fin-real" type="date" class="control" [(ngModel)]="formData.dateFinRealisation" name="dateFinRealisation"
+                     [class.is-invalid]="errors['dateFinRealisation']"
+                     [attr.aria-invalid]="errors['dateFinRealisation'] ? 'true' : null"
+                     [attr.aria-describedby]="errors['dateFinRealisation'] ? 'e-fin-real' : null">
+              @if (errors['dateFinRealisation']) {
+                <p id="e-fin-real" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['dateFinRealisation'] }}</p>
+              }
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-ecart">Écart conventionnel (jours)</label>
+              <input id="f-ecart" type="number" class="control" [(ngModel)]="formData.ecartConventionnel" name="ecartConventionnel">
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field">
+              <label class="field-label" for="f-delais-prev">Délais prévisionnels<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-delais-prev" class="control" rows="3" [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels"
+                        placeholder="Ex : le délai prévisionnel du projet est de 6 mois (hors délais de validation)"
+                        [class.is-invalid]="errors['delaisPrevisionnels']"
+                        [attr.aria-invalid]="errors['delaisPrevisionnels'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['delaisPrevisionnels'] ? 'e-delais-prev' : null"></textarea>
               @if (errors['delaisPrevisionnels']) {
-                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['delaisPrevisionnels'] }}</p>
+                <p id="e-delais-prev" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['delaisPrevisionnels'] }}</p>
               }
             </div>
           </div>
-        }
+        </section>
+      }
 
-        <!-- Section III: Risques & Validation -->
-        @if (currentTab() === 'risques') {
-          <div class="space-y-6">
-            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-                <i class="fas fa-shield-alt mr-3" style="color: #10b981;"></i>III. Risques & Validation
-              </h2>
-            </div>
+      <!-- ============ Étape 3 : risques et validation ============ -->
+      @if (currentTab() === 'risques') {
 
-            <!-- Risques potentiels -->
+        <!-- Risques et pré-requis -->
+        <section class="panel" aria-labelledby="t-risques">
+          <div class="panel-head">
             <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Risques potentiels <span style="color: #ef4444;">*</span>
-              </label>
-              <textarea [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels" rows="4"
-                        class="form-control" placeholder="Ex: Convention en cours de discussion avec MTIC"
-                        [style.border]="errors['risquesPotentiels'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+              <h2 id="t-risques" class="panel-title"><span class="dot is-warn" aria-hidden="true"></span>Risques et pré-requis</h2>
+              <p class="panel-sub">Ce qui pourrait gêner le projet, et ce qu'il faut avoir avant de commencer.</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field">
+              <label class="field-label" for="f-risques">Risques potentiels<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-risques" class="control" rows="4" [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels"
+                        placeholder="Ex : convention en cours de discussion avec le MTIC"
+                        [class.is-invalid]="errors['risquesPotentiels']"
+                        [attr.aria-invalid]="errors['risquesPotentiels'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['risquesPotentiels'] ? 'e-risques' : null"></textarea>
               @if (errors['risquesPotentiels']) {
-                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['risquesPotentiels'] }}</p>
+                <p id="e-risques" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['risquesPotentiels'] }}</p>
               }
             </div>
 
-            <!-- Pré-requis -->
-            <div>
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-                <i class="fas fa-list-check mr-2" style="color: #10b981;"></i>Pré-requis <span style="color: #ef4444;">*</span>
-              </label>
-              <textarea [(ngModel)]="formData.preRequis" name="preRequis" rows="4"
-                        class="form-control" placeholder="Listez les pré-requis du projet..."
-                        [style.border]="errors['preRequis'] ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; width: 100%;"></textarea>
+            <div class="field">
+              <label class="field-label" for="f-prerequis">Pré-requis<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-prerequis" class="control" rows="4" [(ngModel)]="formData.preRequis" name="preRequis"
+                        placeholder="Listez les pré-requis du projet…"
+                        [class.is-invalid]="errors['preRequis']"
+                        [attr.aria-invalid]="errors['preRequis'] ? 'true' : null"
+                        [attr.aria-describedby]="errors['preRequis'] ? 'e-prerequis' : null"></textarea>
               @if (errors['preRequis']) {
-                <p style="color:#ef4444; font-size:0.78rem; margin-top:0.25rem;">⚠ {{ errors['preRequis'] }}</p>
+                <p id="e-prerequis" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['preRequis'] }}</p>
               }
             </div>
+          </div>
+        </section>
 
-            <!-- Planning du projet -->
+        <!-- Planning du projet -->
+        <section class="panel" aria-labelledby="t-planning">
+          <div class="panel-head">
             <div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-                  <i class="fas fa-calendar-alt mr-2" style="color: #10b981;"></i>Planning du projet
-                </label>
-                <button type="button" (click)="addPlanning()" 
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-                  <i class="fas fa-plus mr-2"></i> Ajouter une action
-                </button>
-              </div>
-
-              <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-                <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
-                  <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-                    <tr>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 200px;">Actions</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 150px;">Profil des Intervenants</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left; min-width: 100px;">Charge H/M</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">1</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">2</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">3</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">4</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">5</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">6</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">7</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">8</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">9</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">10</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">11</th>
-                      <th style="padding: 0.5rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 50px;">12</th>
-                      <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center; width: 80px;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (planning of formData.planning; track $index) {
-                      <tr style="transition: all 0.2s ease;">
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="planning.action" [name]="'planning_action_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="planning.profilIntervenants" [name]="'planning_profil_' + $index" placeholder="CP, ID, CMIP, CMU"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-                          <input type="text" [(ngModel)]="planning.chargeHM" [name]="'planning_charge_' + $index"
-                                 style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['1']" [name]="'planning_mois1_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['2']" [name]="'planning_mois2_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['3']" [name]="'planning_mois3_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['4']" [name]="'planning_mois4_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['5']" [name]="'planning_mois5_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['6']" [name]="'planning_mois6_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['7']" [name]="'planning_mois7_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['8']" [name]="'planning_mois8_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['9']" [name]="'planning_mois9_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['10']" [name]="'planning_mois10_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['11']" [name]="'planning_mois11_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.5rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <input type="checkbox" [(ngModel)]="planning.mois['12']" [name]="'planning_mois12_' + $index" style="width: 20px; height: 20px; cursor: pointer;">
-                        </td>
-                        <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
-                          <button type="button" (click)="removePlanning($index)" 
-                                  style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
-                            <i class="fas fa-trash"></i>
-                          </button>
-                        </td>
-                      </tr>
-                    }
-                    @if (formData.planning.length === 0) {
-                      <tr>
-                        <td colspan="16" style="padding: 2rem; text-align: center; color: #6b7280;">
-                          Aucune action planifiée. Cliquez sur "Ajouter une action" pour commencer.
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-              <p style="margin-top: 1rem; font-size: 0.875rem; color: #6b7280;">
-                <strong>(*)</strong> CP : Chef de Projet / ID : Ingénieur Développeur / CMIP : Comité de Pilotage / CMU : Comité utilisateurs
-              </p>
-              @if (errors['planning']) {
-                <p style="color:#ef4444; font-size:0.85rem; margin-top:0.5rem; font-weight:600;">⚠ {{ errors['planning'] }}</p>
-              }
+              <h2 id="t-planning" class="panel-title">Planning du projet<span class="req" aria-hidden="true">*</span></h2>
+              <p class="panel-sub">Une ligne par action. Cochez les mois (1 à 12) pendant lesquels elle est menée.</p>
             </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addPlanning()">
+              <ng-container *ngTemplateOutlet="plusIcon"/>
+              Ajouter une action
+            </button>
           </div>
-        }
 
-        <!-- Form Actions with Modern Design -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb;">
-          <div style="display: flex; gap: 1rem;">
-            <a routerLink="/dashboard" 
-               style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border: 2px solid #d1d5db; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-              <i class="fas fa-times mr-2"></i>
-              Annuler
-            </a>
-            @if (!isFirstTab()) {
-              <button type="button" (click)="previousTab()" 
-                      style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Précédent
-              </button>
-            }
-          </div>
-          
-          <div style="display: flex; gap: 1rem;">
-            @if (!isLastTab()) {
-              <button type="button" (click)="nextTab()" 
-                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
-                Suivant
-                <i class="fas fa-arrow-right ml-2"></i>
-              </button>
-            } @else {
-              <button type="submit" [disabled]="isLoading()"
-                      [style.opacity]="isLoading() ? '0.6' : '1'"
-                      [style.cursor]="isLoading() ? 'not-allowed' : 'pointer'"
-                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
-                @if (isLoading()) {
-                  <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.5rem;"></span>
-                  Enregistrement...
-                } @else {
-                  <i class="fas fa-save mr-2"></i>
-                  {{ isEditMode() ? 'Modifier la Fiche de Projet' : 'Enregistrer la Fiche de Projet' }}
-                }
-              </button>
-            }
-          </div>
+          @if (formData.planning.length === 0) {
+            <p class="items-empty">Aucune action planifiée.</p>
+          } @else {
+            <div class="table-wrap is-planning">
+              <table class="tbl tbl-planning">
+                <caption class="visually-hidden">Planning du projet : une ligne par action, une colonne par mois</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-action">Action</th>
+                    <th scope="col" class="col-profil">Profil des intervenants</th>
+                    <th scope="col" class="col-charge">Charge H/M</th>
+                    @for (m of moisPlanning; track m) {
+                      <th scope="col" class="col-mois"><span class="visually-hidden">Mois </span>{{ m }}</th>
+                    }
+                    <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (planning of formData.planning; track $index; let i = $index) {
+                    <tr>
+                      <td class="cell-intitule" data-label="Action">
+                        <input type="text" class="control" [(ngModel)]="planning.action" [name]="'planning_action_' + i"
+                               [attr.aria-label]="'Action de la ligne ' + (i + 1)"
+                               [class.is-invalid]="errors['planning'] && !(planning.action || '').trim()">
+                      </td>
+                      <td class="cell-profil" data-label="Profil des intervenants">
+                        <input type="text" class="control" [(ngModel)]="planning.profilIntervenants" [name]="'planning_profil_' + i"
+                               placeholder="CP, ID, CMIP, CMU" [attr.aria-label]="'Profil des intervenants de la ligne ' + (i + 1)">
+                      </td>
+                      <td class="cell-charge" data-label="Charge H/M">
+                        <input type="text" class="control" [(ngModel)]="planning.chargeHM" [name]="'planning_charge_' + i"
+                               [attr.aria-label]="'Charge en homme-mois de la ligne ' + (i + 1)">
+                      </td>
+                      @for (m of moisPlanning; track m) {
+                        <td class="cell-month" [attr.data-label]="'M' + m">
+                          <label class="check">
+                            <input type="checkbox" [(ngModel)]="planning.mois[m]" [name]="'planning_mois' + m + '_' + i">
+                            <span class="visually-hidden">Mois {{ m }}, action {{ i + 1 }}</span>
+                          </label>
+                        </td>
+                      }
+                      <td class="cell-actions">
+                        <button type="button" class="icon-btn is-danger" (click)="removePlanning(i)"
+                                title="Supprimer" [attr.aria-label]="'Supprimer l\'action ' + (i + 1)">
+                          <ng-container *ngTemplateOutlet="trashIcon"/>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+          @if (errors['planning']) {
+            <p class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['planning'] }}</p>
+          }
+          <p class="field-hint">CP : chef de projet · ID : ingénieur développeur · CMIP : comité de pilotage · CMU : comité utilisateurs.</p>
+        </section>
+      }
+
+      <!-- ============ Actions ============ -->
+      <div class="panel form-actions">
+        <div class="group">
+          <a class="btn btn-secondary" routerLink="/dashboard">Annuler</a>
+          @if (!isFirstTab()) {
+            <button type="button" class="btn btn-secondary" (click)="previousTab()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+              </svg>
+              Précédent
+            </button>
+          }
         </div>
-      </form>
-    </div>
+
+        <div class="group">
+          @if (!isLastTab()) {
+            <button type="button" class="btn btn-primary" (click)="nextTab()">
+              Suivant
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </button>
+          } @else {
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spin" aria-hidden="true"></span>
+                Enregistrement…
+              } @else {
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                {{ isEditMode() ? 'Modifier la fiche de projet' : 'Enregistrer la fiche de projet' }}
+              }
+            </button>
+          }
+        </div>
+      </div>
+    </form>
   </div>
-</div>
+</main>
+
+<!-- Icônes communes -->
+<ng-template #errIcon>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+</ng-template>
+<ng-template #chevron>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+  </svg>
+</ng-template>
+<ng-template #plusIcon>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+  </svg>
+</ng-template>
+<ng-template #trashIcon>
+  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+  </svg>
+</ng-template>

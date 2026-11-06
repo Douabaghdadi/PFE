@@ -30,6 +30,7 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@popperjs/core": "^2.11.8",
+    "@stomp/stompjs": "^7.5.0",
     "@tabler/icons-webfont": "^3.36.0",
     "bootstrap": "^5.3.8",
     "glightbox": "^3.3.1",

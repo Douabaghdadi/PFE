@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, ViewportScroller } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { filter } from 'rxjs/operators';
 
@@ -20,6 +20,9 @@ export class App {
   isAdminRoute = false;
 
   constructor() {
+    // Laisser la place du header fixe (70 px) quand on défile vers une section
+    inject(ViewportScroller).setOffset([0, 80]);
+
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {

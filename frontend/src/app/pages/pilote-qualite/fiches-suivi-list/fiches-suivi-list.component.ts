@@ -5,14 +5,15 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { PiloteQualiteFicheProjetService } from '../../../services/pilote-qualite-fiche-projet.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
-import { FicheProjet } from '../../../services/pilote-qualite-fiche-projet.service';
+import { initiales, pl } from '../../shared/projet-stats';
+import { SuiviTotaux, dateDerniereFiche, resumeFiche, totauxSuivi } from '../../shared/suivi-stats';
 
 @Component({
   selector: 'app-pilote-fiches-suivi-list',
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './fiches-suivi-list.component.html',
-  styleUrls: ['./fiches-suivi-list.component.css']
+  styleUrls: ['../pilote-ui.css', '../../shared/projets-ui.css']
 })
 export class PiloteFichesSuiviListComponent implements OnInit {
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
@@ -20,29 +21,47 @@ export class PiloteFichesSuiviListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
+  readonly pl = pl;
+  readonly initiales = initiales;
+  readonly resume = resumeFiche;
+
   fichesSuivi: FicheSuivi[] = [];
+  /** Fiches du projet choisi (toutes si aucun projet) : c'est le périmètre des indicateurs. */
+  portee: FicheSuivi[] = [];
   filteredFiches: FicheSuivi[] = [];
   paginatedFiches: FicheSuivi[] = [];
   loading = true;
   error: string | null = null;
+
+  // Indicateurs
+  totaux: SuiviTotaux = totauxSuivi([]);
+  derniereFiche: string | undefined;
 
   // Filtres
   searchTerm = '';
   selectedProjetId = '';
   sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
 
-  // Cache pour les noms des projets
+  // Cache pour les noms des projets et liste déroulante des projets
   projetNames: { [key: string]: string } = {};
-  
+  projetOptions: { id: string; name: string }[] = [];
+
   // Pagination
   currentPage = 1;
   itemsPerPage = 6;
   totalPages = 1;
 
+  private chargees = false;
+
   ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      this.selectedProjetId = params['projetId'] || '';
-      this.loadFichesSuivi();
+    this.route.queryParamMap.subscribe(params => {
+      this.selectedProjetId = params.get('projetId') || '';
+      // Un simple changement de projet dans l'adresse ne demande pas de recharger les fiches
+      if (this.chargees) {
+        this.applyFilters();
+      } else {
+        this.loadFichesSuivi();
+      }
     });
   }
 
@@ -53,9 +72,9 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     this.ficheSuiviService.getAllFichesSuivi().subscribe({
       next: (fiches) => {
         this.fichesSuivi = fiches;
+        this.chargees = true;
         this.applyFilters();
         this.loadProjetNames();
-        this.updatePagination();
         this.loading = false;
       },
       error: (err) => {
@@ -70,22 +89,31 @@ export class PiloteFichesSuiviListComponent implements OnInit {
    * Charge les noms des projets liés aux fiches de suivi
    */
   loadProjetNames(): void {
-    const uniqueProjetIds = [...new Set(
-      this.fichesSuivi
-        .map(f => f.ficheProjetId)
-        .filter(id => id) as string[]
-    )];
+    const ids = new Set(this.fichesSuivi.map(f => f.ficheProjetId).filter(id => !!id));
+    // Le projet choisi dans l'adresse doit apparaître dans la liste même s'il n'a encore aucune fiche
+    if (this.selectedProjetId) ids.add(this.selectedProjetId);
+    this.updateProjetOptions();
 
-    uniqueProjetIds.forEach(projetId => {
+    ids.forEach(projetId => {
       this.ficheProjetService.getFicheProjetById(projetId).subscribe({
         next: (projet) => {
           this.projetNames[projetId] = projet.nomProjet || 'Projet sans nom';
+          this.updateProjetOptions();
         },
         error: () => {
           this.projetNames[projetId] = 'Projet inconnu';
+          this.updateProjetOptions();
         }
       });
     });
+  }
+
+  private updateProjetOptions() {
+    const ids = new Set(this.fichesSuivi.map(f => f.ficheProjetId).filter(id => !!id));
+    if (this.selectedProjetId) ids.add(this.selectedProjetId);
+    this.projetOptions = [...ids]
+      .map(id => ({ id, name: this.getProjetName(id) }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   }
 
   /**
@@ -95,37 +123,42 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     if (!projetId) {
       return 'Non assigné';
     }
-    return this.projetNames[projetId] || 'Chargement...';
-  }
-
-  getInitials(name: string | undefined): string {
-    if (!name) return '?';
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return '?';
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    return this.projetNames[projetId] || 'Chargement…';
   }
 
   applyFilters() {
-    this.filteredFiches = this.fichesSuivi.filter(fiche => {
-      const matchesProjet = !this.selectedProjetId || fiche.ficheProjetId === this.selectedProjetId;
-      const matchesSearch = !this.searchTerm || 
-        fiche.numeroRapport?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        fiche.ficheSignaletique?.chefProjet?.nom?.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        fiche.constatGlobal?.etatAvancement?.toLowerCase().includes(this.searchTerm.toLowerCase());
+    const terme = this.searchTerm.trim().toLowerCase();
 
-      return matchesProjet && matchesSearch;
-    });
-    
+    this.portee = this.fichesSuivi.filter(fiche => !this.selectedProjetId || fiche.ficheProjetId === this.selectedProjetId);
+    this.totaux = totauxSuivi(this.portee);
+    this.derniereFiche = dateDerniereFiche(this.portee);
+    this.updateProjetOptions();
+
+    this.filteredFiches = this.portee.filter(fiche => !terme ||
+      fiche.numeroRapport?.toLowerCase().includes(terme) ||
+      fiche.ficheSignaletique?.chefProjet?.nom?.toLowerCase().includes(terme) ||
+      fiche.constatGlobal?.etatAvancement?.toLowerCase().includes(terme) ||
+      this.getProjetName(fiche.ficheProjetId).toLowerCase().includes(terme));
+
     // Tri par date
     this.filteredFiches.sort((a, b) => {
       const dateA = new Date(a.dateRapport || a.dateCreation || 0).getTime();
       const dateB = new Date(b.dateRapport || b.dateCreation || 0).getTime();
       return this.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
-    
+
     this.currentPage = 1;
     this.updatePagination();
+  }
+
+  /** Le projet choisi est aussi écrit dans l'adresse, pour qu'un rechargement de la page garde le même filtre. */
+  onProjetChange() {
+    this.applyFilters();
+    this.router.navigate([], {
+      queryParams: { projetId: this.selectedProjetId || null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   toggleSortOrder() {
@@ -151,7 +184,7 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     const pages: number[] = [];
     const total = this.totalPages;
     const current = this.currentPage;
-    
+
     if (total <= 7) {
       for (let i = 1; i <= total; i++) {
         pages.push(i);
@@ -176,33 +209,21 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     return pages;
   }
 
+  get filtresActifs(): boolean {
+    return !!this.searchTerm.trim() || !!this.selectedProjetId;
+  }
+
   resetFilters() {
     this.searchTerm = '';
     this.selectedProjetId = '';
-    this.router.navigate([], { queryParams: {} });
-    this.filteredFiches = this.fichesSuivi;
-    this.currentPage = 1;
-    this.updatePagination();
+    this.sortOrder = 'desc';
+    this.applyFilters();
+    this.router.navigate([], { queryParams: { projetId: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   viewDetails(id: string | undefined) {
     if (id) {
       this.router.navigate(['/pilote-qualite/fiches-suivi', id]);
-    }
-  }
-
-  getAvancementClass(avancement: string | undefined): string {
-    if (!avancement) return 'badge-secondary';
-    
-    const lower = avancement.toLowerCase();
-    if (lower.includes('terminé') || lower.includes('100%')) {
-      return 'badge-success';
-    } else if (lower.includes('en cours') || lower.includes('avancé')) {
-      return 'badge-warning';
-    } else if (lower.includes('retard') || lower.includes('bloqué')) {
-      return 'badge-danger';
-    } else {
-      return 'badge-info';
     }
   }
 }

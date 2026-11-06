@@ -1,306 +1,352 @@
-<div class="dash-page">
-  <div class="dash-container">
+<div class="page is-admin">
+  <div class="page-container">
 
     <!-- ============ En-tête ============ -->
-    <header class="dash-hero">
-      <div class="hero-bubble hero-bubble-1"></div>
-      <div class="hero-bubble hero-bubble-2"></div>
-
-      <div class="hero-content">
-        <div class="hero-left">
-          <span class="hero-badge"><i></i> ADMINISTRATION</span>
-          <h1 class="hero-title">Pilotage de la plateforme</h1>
-          <p class="hero-subtitle">
-            {{ rowsAll.length }} compte(s) &bull; {{ projets.length }} projet(s) &bull;
-            {{ fiches.length }} fiche(s) de suivi &bull; mise à jour {{ generatedAt | date:'dd/MM à HH:mm' }}
-          </p>
-        </div>
-
-        <div class="hero-actions">
-          <button class="hero-btn" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-            </svg>
-            Imprimer
-          </button>
-        </div>
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Pilotage de la plateforme</h1>
+        <p class="page-meta">
+          @if (!loading && !error) {
+            {{ pl(rowsAll.length, 'compte') }}, {{ pl(projets.length, 'projet') }}, {{ pl(fiches.length, 'fiche de suivi', 'fiches de suivi') }}.
+          }
+          Mis à jour le {{ generatedAt | date:'dd/MM à HH:mm' }}.
+        </p>
+      </div>
+      <div class="page-actions">
+        <button type="button" class="btn btn-secondary" (click)="imprimer()" [disabled]="loading" title="Imprimer ou enregistrer en PDF">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Imprimer
+        </button>
       </div>
     </header>
 
     <!-- ============ Chargement ============ -->
-    <div *ngIf="loading" class="skeleton-wrap">
-      <div class="stats-grid">
-        <div class="skeleton skeleton-card" *ngFor="let i of [1,2,3,4,5,6]"></div>
+    @if (loading) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-strip"></div>
+        <div class="grid-2">
+          <div class="skeleton skeleton-panel"></div>
+          <div class="skeleton skeleton-panel"></div>
+        </div>
       </div>
-      <div class="row-3col">
-        <div class="skeleton skeleton-panel"></div>
-        <div class="skeleton skeleton-panel"></div>
-        <div class="skeleton skeleton-panel"></div>
-      </div>
-    </div>
+    }
 
     <!-- ============ Erreur ============ -->
-    <div *ngIf="error && !loading" class="error-banner">
-      <span>{{ error }}</span>
-      <button (click)="refresh()">Réessayer</button>
-    </div>
+    @if (error && !loading) {
+      <div class="error-banner" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" class="btn btn-secondary" (click)="refresh()">Réessayer</button>
+      </div>
+    }
 
-    <!-- ============ Contenu ============ -->
-    <div *ngIf="!loading && !error">
+    @if (!loading && !error) {
 
-      <!-- Points d'attention -->
-      <section *ngIf="attentions.length" class="alert-banner">
-        <div class="alert-head">
-          <span class="alert-ico">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-          </span>
-          <div>
-            <h2 class="alert-title">Points d'attention</h2>
-            <p class="alert-summary">{{ attentions.length }} sujet(s) de gouvernance à traiter</p>
+      <!-- ============ Indicateurs : une carte par indicateur, la première plus large ============ -->
+      <section class="kpi-strip" aria-label="Indicateurs de la plateforme">
+        @for (kpi of kpis; track kpi.key; let premier = $first) {
+          <div class="kpi" [class.kpi-lead]="premier">
+            <span class="kpi-label">{{ kpi.title }}</span>
+            <span class="kpi-value">{{ kpi.value }}</span>
+            <span class="kpi-hint">{{ kpi.hint }}</span>
           </div>
-        </div>
-
-        <div class="attention-grid">
-          <article *ngFor="let a of attentions" class="attention-item" [ngClass]="'ton-' + a.ton"
-                   [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
-            <span class="attention-count">{{ a.count }}</span>
-            <div class="attention-body">
-              <p class="attention-label">{{ a.label }}</p>
-              <p class="attention-detail">{{ a.detail }}</p>
-            </div>
-            <svg *ngIf="a.lien" class="attention-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-            </svg>
-          </article>
-        </div>
+        }
       </section>
 
-      <!-- KPI -->
-      <section class="stats-grid">
-        <button *ngFor="let kpi of kpis" class="stat-card" [ngClass]="'stat-' + kpi.accent"
-                [disabled]="!kpi.action"
-                (click)="onKpiClick(kpi)">
-          <span class="stat-accent"></span>
-          <div class="stat-card-top">
-            <span class="stat-icon">{{ kpi.icon }}</span>
-            <span class="stat-value">{{ kpi.value }}</span>
-          </div>
-          <p class="stat-title">{{ kpi.title }}</p>
-          <p class="stat-hint">{{ kpi.hint }}</p>
-        </button>
-      </section>
+      <!-- ============ Points d'attention : un point par ligne, avec son action ============ -->
+      @if (attentions.length) {
+        <section class="panel" aria-labelledby="t-attention">
+          <h2 class="panel-title" id="t-attention">Points d'attention <span class="count">{{ attentions.length }}</span></h2>
+          <p class="panel-sub">Ce qui demande une action de l'administrateur.</p>
 
-      <!-- Rôles / Volumétrie / Référentiel -->
-      <section class="row-3col">
-        <div class="panel">
-          <h2 class="panel-title">👥 Répartition des rôles</h2>
-          <p class="panel-subtitle">Rôle principal de chaque compte</p>
+          <ul class="item-list is-2-col">
+            @for (a of attentions; track a.key) {
+              <li class="item" [ngClass]="'ton-' + a.ton">
+                <span class="item-nb" aria-hidden="true">{{ a.count }}</span>
+                <div class="item-main">
+                  <p class="item-title"><span class="visually-hidden">{{ a.count }} : </span>{{ a.label }}</p>
+                  <p class="item-text">{{ a.detail }}</p>
+                </div>
+                @if (a.lien && a.action) {
+                  <button type="button" class="btn btn-small" (click)="navigateTo(a.lien)">{{ a.action }}</button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
 
-          <div *ngIf="!rowsAll.length" class="panel-empty">Aucun compte enregistré.</div>
+      <!-- ============ Rôles / Référentiel ============ -->
+      <section class="grid-2">
+        <div class="panel" aria-labelledby="t-roles">
+          <h2 class="panel-title" id="t-roles">Répartition des rôles</h2>
+          <p class="panel-sub">Rôle principal de chaque compte.</p>
 
-          <div *ngIf="rowsAll.length" class="donut-wrap">
-            <div class="donut-holder">
-              <svg viewBox="0 0 120 120" class="donut-svg">
-                <circle cx="60" cy="60" r="54" class="donut-track"/>
-                <circle *ngFor="let s of roleSegments" cx="60" cy="60" r="54" class="donut-seg"
-                        [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset">
-                  <title>{{ s.label }} : {{ s.count }} ({{ s.percent }}%)</title>
-                </circle>
-              </svg>
-              <div class="donut-center">
-                <strong>{{ rowsAll.length }}</strong>
-                <span>comptes</span>
+          @if (!rowsAll.length) {
+            <p class="panel-empty">Aucun compte enregistré.</p>
+          } @else {
+            <div class="donut-wrap">
+              <div class="donut-holder">
+                <svg viewBox="0 0 120 120" class="donut-svg" role="img" [attr.aria-label]="pl(rowsAll.length, 'compte') + ' répartis par rôle'">
+                  <circle cx="60" cy="60" r="54" class="donut-track"/>
+                  @for (s of roleSegments; track s.key) {
+                    <circle cx="60" cy="60" r="54" class="donut-seg"
+                            [attr.stroke]="s.color" [attr.stroke-dasharray]="s.dash" [attr.stroke-dashoffset]="s.offset">
+                      <title>{{ s.label }} : {{ s.count }} ({{ s.percent }} %)</title>
+                    </circle>
+                  }
+                </svg>
+                <div class="donut-center">
+                  <strong>{{ rowsAll.length }}</strong>
+                  <span>comptes</span>
+                </div>
               </div>
+
+              <ul class="legend">
+                @for (s of roleSegments; track s.key) {
+                  <li>
+                    <span class="dot" [style.background]="s.color" aria-hidden="true"></span>
+                    <span class="legend-label">{{ s.label }}</span>
+                    <span class="legend-value">{{ s.count }}</span>
+                    <span class="legend-pct">{{ s.percent }}&#8239;%</span>
+                  </li>
+                }
+              </ul>
             </div>
-
-            <div class="donut-legend">
-              <div *ngFor="let s of roleSegments" class="legend-row">
-                <span class="legend-dot" [style.background]="s.color"></span>
-                <span class="legend-label">{{ s.label }}</span>
-                <span class="legend-value">{{ s.count }}</span>
-                <span class="legend-pct">{{ s.percent }}%</span>
-              </div>
-            </div>
-          </div>
+          }
+          <a class="link-btn panel-link" routerLink="/admin/users">Gérer les comptes</a>
         </div>
 
-        <div class="panel">
-          <h2 class="panel-title">📈 Volumétrie sur 12 mois</h2>
-          <p class="panel-subtitle">Créations enregistrées chaque mois</p>
+        <div class="panel" aria-labelledby="t-referentiel">
+          <h2 class="panel-title" id="t-referentiel">Nomenclature</h2>
+          <p class="panel-sub">Valeurs actives de chaque liste de choix, sur {{ pl(nomenclatures.length, 'valeur') }}.</p>
 
-          <div class="chart-bars">
-            <div class="chart-col" *ngFor="let m of moisBars"
-                 [title]="m.titre + ' — ' + m.comptes + ' compte(s), ' + m.projets + ' projet(s), ' + m.fiches + ' fiche(s)'">
-              <div class="chart-stack">
-                <span class="chart-seg seg-fiches" [style.height.%]="m.hFiches"></span>
-                <span class="chart-seg seg-projets" [style.height.%]="m.hProjets"></span>
-                <span class="chart-seg seg-comptes" [style.height.%]="m.hComptes"></span>
-              </div>
-              <span class="chart-label">{{ m.label }}</span>
-            </div>
-          </div>
-
-          <div class="chart-legend">
-            <span><i class="seg-comptes"></i> Comptes</span>
-            <span><i class="seg-projets"></i> Projets</span>
-            <span><i class="seg-fiches"></i> Fiches de suivi</span>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h2 class="panel-title">⚙️ Référentiel</h2>
-          <p class="panel-subtitle">{{ nomenclatures.length }} entrée(s) de nomenclature</p>
-
-          <div *ngIf="!referentiel.length" class="panel-empty">Aucune nomenclature définie.</div>
-
-          <div *ngFor="let g of referentiel" class="rubrique-row">
-            <div class="rubrique-head">
-              <span class="rubrique-label">{{ g.label }}</span>
-              <span class="rubrique-count">{{ g.actifs }}/{{ g.total }} actives</span>
-            </div>
-            <div class="progress-track slim">
-              <div class="progress-fill" [style.width.%]="g.total ? (g.actifs / g.total) * 100 : 0"></div>
-            </div>
-            <p *ngIf="g.inactifs" class="rubrique-note">{{ g.inactifs }} entrée(s) désactivée(s)</p>
-          </div>
-
-          <button class="panel-more" routerLink="/admin/nomenclature">Gérer le référentiel</button>
-        </div>
-      </section>
-
-      <!-- Activité récente -->
-      <section class="panel section-gap">
-        <h2 class="panel-title">🕓 Activité récente</h2>
-        <p class="panel-subtitle">{{ activites.length }} évènement(s) sur les 12 derniers mois</p>
-
-        <div *ngIf="!activites.length" class="panel-empty">Aucune activité sur les 12 derniers mois.</div>
-
-        <div *ngFor="let a of activitesVisibles" class="activite-item" [ngClass]="'act-' + a.type"
-             [class.clickable]="a.lien" (click)="navigateTo(a.lien)">
-          <span class="activite-ico">{{ a.icon }}</span>
-          <div class="activite-main">
-            <p class="activite-titre">{{ a.titre }}</p>
-            <p class="activite-meta">{{ a.meta }}</p>
-          </div>
-          <div class="activite-date">
-            <strong>{{ a.date | date:'dd/MM' }}</strong>
-            <span>{{ depuis(a.date) }}</span>
-          </div>
-        </div>
-
-        <button *ngIf="activites.length > 8" class="panel-more" (click)="activitesCompletes = !activitesCompletes">
-          {{ activitesCompletes ? 'Réduire' : 'Voir plus d\'activité' }}
-        </button>
-      </section>
-
-      <!-- Charge par chef de projet -->
-      <section class="panel section-gap" *ngIf="chefStats.length">
-        <div class="panel-head-row">
-          <div>
-            <h2 class="panel-title">📊 Charge par chef de projet</h2>
-            <p class="panel-subtitle">Répartition du portefeuille entre les comptes porteurs</p>
-          </div>
-        </div>
-
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Chef de projet</th>
-                <th>Projets</th>
-                <th>Part du portefeuille</th>
-                <th>Fiches déposées</th>
-                <th>Dernier dépôt</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let c of chefStats">
-                <td class="cell-nom">
-                  <span class="avatar" [style.background]="couleurRole('ROLE_CHEF_PROJET')">{{ initiales(c.nom) }}</span>
-                  {{ c.nom }}
-                </td>
-                <td>{{ c.projets }}</td>
-                <td class="bar-cell">
-                  <div class="progress-track"><div class="progress-fill" [style.width.%]="c.part"></div></div>
-                  <span>{{ c.part }}%</span>
-                </td>
-                <td>{{ c.fiches }}</td>
-                <td>
-                  <span *ngIf="c.dernierDepot">{{ c.dernierDepot | date:'dd/MM/yyyy' }}</span>
-                  <span *ngIf="!c.dernierDepot" class="badge badge-neutral">Aucun</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Comptes -->
-      <section class="panel section-gap">
-        <div class="panel-head-row">
-          <div>
-            <h2 class="panel-title">🗃️ Comptes de la plateforme</h2>
-            <p class="panel-subtitle">{{ rows.length }} compte(s)</p>
-          </div>
-          <div class="sort-group">
-            <button [class.active]="sortKey === 'createdAt'" (click)="trier('createdAt')">Inscription</button>
-            <button [class.active]="sortKey === 'username'" (click)="trier('username')">Nom</button>
-            <button [class.active]="sortKey === 'projets'" (click)="trier('projets')">Projets</button>
-            <button [class.active]="sortKey === 'fiches'" (click)="trier('fiches')">Fiches</button>
-          </div>
-        </div>
-
-        <div *ngIf="!rows.length" class="panel-empty">Aucun compte enregistré.</div>
-
-        <div *ngIf="rows.length" class="table-scroll">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Compte</th>
-                <th>Rôle principal</th>
-                <th>Inscription</th>
-                <th>Projets</th>
-                <th>Fiches</th>
-                <th>Dernier dépôt</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let r of rowsVisibles">
-                <td class="cell-nom">
-                  <span class="avatar" [style.background]="r.roleColor">{{ initiales(r.username) }}</span>
-                  <div class="cell-identite">
-                    <strong>{{ r.username }}</strong>
-                    <span>{{ r.email }}</span>
+          @if (!referentiel.length) {
+            <p class="panel-empty">Aucune nomenclature définie.</p>
+          } @else {
+            <ul class="rubrique-list">
+              @for (g of referentiel; track g.key) {
+                <li>
+                  <div class="rubrique-head">
+                    <span>{{ g.label }}</span>
+                    <span class="rubrique-count">{{ g.actifs }}/{{ g.total }} active{{ g.actifs > 1 ? 's' : '' }}</span>
                   </div>
-                </td>
-                <td>
-                  <span class="role-tag" [style.background]="r.roleColor + '1f'" [style.color]="r.roleColor">
-                    {{ libelleRoleCourt(r.rolePrincipal) }}
-                  </span>
-                  <span *ngIf="r.roles.length > 1" class="role-plus">+{{ r.roles.length - 1 }}</span>
-                </td>
-                <td>
-                  <span *ngIf="r.createdAt">{{ r.createdAt | date:'dd/MM/yyyy' }}</span>
-                  <span *ngIf="!r.createdAt" class="badge badge-neutral">Inconnue</span>
-                </td>
-                <td>{{ r.projets }}</td>
-                <td>{{ r.fiches }}</td>
-                <td>
-                  <span *ngIf="r.derniereActivite">{{ depuis(r.derniereActivite) }}</span>
-                  <span *ngIf="!r.derniereActivite" class="badge badge-neutral">Aucun</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  <div class="track" aria-hidden="true">
+                    <i [style.width.%]="g.total ? (g.actifs / g.total) * 100 : 0" [class.is-partiel]="g.inactifs > 0"></i>
+                  </div>
+                  @if (g.inactifs) {
+                    <p class="rubrique-note">{{ pl(g.inactifs, 'valeur désactivée', 'valeurs désactivées') }}</p>
+                  }
+                </li>
+              }
+            </ul>
+          }
+          <a class="link-btn panel-link" routerLink="/admin/nomenclature">Gérer la nomenclature</a>
         </div>
-
-        <button *ngIf="rows.length > 10" class="panel-more" (click)="tableComplete = !tableComplete">
-          {{ tableComplete ? 'Réduire' : 'Voir les ' + rows.length + ' comptes' }}
-        </button>
       </section>
 
-    </div>
+      <!-- ============ Volumétrie sur 12 mois ============ -->
+      <section class="panel" aria-labelledby="t-volume">
+        <h2 class="panel-title" id="t-volume">Volumétrie sur 12 mois</h2>
+        <p class="panel-sub">Comptes, projets et fiches de suivi créés chaque mois.</p>
+
+        <ol class="volume-chart" role="img"
+            [attr.aria-label]="'Créations par mois sur les 12 derniers mois : ' + nouveauxComptes + ' comptes, ' + fichesPeriode + ' fiches de suivi'">
+          @for (m of moisBars; track m.titre) {
+            <li class="volume-mois" [title]="m.titre + ' : ' + m.comptes + ' compte(s), ' + m.projets + ' projet(s), ' + m.fiches + ' fiche(s)'">
+              <span class="volume-total">{{ m.total || '' }}</span>
+              <span class="volume-pile">
+                <i class="v-fiches" [style.height.%]="m.hFiches"></i>
+                <i class="v-projets" [style.height.%]="m.hProjets"></i>
+                <i class="v-comptes" [style.height.%]="m.hComptes"></i>
+              </span>
+              <span class="volume-label">{{ m.label }}</span>
+            </li>
+          }
+        </ol>
+
+        <div class="volume-legende" aria-hidden="true">
+          <span><i class="v-comptes"></i>Comptes</span>
+          <span><i class="v-projets"></i>Projets</span>
+          <span><i class="v-fiches"></i>Fiches de suivi</span>
+        </div>
+      </section>
+
+      <!-- ============ Activité récente / Charge par chef de projet ============ -->
+      <section class="grid-2 is-suivi">
+        <div class="panel panel-activite" aria-labelledby="t-activite">
+          <h2 class="panel-title" id="t-activite">Activité récente</h2>
+          <p class="panel-sub">
+            @if (impression && activites.length > activitesImprimees) {
+              Les {{ activitesImprimees }} plus récents, sur {{ pl(activites.length, 'évènement') }} en 12 mois.
+            } @else {
+              {{ pl(activites.length, 'évènement') }} sur les 12 derniers mois.
+            }
+          </p>
+
+          @if (!activites.length) {
+            <p class="panel-empty">Aucune activité sur les 12 derniers mois.</p>
+          } @else {
+            <ul class="item-list is-2-col">
+              @for (a of activitesVisibles; track $index) {
+                <li class="item activite" [ngClass]="'act-' + a.type">
+                  <span class="act-icone" aria-hidden="true">
+                    @switch (a.type) {
+                      @case ('compte') {
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                      }
+                      @case ('projet') {
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"/></svg>
+                      }
+                      @default {
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                      }
+                    }
+                  </span>
+                  <div class="item-main">
+                    <p class="item-title"><span class="visually-hidden">{{ libelleType(a.type) }} : </span>{{ a.titre }}</p>
+                    <p class="item-meta">{{ a.meta }}</p>
+                  </div>
+                  <span class="act-date">
+                    <time [attr.datetime]="a.date">{{ a.date | date:'dd/MM' }}</time>
+                    <span>{{ depuis(a.date) }}</span>
+                  </span>
+                </li>
+              }
+            </ul>
+            @if (activites.length > 8) {
+              <button type="button" class="link-btn panel-more" (click)="activitesCompletes = !activitesCompletes">
+                {{ activitesCompletes ? 'Réduire' : 'Voir plus d\'activité' }}
+              </button>
+            }
+          }
+        </div>
+
+        @if (chefStats.length) {
+          <div class="panel is-flush" aria-labelledby="t-charge">
+            <div class="panel-pad">
+              <h2 class="panel-title" id="t-charge">Charge par chef de projet</h2>
+              <p class="panel-sub">Part du portefeuille de chaque chef de projet.</p>
+            </div>
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Chef de projet</th>
+                    <th scope="col" class="col-part">Projets</th>
+                    <th scope="col" class="num">Fiches</th>
+                    <th scope="col" class="col-sm">Dernier dépôt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (c of chefStats; track c.id) {
+                    <tr>
+                      <td><span class="person"><span class="avatar" aria-hidden="true">{{ initiales(c.nom) }}</span><span class="nom" [title]="c.nom">{{ c.nom }}</span></span></td>
+                      <td>
+                        <span class="part">
+                          <span class="part-nb">{{ c.projets }}</span>
+                          <span class="track" aria-hidden="true"><i [style.width.%]="c.part"></i></span>
+                          <span class="part-pct">{{ c.part }}&#8239;%</span>
+                        </span>
+                      </td>
+                      <td class="num">{{ c.fiches }}</td>
+                      <td class="nowrap col-sm">
+                        @if (c.dernierDepot) {
+                          {{ c.dernierDepot | date:'dd/MM/yyyy' }}
+                        } @else {
+                          <span class="muted">Aucun</span>
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- ============ Comptes de la plateforme ============ -->
+      <section class="panel is-flush" aria-labelledby="t-comptes">
+        <div class="panel-pad panel-head">
+          <div>
+            <h2 class="panel-title" id="t-comptes">Comptes de la plateforme <span class="count">{{ rows.length }}</span></h2>
+            <p class="panel-sub">Projets pilotés et fiches déposées par compte.</p>
+          </div>
+          <div class="sort-group" role="group" aria-label="Trier les comptes">
+            <span class="sort-label">Trier par</span>
+            <button type="button" [class.is-active]="sortKey === 'createdAt'" [attr.aria-pressed]="sortKey === 'createdAt'" (click)="trier('createdAt')">Inscription</button>
+            <button type="button" [class.is-active]="sortKey === 'username'" [attr.aria-pressed]="sortKey === 'username'" (click)="trier('username')">Nom</button>
+            <button type="button" [class.is-active]="sortKey === 'projets'" [attr.aria-pressed]="sortKey === 'projets'" (click)="trier('projets')">Projets</button>
+            <button type="button" [class.is-active]="sortKey === 'fiches'" [attr.aria-pressed]="sortKey === 'fiches'" (click)="trier('fiches')">Fiches</button>
+          </div>
+        </div>
+
+        @if (!rows.length) {
+          <p class="panel-empty panel-pad">Aucun compte enregistré.</p>
+        } @else {
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Compte</th>
+                  <th scope="col" class="col-role">Rôle principal</th>
+                  <th scope="col" class="col-md">Inscription</th>
+                  <th scope="col" class="num">Projets</th>
+                  <th scope="col" class="num">Fiches</th>
+                  <th scope="col" class="col-sm">Dernier dépôt</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of rowsVisibles; track r.id) {
+                  <tr>
+                    <td>
+                      <span class="person">
+                        <span class="avatar" aria-hidden="true">{{ initiales(r.username) }}</span>
+                        <span class="identite">
+                          <strong [title]="r.username">{{ r.username }}</strong>
+                          <span [title]="r.email">{{ r.email }}</span>
+                          <!-- Sur téléphone, la colonne « Rôle principal » est masquée : le rôle passe ici -->
+                          <span class="role-mobile">{{ r.roleLabel }}</span>
+                        </span>
+                      </span>
+                    </td>
+                    <td class="nowrap col-role">
+                      <span class="pill" [ngClass]="roleClass(r.rolePrincipal)">{{ r.roleLabel }}</span>
+                      @if (r.roles.length > 1) {
+                        <span class="role-plus" [title]="'Et ' + (r.roles.length - 1) + ' autre(s) rôle(s)'">+{{ r.roles.length - 1 }}</span>
+                      }
+                    </td>
+                    <td class="nowrap col-md">
+                      @if (r.createdAt) {
+                        {{ r.createdAt | date:'dd/MM/yyyy' }}
+                      } @else {
+                        <span class="muted">Inconnue</span>
+                      }
+                    </td>
+                    <td class="num">{{ r.projets }}</td>
+                    <td class="num">{{ r.fiches }}</td>
+                    <td class="nowrap col-sm">
+                      @if (r.derniereActivite) {
+                        {{ depuis(r.derniereActivite) }}
+                      } @else {
+                        <span class="muted">Aucun</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          @if (rows.length > 10) {
+            <button type="button" class="link-btn panel-more" (click)="tableComplete = !tableComplete">
+              {{ tableComplete ? 'Réduire' : 'Voir les ' + rows.length + ' comptes' }}
+            </button>
+          }
+        }
+      </section>
+    }
   </div>
 </div>

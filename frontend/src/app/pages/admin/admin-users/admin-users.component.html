@@ -1,0 +1,351 @@
+<div class="page is-admin">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Utilisateurs</h1>
+        <p class="page-meta">
+          Comptes ayant accès à la plateforme.
+          @if (!isLoading() && !errorMessage()) {
+            {{ resume() }}
+          }
+        </p>
+      </div>
+      <div class="page-actions">
+        <button type="button" class="btn btn-primary" (click)="openCreate()" [disabled]="isLoading() || !!errorMessage()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14"/>
+          </svg>
+          Nouveau compte
+        </button>
+      </div>
+    </header>
+
+    <!-- Confirmation d'un ajout, d'une modification ou d'une suppression -->
+    <div class="message-zone" role="status" aria-live="polite">
+      @if (message()) {
+        <p class="notice notice-ok is-banner">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          {{ message() }}
+        </p>
+      }
+    </div>
+
+    <!-- ============ Chargement ============ -->
+    @if (isLoading()) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-filters"></div>
+        <div class="skeleton skeleton-table"></div>
+      </div>
+    }
+
+    <!-- ============ Erreur ============ -->
+    @if (errorMessage() && !isLoading()) {
+      <div class="error-banner" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn-secondary" (click)="loadUsers()">Réessayer</button>
+      </div>
+    }
+
+    @if (!isLoading() && !errorMessage()) {
+
+      <!-- ============ Recherche et rôle ============ -->
+      <section class="panel filters" aria-label="Filtrer les comptes">
+        <div class="field-search">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+          </svg>
+          <label for="recherche" class="visually-hidden">Rechercher un compte</label>
+          <input id="recherche" type="search" class="control" autocomplete="off"
+                 [(ngModel)]="searchTerm" (ngModelChange)="filterUsers()"
+                 placeholder="Nom d'utilisateur ou email">
+        </div>
+        <div class="field-select">
+          <label for="role" class="visually-hidden">Filtrer par rôle</label>
+          <select id="role" class="control" [(ngModel)]="filterRole" (ngModelChange)="filterUsers()">
+            <option value="">Tous les rôles</option>
+            @for (r of roles; track r.role) {
+              <option [value]="r.role">{{ r.label }}</option>
+            }
+          </select>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+      </section>
+
+      <!-- ============ Comptes ============ -->
+      <section class="panel is-table" aria-label="Liste des comptes">
+        <div class="table-wrap">
+          <table class="tbl-admin tbl-users">
+            <thead>
+              <tr>
+                <th scope="col" class="c-compte">Compte</th>
+                <th scope="col" class="c-role">Rôle</th>
+                <th scope="col" class="c-date">Inscrit le</th>
+                <th scope="col" class="c-actions"><span class="visually-hidden">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of pagedUsers(); track user.id) {
+                <tr class="ligne">
+                  <td class="c-compte">
+                    <div class="compte">
+                      <span class="avatar" aria-hidden="true">{{ getInitials(user.username) }}</span>
+                      <span class="compte-texte">
+                        <span class="compte-nom">
+                          {{ user.username }}
+                          @if (estMoi(user)) {
+                            <span class="moi">(vous)</span>
+                          }
+                        </span>
+                        <span class="compte-email" [title]="user.email">{{ user.email }}</span>
+                      </span>
+                    </div>
+                  </td>
+                  <td class="c-role">
+                    <span class="roles">
+                      @for (role of user.roles; track role) {
+                        <span class="pill" [ngClass]="roleClass(role)">{{ getRoleLabel(role) }}</span>
+                      }
+                    </span>
+                  </td>
+                  <td class="c-date"><span class="visually-hidden">Inscrit le </span>{{ formatDate(user.createdAt) }}</td>
+                  <td class="c-actions">
+                    <div class="actions">
+                      <button type="button" class="icon-btn" (click)="editUser(user)"
+                              title="Modifier" [attr.aria-label]="'Modifier le compte ' + user.username">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"/>
+                        </svg>
+                      </button>
+                      <button type="button" class="icon-btn is-danger" (click)="deleteUser(user)" [disabled]="estMoi(user)"
+                              [title]="estMoi(user) ? 'Vous ne pouvez pas supprimer votre propre compte' : 'Supprimer'"
+                              [attr.aria-label]="estMoi(user) ? 'Suppression impossible : c\'est votre compte' : 'Supprimer le compte ' + user.username">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr class="ligne-vide">
+                  <td colspan="4">
+                    Aucun compte ne correspond à votre recherche.
+                    @if (filtresActifs) {
+                      <button type="button" class="link-btn" (click)="resetFilters()">Effacer les filtres</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination : 10 comptes par page -->
+        @if (filteredUsers().length > 0) {
+          <div class="table-foot">
+            <p class="table-range" role="status">
+              {{ rangeStart() }} à {{ rangeEnd() }} sur {{ pl(filteredUsers().length, 'compte') }}
+            </p>
+            @if (totalPages() > 1) {
+              <nav class="pager" aria-label="Pagination">
+                <button type="button" class="pager-btn" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" aria-label="Page précédente">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                @for (page of pages(); track page) {
+                  <button type="button" class="pager-btn" [class.is-current]="page === currentPage()"
+                          [attr.aria-current]="page === currentPage() ? 'page' : null" [attr.aria-label]="'Page ' + page"
+                          (click)="goToPage(page)">{{ page }}</button>
+                }
+                <button type="button" class="pager-btn" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" aria-label="Page suivante">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </nav>
+            }
+          </div>
+        }
+      </section>
+    }
+  </div>
+</div>
+
+<!-- ============ Créer ou modifier un compte ============ -->
+<dialog #formDialog class="dlg is-form" aria-labelledby="form-titre"
+        (click)="onDialogClick($event, formDialog)" (close)="onFormClosed()"
+        (cancel)="isCreating() && $event.preventDefault()">
+  <form class="dlg-inner" (ngSubmit)="createUser()" novalidate>
+    <button type="button" class="icon-btn dlg-close" (click)="closeForm()" [disabled]="isCreating()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z"/>
+        </svg>
+      </span>
+      <div>
+        <h2 id="form-titre" class="dlg-title">{{ isEditMode() ? 'Modifier le compte' : 'Nouveau compte' }}</h2>
+        @if (enEdition(); as u) {
+          <p class="dlg-sub">Inscrit le {{ formatDate(u.createdAt) }}</p>
+        } @else {
+          <p class="dlg-sub">La personne se connectera avec son email et ce mot de passe.</p>
+        }
+      </div>
+    </div>
+
+    <div class="champs">
+      <div class="champ">
+        <label class="champ-label" for="u-nom">Nom d'utilisateur<span class="req" aria-hidden="true">*</span></label>
+        <input id="u-nom" name="username" type="text" class="control" autocomplete="off" spellcheck="false"
+               [(ngModel)]="newUser.username" required placeholder="Ex. : jdupont"
+               [class.is-invalid]="tentative() && !!erreurNom()"
+               [attr.aria-invalid]="tentative() && !!erreurNom()"
+               [attr.aria-describedby]="tentative() && erreurNom() ? 'u-nom-err' : 'u-nom-aide'">
+        @if (tentative() && erreurNom()) {
+          <p class="champ-error" id="u-nom-err">{{ erreurNom() }}</p>
+        } @else {
+          <p class="champ-hint" id="u-nom-aide">Nom affiché dans la plateforme, unique, 3 caractères minimum.</p>
+        }
+      </div>
+
+      <div class="champ">
+        <label class="champ-label" for="u-email">Adresse email<span class="req" aria-hidden="true">*</span></label>
+        <input id="u-email" name="email" type="email" class="control" autocomplete="off" spellcheck="false"
+               [(ngModel)]="newUser.email" required placeholder="Ex. : jdupont@qualinet.com"
+               [class.is-invalid]="tentative() && !!erreurEmail()"
+               [attr.aria-invalid]="tentative() && !!erreurEmail()"
+               [attr.aria-describedby]="tentative() && erreurEmail() ? 'u-email-err' : 'u-email-aide'">
+        @if (tentative() && erreurEmail()) {
+          <p class="champ-error" id="u-email-err">{{ erreurEmail() }}</p>
+        } @else {
+          <p class="champ-hint" id="u-email-aide">Sert à se connecter et à recevoir les notifications.</p>
+        }
+      </div>
+
+      <!-- Mot de passe : seulement à la création ; en modification, il reste celui du compte -->
+      @if (!isEditMode()) {
+        <div class="champ">
+          <label class="champ-label" for="u-mdp">Mot de passe<span class="req" aria-hidden="true">*</span></label>
+          <div class="mdp">
+            <input id="u-mdp" name="password" class="control" autocomplete="new-password"
+                   [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="newUser.password" required
+                   [class.is-invalid]="tentative() && !!erreurMotDePasse()"
+                   [attr.aria-invalid]="tentative() && !!erreurMotDePasse()"
+                   [attr.aria-describedby]="tentative() && erreurMotDePasse() ? 'u-mdp-err' : 'u-mdp-aide'">
+            <button type="button" class="mdp-voir" (click)="showPassword.set(!showPassword())"
+                    [attr.aria-pressed]="showPassword()" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+              @if (showPassword()) {
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/>
+                </svg>
+              } @else {
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              }
+            </button>
+          </div>
+          @if (tentative() && erreurMotDePasse()) {
+            <p class="champ-error" id="u-mdp-err">{{ erreurMotDePasse() }}</p>
+          } @else {
+            <p class="champ-hint" id="u-mdp-aide" [class.is-ok]="isPasswordValid(newUser.password)">
+              8 caractères minimum, avec au moins une majuscule et un chiffre.
+            </p>
+          }
+        </div>
+      }
+
+      <fieldset class="champ roles-choix" [attr.aria-describedby]="tentative() && erreurRoles() ? 'u-roles-err' : null">
+        <legend class="champ-label">Rôle<span class="req" aria-hidden="true">*</span></legend>
+        @for (r of roles; track r.valeur) {
+          <label class="role-option" [class.is-checked]="newUser.roles.includes(r.valeur)" [attr.for]="'u-role-' + r.valeur">
+            <input type="checkbox" [id]="'u-role-' + r.valeur" [name]="'role-' + r.valeur" [checked]="newUser.roles.includes(r.valeur)" (change)="toggleRole(r.valeur)">
+            <span>
+              <span class="role-nom">{{ r.label }}</span>
+              <span class="role-aide">{{ r.aide }}</span>
+            </span>
+          </label>
+        }
+        @if (tentative() && erreurRoles()) {
+          <p class="champ-error" id="u-roles-err">{{ erreurRoles() }}</p>
+        }
+      </fieldset>
+    </div>
+
+    @if (createError()) {
+      <div class="notice notice-error" role="alert">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ createError() }}
+      </div>
+    }
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-secondary" (click)="closeForm()" [disabled]="isCreating()">Annuler</button>
+      <button type="submit" class="btn btn-primary" [disabled]="isCreating()">
+        {{ isCreating() ? 'Enregistrement…' : (isEditMode() ? 'Enregistrer' : 'Créer le compte') }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ Confirmation de suppression ============ -->
+<dialog #suppressionDialog class="dlg" aria-labelledby="suppression-titre"
+        (click)="onDialogClick($event, suppressionDialog)" (close)="onSuppressionClosed()"
+        (cancel)="suppressionEnCours() && $event.preventDefault()">
+  @if (aSupprimer(); as u) {
+    <div class="dlg-inner">
+      <button type="button" class="icon-btn dlg-close" (click)="annulerSuppression()" [disabled]="suppressionEnCours()" aria-label="Fermer" title="Fermer">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="dlg-head">
+        <span class="dlg-icon is-danger" aria-hidden="true">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="suppression-titre" class="dlg-title">Supprimer ce compte ?</h2>
+          <p class="dlg-sub" [title]="u.email">{{ u.username }} · {{ u.email }}</p>
+        </div>
+      </div>
+
+      <p class="dlg-text">
+        Cette personne ne pourra plus se connecter. Les projets et les fiches déjà enregistrés restent dans la plateforme.
+      </p>
+
+      @if (erreurSuppression()) {
+        <div class="notice notice-error" role="alert">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ erreurSuppression() }}
+        </div>
+      }
+
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-secondary" data-autofocus (click)="annulerSuppression()" [disabled]="suppressionEnCours()">Annuler</button>
+        <button type="button" class="btn btn-danger" (click)="confirmerSuppression()" [disabled]="suppressionEnCours()">
+          {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>

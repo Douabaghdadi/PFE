@@ -1,0 +1,237 @@
+<main class="page">
+  <div class="page-container is-journal">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Historique du projet</h1>
+        <p class="page-meta">Toutes les modifications du projet et de ses fiches de suivi.</p>
+      </div>
+
+      <div class="page-actions">
+        <a class="btn btn-secondary" [routerLink]="retourLink()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
+          Retour au projet
+        </a>
+      </div>
+    </header>
+
+    <!-- ============ Chargement ============ -->
+    @if (loading) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-filters"></div>
+        <div class="skeleton skeleton-entry"></div>
+        <div class="skeleton skeleton-entry"></div>
+        <div class="skeleton skeleton-entry"></div>
+      </div>
+    }
+
+    <!-- ============ Erreur ============ -->
+    @if (error && !loading) {
+      <div class="error-banner" role="alert">
+        <span>{{ error }}</span>
+        <button type="button" class="btn btn-secondary" (click)="loadHistorique()">Réessayer</button>
+      </div>
+    }
+
+    @if (!loading && !error) {
+
+      <!-- ============ Aucun historique ============ -->
+      @if (historique.length === 0) {
+        <div class="panel empty">
+          <div class="empty-icon" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h2 class="empty-title">Aucune modification enregistrée</h2>
+          <p class="empty-text">L'historique de ce projet est vide.</p>
+        </div>
+      } @else {
+
+        <!-- ============ Filtres ============ -->
+        <section class="panel filters" aria-label="Filtrer l'historique">
+          <div class="field-search">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+            </svg>
+            <label for="recherche" class="visually-hidden">Rechercher dans l'historique</label>
+            <input id="recherche" type="search" class="control" autocomplete="off"
+                   [(ngModel)]="searchTerm" (ngModelChange)="applyFilters()"
+                   placeholder="Description, utilisateur ou fiche">
+          </div>
+
+          <div class="field-select">
+            <label for="action" class="visually-hidden">Filtrer par action</label>
+            <select id="action" class="control" [(ngModel)]="selectedAction" (ngModelChange)="applyFilters()">
+              <option value="">Toutes les actions</option>
+              <option value="CREATION">Création</option>
+              <option value="MODIFICATION">Modification</option>
+              <option value="SUPPRESSION">Suppression</option>
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <div class="field-select">
+            <label for="type" class="visually-hidden">Filtrer par type de fiche</label>
+            <select id="type" class="control" [(ngModel)]="selectedEntityType" (ngModelChange)="applyFilters()">
+              <option value="">Tous les types</option>
+              <option value="FICHE_PROJET">Fiche projet</option>
+              <option value="FICHE_SUIVI">Fiche de suivi</option>
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <div class="field-select">
+            <label for="utilisateur" class="visually-hidden">Filtrer par utilisateur</label>
+            <select id="utilisateur" class="control" [(ngModel)]="selectedUser" (ngModelChange)="applyFilters()">
+              <option value="">Tous les utilisateurs</option>
+              @for (user of uniqueUsers; track user) {
+                <option [value]="user">{{ user }}</option>
+              }
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <div class="field-date">
+            <label for="date-debut">Du</label>
+            <input id="date-debut" type="date" class="control" [(ngModel)]="dateFrom" (ngModelChange)="applyFilters()">
+          </div>
+
+          <div class="field-date">
+            <label for="date-fin">Au</label>
+            <input id="date-fin" type="date" class="control" [(ngModel)]="dateTo" (ngModelChange)="applyFilters()">
+          </div>
+
+          <button type="button" class="btn btn-secondary" (click)="resetFilters()" [disabled]="!filtresActifs">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Réinitialiser
+          </button>
+        </section>
+
+        <!-- ============ Aucun résultat après filtrage ============ -->
+        @if (historiqueFiltered.length === 0) {
+          <div class="panel empty">
+            <div class="empty-icon" aria-hidden="true">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+              </svg>
+            </div>
+            <h2 class="empty-title">Aucun résultat</h2>
+            <p class="empty-text">Aucune entrée de l'historique ne correspond à vos critères.</p>
+            <button type="button" class="btn btn-primary" (click)="resetFilters()">Réinitialiser les filtres</button>
+          </div>
+        } @else {
+
+          <!-- ============ Journal ============ -->
+          <section id="journal" aria-label="Journal des modifications">
+            <p class="result-count" role="status">
+              {{ pl(historiqueFiltered.length, 'événement') }}@if (historiqueFiltered.length !== historique.length) { sur {{ historique.length }}}
+            </p>
+
+            <ol class="timeline">
+              @for (item of paginatedHistorique; track item.id) {
+                @let cles = getChangedKeys(item);
+                <li class="tl-item">
+                  <span class="tl-dot" [ngClass]="'is-' + item.action.toLowerCase()" aria-hidden="true"></span>
+
+                  <article class="panel entry">
+                    <div class="entry-head">
+                      <span class="pill" [ngClass]="actionPill(item.action)">{{ getActionLabel(item.action) }}</span>
+                      <span class="entry-type">{{ typeLabel(item.entityType) }}</span>
+                      @if (item.entityName) {
+                        <span class="entry-name">{{ item.entityName }}</span>
+                      }
+                    </div>
+
+                    <p class="entry-desc">{{ item.description }}</p>
+
+                    <div class="entry-meta">
+                      <span class="person">
+                        <span class="avatar" aria-hidden="true">{{ initiales(item.username) }}</span>
+                        <span>{{ item.username }}</span>
+                      </span>
+                      <span class="entry-role">{{ getRoleLabel(item.userRole) }}</span>
+                      <time class="entry-date" [attr.datetime]="item.dateModification">{{ item.dateModification | date:'dd/MM/yyyy HH:mm' }}</time>
+                    </div>
+
+                    @if (cles.length > 0) {
+                      <button type="button" class="link-btn details-toggle" (click)="toggleDetails(item.id)"
+                              [attr.aria-expanded]="isExpanded(item.id)" [attr.aria-controls]="'det-' + item.id">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true"
+                             [class.is-open]="isExpanded(item.id)">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                        {{ isExpanded(item.id) ? 'Masquer le détail' : (cles.length > 1 ? 'Voir les ' + cles.length + ' champs concernés' : 'Voir le champ concerné') }}
+                      </button>
+
+                      @if (isExpanded(item.id)) {
+                        <dl class="changes" [id]="'det-' + item.id">
+                          @for (cle of cles; track cle) {
+                            <div class="change">
+                              <dt>{{ libelleChamp(cle) }}</dt>
+                              <dd>
+                                @if (item.anciennesValeurs && item.anciennesValeurs[cle] !== undefined) {
+                                  <span class="val val-avant">
+                                    <span class="val-cap">Avant</span>
+                                    <span class="val-text">{{ formatValue(item.anciennesValeurs[cle]) }}</span>
+                                  </span>
+                                }
+                                @if (item.nouvellesValeurs && item.nouvellesValeurs[cle] !== undefined) {
+                                  <span class="val val-apres">
+                                    <span class="val-cap">Après</span>
+                                    <span class="val-text">{{ formatValue(item.nouvellesValeurs[cle]) }}</span>
+                                  </span>
+                                }
+                              </dd>
+                            </div>
+                          }
+                        </dl>
+                      }
+                    }
+                  </article>
+                </li>
+              }
+            </ol>
+
+            <!-- Pagination -->
+            @if (totalPages > 1) {
+              <nav class="pager" aria-label="Pagination">
+                <button type="button" class="pager-btn" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" aria-label="Page précédente">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                  </svg>
+                </button>
+                @for (page of getPageNumbers(); track $index) {
+                  @if (page === -1) {
+                    <span class="pager-gap" aria-hidden="true">…</span>
+                  } @else {
+                    <button type="button" class="pager-btn" [class.is-current]="currentPage === page"
+                            [attr.aria-current]="currentPage === page ? 'page' : null" [attr.aria-label]="'Page ' + page"
+                            (click)="goToPage(page)">{{ page }}</button>
+                  }
+                }
+                <button type="button" class="pager-btn" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" aria-label="Page suivante">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+              </nav>
+            }
+          </section>
+        }
+      }
+    }
+
+  </div>
+</main>

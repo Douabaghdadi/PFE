@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -20,6 +20,8 @@ const JOUR_MS = 24 * 60 * 60 * 1000;
 const PERIODE_JOURS = 365;
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 const SANS_ROLE = 'SANS_ROLE';
+/** Sur papier, l'activité reste un aperçu : deux colonnes de six lignes. */
+const NB_ACTIVITES_IMPRIMEES = 12;
 
 interface RoleDef {
   key: string;
@@ -30,16 +32,20 @@ interface RoleDef {
 
 /** Ordre = priorité d'affichage du « rôle principal » d'un compte. */
 const ROLE_DEFS: RoleDef[] = [
-  { key: 'ROLE_ADMIN', label: 'Administrateur', court: 'Admin', color: '#ef4444' },
-  { key: 'ROLE_PILOTE_QUALITE', label: 'Pilote qualité', court: 'Pilote', color: '#6366f1' },
-  { key: 'ROLE_CHEF_PROJET', label: 'Chef de projet', court: 'Chef projet', color: '#3b82f6' },
+  { key: 'ROLE_ADMIN', label: 'Administrateur', court: 'Admin', color: '#0f2447' },
+  { key: 'ROLE_PILOTE_QUALITE', label: 'Pilote qualité', court: 'Pilote', color: '#3b6cc4' },
+  { key: 'ROLE_CHEF_PROJET', label: 'Chef de projet', court: 'Chef projet', color: '#09c82c' },
   { key: SANS_ROLE, label: 'Sans rôle', court: 'Sans rôle', color: '#94a3b8' },
 ];
 
+/** Les listes de la page Nomenclature, dans l'ordre des formulaires. */
 const NOMENCLATURE_DEFS: { key: string; label: string }[] = [
-  { key: 'STATUT', label: 'Statuts' },
-  { key: 'CATEGORIE_PROJET', label: 'Catégories de projet' },
-  { key: 'TYPE_FICHE', label: 'Types de fiche' },
+  { key: 'STATUT', label: 'Statut du projet' },
+  { key: 'CARACTERE_PROJET', label: 'Caractère du projet' },
+  { key: 'TYPE_PROJET', label: 'Type de projet' },
+  { key: 'MODALITE_DEVELOPPEMENT', label: 'Modalité de développement' },
+  { key: 'CATEGORIE_PROJET', label: 'Catégorie de projet' },
+  { key: 'STATUT_TACHE', label: 'Statut de tâche' },
 ];
 
 interface UserRow {
@@ -56,16 +62,12 @@ interface UserRow {
   derniereActivite?: string;
 }
 
+/** Indicateur du bandeau : purement informatif, aucune carte n'est cliquable. */
 interface KpiCard {
   key: string;
   title: string;
   value: string;
   hint: string;
-  icon: string;
-  accent: string;
-  /** Sans action, la carte est purement informative et n'est pas cliquable. */
-  action?: 'route';
-  payload?: string;
 }
 
 interface DonutSegment {
@@ -110,7 +112,6 @@ interface ChefStat {
 
 interface ActiviteItem {
   type: 'compte' | 'projet' | 'fiche';
-  icon: string;
   titre: string;
   meta: string;
   date: string;
@@ -124,6 +125,8 @@ interface Attention {
   count: number;
   ton: 'rouge' | 'orange' | 'gris';
   lien?: any[];
+  /** Texte du bouton qui mène à la page où le point se traite. */
+  action?: string;
 }
 
 @Component({
@@ -131,11 +134,12 @@ interface Attention {
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.css']
+  styleUrls: ['../../pilote-qualite/pilote-ui.css', '../../shared/projets-ui.css', '../admin-ui.css', './admin-dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit {
   private adminService = inject(AdminDashboardService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   // --- État ---
   loading = true;
@@ -170,6 +174,9 @@ export class AdminDashboardComponent implements OnInit {
   nomenclaturesActives = 0;
   nomenclaturesInactives = 0;
   activitesCompletes = false;
+  /** Pendant l'impression, la liste des comptes sort en entier et l'activité se limite aux dernières entrées. */
+  impression = false;
+  readonly activitesImprimees = NB_ACTIVITES_IMPRIMEES;
 
   readonly donutCircumference = DONUT_CIRCUMFERENCE;
 
@@ -304,55 +311,35 @@ export class AdminDashboardComponent implements OnInit {
         key: 'comptes',
         title: 'Comptes enregistrés',
         value: String(this.rowsAll.length),
-        hint: sansRole ? `${sansRole} sans rôle attribué` : 'Tous les comptes ont un rôle',
-        icon: '👥',
-        accent: 'blue',
-        action: 'route',
-        payload: '/admin/users',
+        hint: sansRole
+          ? `${sansRole} sans rôle attribué`
+          : `Tous ont un rôle, dont ${this.pl(privilegies, 'administrateur ou pilote', 'administrateurs ou pilotes')}`,
       },
       {
         key: 'nouveaux',
         title: 'Nouvelles inscriptions',
         value: String(this.nouveauxComptes),
-        hint: '12 derniers mois',
-        icon: '✨',
-        accent: 'green',
+        hint: 'Sur les 12 derniers mois',
       },
       {
         key: 'chefs',
         title: 'Chefs de projet',
         value: String(chefs.length),
         hint: chefsSansProjet ? `${chefsSansProjet} sans projet rattaché` : 'Tous ont au moins un projet',
-        icon: '📁',
-        accent: 'indigo',
-      },
-      {
-        key: 'privilegies',
-        title: 'Comptes privilégiés',
-        value: String(privilegies),
-        hint: 'Administrateurs et pilotes qualité',
-        icon: '🛡️',
-        accent: 'red',
       },
       {
         key: 'projets',
-        title: 'Projets de la plateforme',
+        title: 'Projets',
         value: String(this.projets.length),
-        hint: `${this.projetsActifs} en cours · ${projetsSansSuivi} sans fiche de suivi`,
-        icon: '🗂️',
-        accent: 'orange',
+        hint: `${this.projetsActifs} en cours, ${projetsSansSuivi} sans fiche de suivi`,
       },
       {
         key: 'referentiel',
-        title: 'Référentiel',
+        title: 'Nomenclature',
         value: String(this.nomenclaturesActives),
         hint: this.nomenclaturesInactives
-          ? `${this.nomenclaturesInactives} entrée(s) désactivée(s)`
-          : 'Toutes les entrées sont actives',
-        icon: '⚙️',
-        accent: 'gray',
-        action: 'route',
-        payload: '/admin/nomenclature',
+          ? this.pl(this.nomenclaturesInactives, 'désactivée', 'désactivées')
+          : 'Toutes les valeurs sont actives',
       },
     ];
   }
@@ -492,7 +479,6 @@ export class AdminDashboardComponent implements OnInit {
       if (!this.dansPeriode(r.createdAt)) continue;
       items.push({
         type: 'compte',
-        icon: '👤',
         titre: `Nouveau compte : ${r.username}`,
         meta: r.roleLabel,
         date: r.createdAt!,
@@ -504,7 +490,6 @@ export class AdminDashboardComponent implements OnInit {
       if (!this.dansPeriode(p.dateCreation)) continue;
       items.push({
         type: 'projet',
-        icon: '🗂️',
         titre: `Projet créé : ${p.nomProjet || 'Sans nom'}`,
         meta: nomUser.get(p.chefProjetId || '') || p.responsable || 'Chef de projet inconnu',
         date: p.dateCreation!,
@@ -516,7 +501,6 @@ export class AdminDashboardComponent implements OnInit {
       if (!this.dansPeriode(date)) continue;
       items.push({
         type: 'fiche',
-        icon: '📝',
         titre: `Fiche de suivi déposée${f.numeroRapport ? ' n°' + f.numeroRapport : ''}`,
         meta: nomProjet.get(f.ficheProjetId) || 'Projet inconnu',
         date: date!,
@@ -529,6 +513,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   get activitesVisibles(): ActiviteItem[] {
+    if (this.impression) return this.activites.slice(0, NB_ACTIVITES_IMPRIMEES);
     return this.activitesCompletes ? this.activites.slice(0, 40) : this.activites.slice(0, 8);
   }
 
@@ -557,6 +542,7 @@ export class AdminDashboardComponent implements OnInit {
         count: sansRole,
         ton: 'rouge',
         lien: ['/admin/users'],
+        action: 'Voir les comptes',
       },
       {
         key: 'projets-orphelins',
@@ -586,6 +572,7 @@ export class AdminDashboardComponent implements OnInit {
         count: this.nomenclaturesInactives,
         ton: 'gris',
         lien: ['/admin/nomenclature'],
+        action: 'Ouvrir la nomenclature',
       },
       {
         key: 'aucun-pilote',
@@ -594,6 +581,7 @@ export class AdminDashboardComponent implements OnInit {
         count: aucunPilote ? 1 : 0,
         ton: 'rouge',
         lien: ['/admin/users'],
+        action: 'Voir les comptes',
       },
     ];
 
@@ -625,7 +613,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 
   get rowsVisibles(): UserRow[] {
-    return this.tableComplete ? this.rows : this.rows.slice(0, 10);
+    return this.tableComplete || this.impression ? this.rows : this.rows.slice(0, 10);
   }
 
   // ==================== Utilitaires d'affichage ====================
@@ -636,17 +624,35 @@ export class AdminDashboardComponent implements OnInit {
     return isNaN(t) ? 0 : t;
   }
 
+  /** Initiales d'un nom de compte (« mehdi.bouaziz » → MB, « chefprojet » → CH). */
   initiales(nom: string): string {
-    return (nom || '?').slice(0, 2).toUpperCase();
+    const parts = (nom || '').split(/[\s._-]+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return (parts.length === 1 ? parts[0].slice(0, 2) : parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  /** Pastille de rôle : mêmes teintes que la page Utilisateurs. */
+  roleClass(key: string): string {
+    switch (key) {
+      case 'ROLE_ADMIN': return 'role-admin';
+      case 'ROLE_PILOTE_QUALITE': return 'role-pilote';
+      case 'ROLE_CHEF_PROJET': return 'role-chef';
+      default: return 'role-sans';
+    }
+  }
+
+  libelleType(type: ActiviteItem['type']): string {
+    return type === 'compte' ? 'Compte' : (type === 'projet' ? 'Projet' : 'Fiche de suivi');
+  }
+
+  pl(n: number, singulier: string, pluriel = singulier + 's'): string {
+    return `${n} ${n > 1 ? pluriel : singulier}`;
   }
 
   couleurRole(key: string): string {
     return this.roleDef(key).color;
   }
 
-  libelleRoleCourt(key: string): string {
-    return this.roleDef(key).court;
-  }
 
   /** « il y a 3 jours », « aujourd'hui »… pour le flux d'activité. */
   depuis(date?: string): string {
@@ -664,11 +670,20 @@ export class AdminDashboardComponent implements OnInit {
   // ==================== Impression & navigation ====================
 
   imprimer() {
+    this.avantImpression();
     window.print();
   }
 
-  onKpiClick(kpi: KpiCard) {
-    if (kpi.action === 'route') this.router.navigate([kpi.payload!]);
+  // Aussi déclenché par Ctrl+P : le DOM doit être complété avant que le navigateur ne mette en page
+  @HostListener('window:beforeprint')
+  avantImpression() {
+    this.impression = true;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('window:afterprint')
+  apresImpression() {
+    this.impression = false;
   }
 
   navigateTo(lien?: any[]) {

@@ -1,1216 +1,636 @@
-<div class="min-h-screen py-8" style="background: #f8fafc;">
+<main class="page">
+  <div class="page-container is-form">
 
-  <div class="container mx-auto px-4" style="max-width: 1400px;">
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">
+          @if (isEditMode()) { Modifier la fiche de suivi } @else { Nouvelle fiche de suivi }
+        </h1>
+        <p class="page-meta">
+          Rapport de suivi de projet. Les champs marqués d'un <span class="req" aria-hidden="true">*</span><span class="visually-hidden">astérisque</span> sont obligatoires.
+        </p>
+      </div>
 
-    <!-- Header -->
-    <div class="mb-8" style="background: linear-gradient(135deg, #09C82C 0%, #07a625 100%); border-radius: 1.25rem; padding: 1.5rem 2rem; position: relative; overflow: hidden;">
-      <div style="position: absolute; top: -60px; right: -60px; width: 220px; height: 220px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-      <div style="position: absolute; bottom: -40px; left: 30%; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%;"></div>
-      <div class="flex items-center justify-between" style="position: relative; z-index: 1;">
-        <div>
-          <div style="display: inline-flex; align-items: center; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.35); border-radius: 2rem; padding: 0.35rem 1rem; margin-bottom: 0.75rem;">
-            <span style="width: 8px; height: 8px; background: white; border-radius: 50%; margin-right: 0.5rem;"></span>
-            <span style="color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em;">FICHE DE SUIVI</span>
-          </div>
-          <h1 style="color: white; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.25rem;">
-            @if (isEditMode()) { Modifier la Fiche de Suivi } @else { Nouvelle Fiche de Suivi }
-          </h1>
-          <p style="color: rgba(255,255,255,0.85); font-size: 0.9rem; margin: 0;">Rapport de Suivi de Projet</p>
-        </div>
-        <a routerLink="/projets" style="background: white; color: #09C82C; border: none; padding: 0.75rem 1.5rem; border-radius: 0.875rem; font-weight: 700; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 0.95rem;">
-          <i class="fas fa-arrow-left"></i> Retour
+      <div class="page-actions">
+        <a class="btn btn-secondary" routerLink="/projets">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
+          Retour
         </a>
       </div>
-    </div>
+    </header>
 
-
-
-    <!-- Messages -->
-
+    <!-- ============ Messages ============ -->
     @if (errorMessage()) {
-
-      <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-left: 4px solid #ef4444; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
-
-        <div style="display: flex; align-items: center; color: #991b1b;">
-
-          <i class="fas fa-exclamation-circle mr-3" style="font-size: 1.5rem;"></i>
-
-          <span style="font-weight: 600;">{{ errorMessage() }}</span>
-
-        </div>
-
+      <div class="error-banner" role="alert">
+        <span>{{ errorMessage() }}</span>
       </div>
-
     }
-
-
-
     @if (successMessage()) {
-
-      <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-left: 4px solid #10b981; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-
-        <div style="display: flex; align-items: center; color: #065f46;">
-
-          <i class="fas fa-check-circle mr-3" style="font-size: 1.5rem;"></i>
-
-          <span style="font-weight: 600;">{{ successMessage() }}</span>
-
-        </div>
-
+      <div class="notice notice-ok is-banner" role="status">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        {{ successMessage() }}
       </div>
-
     }
 
-
-
-    <!-- Form Card with Luxury Design -->
-
-    <div style="background: white; border-radius: 1.5rem; box-shadow: 0 20px 60px rgba(0,0,0,0.1); overflow: hidden;">
-
-      
-
-      <!-- Tabs Navigation with Modern Design -->
-
-      <div style="background: linear-gradient(to right, #f9fafb 0%, #f3f4f6 100%); border-bottom: 2px solid #e5e7eb; position: relative;">
-
-        <!-- Decorative top border -->
-
-        <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #10b981 0%, #059669 50%, #10b981 100%);"></div>
-
-        
-
-        <nav class="flex space-x-2 px-8 py-2" style="overflow-x: auto;">
-
-          <button 
-
-            (click)="setTab('signaletique')"
-
-            [style.background]="currentTab() === 'signaletique' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-
-            [style.color]="currentTab() === 'signaletique' ? 'white' : '#6b7280'"
-
-            [style.box-shadow]="currentTab() === 'signaletique' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-
-            <i class="fas fa-id-card mr-2"></i>
-
-            I. Fiche Signalétique
-
+    <!-- ============ Étapes ============ -->
+    <nav class="panel steps" aria-label="Étapes de la fiche de suivi">
+      <ol>
+        <li [class.is-current]="currentTab() === 'signaletique'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'signaletique'"
+                  [attr.aria-current]="currentTab() === 'signaletique' ? 'step' : null"
+                  aria-label="Étape 1 : Fiche signalétique" (click)="setTab('signaletique')">
+            <span class="step-num" aria-hidden="true">1</span>
+            <span class="step-label">Fiche signalétique</span>
           </button>
-
-          
-
-          <button 
-
-            (click)="setTab('constat')"
-
-            [style.background]="currentTab() === 'constat' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-
-            [style.color]="currentTab() === 'constat' ? 'white' : '#6b7280'"
-
-            [style.box-shadow]="currentTab() === 'constat' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-
-            <i class="fas fa-clipboard-check mr-2"></i>
-
-            II. Constat Global
-
+        </li>
+        <li [class.is-current]="currentTab() === 'constat'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'constat'"
+                  [attr.aria-current]="currentTab() === 'constat' ? 'step' : null"
+                  aria-label="Étape 2 : Constat global" (click)="setTab('constat')">
+            <span class="step-num" aria-hidden="true">2</span>
+            <span class="step-label">Constat global</span>
           </button>
-
-          
-
-          <button 
-
-            (click)="setTab('taches')"
-
-            [style.background]="currentTab() === 'taches' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent'"
-
-            [style.color]="currentTab() === 'taches' ? 'white' : '#6b7280'"
-
-            [style.box-shadow]="currentTab() === 'taches' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : 'none'"
-
-            style="padding: 1rem 1.5rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.95rem; white-space: nowrap; transition: all 0.3s ease; border: none; cursor: pointer; margin-top: 0.5rem;">
-
-            <i class="fas fa-tasks mr-2"></i>
-
-            III. État d'Avancement
-
+        </li>
+        <li [class.is-current]="currentTab() === 'taches'">
+          <button type="button" class="step" [class.is-current]="currentTab() === 'taches'"
+                  [attr.aria-current]="currentTab() === 'taches' ? 'step' : null"
+                  aria-label="Étape 3 : État d'avancement" (click)="setTab('taches')">
+            <span class="step-num" aria-hidden="true">3</span>
+            <span class="step-label">État d'avancement</span>
           </button>
+        </li>
+      </ol>
+    </nav>
 
+    <form (ngSubmit)="onSubmit()">
 
+      <!-- ============ Étape 1 : fiche signalétique ============ -->
+      @if (currentTab() === 'signaletique') {
 
-        </nav>
+        <!-- Rapport et projet -->
+        <section class="panel" aria-labelledby="t-rapport">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-rapport" class="panel-title">Rapport</h2>
+              <p class="panel-sub">Identification de la fiche de suivi.</p>
+            </div>
+          </div>
 
-      </div>
-
-
-
-      <!-- Form Content -->
-
-      <form (ngSubmit)="onSubmit()" style="padding: 2.5rem;">
-
-        
-
-        <!-- Section I: Fiche Signalétique -->
-
-        @if (currentTab() === 'signaletique') {
-
-          <div class="space-y-6">
-
-            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-
-              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-
-              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-
-                <i class="fas fa-id-card mr-3" style="color: #10b981;"></i>I. Fiche Signalétique
-
-              </h2>
-
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-numero">Numéro de rapport</label>
+              <input id="f-numero" type="text" class="control" [(ngModel)]="ficheSuivi.numeroRapport" name="numeroRapport"
+                     readonly placeholder="Généré automatiquement" aria-describedby="h-numero">
+              <p id="h-numero" class="field-hint">Généré automatiquement.</p>
             </div>
 
-            
-
-            <!-- Info Rapport -->
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-              <div>
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-
-                  <i class="fas fa-hashtag mr-2" style="color: #10b981;"></i>Numéro de Rapport
-
-                  <span style="color: #6b7280; font-size: 0.75rem; font-weight: 400; margin-left: 0.5rem;">(Généré automatiquement)</span>
-
-                </label>
-
-                <input type="text" [(ngModel)]="ficheSuivi.numeroRapport" name="numeroRapport" readonly
-
-                       class="form-control" placeholder="Généré automatiquement"
-
-                       style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease; background-color: #f9fafb; cursor: not-allowed;">
-
-              </div>
-
-              <div>
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-
-                  <i class="fas fa-calendar mr-2" style="color: #10b981;"></i>Date du Rapport
-
-                </label>
-
-                <input type="date" [(ngModel)]="ficheSuivi.dateRapport" name="dateRapport"
-
-                       class="form-control" required
-
-                       [style.border]="hasError('dateRapport') ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-
-                       style="border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;">
-                @if (hasError('dateRapport')) {
-                  <p style="color:#ef4444;font-size:0.78rem;margin-top:0.25rem;font-weight:600;">&#9888; {{ getError('dateRapport') }}</p>
-                }
-
-              </div>
-
+            <div class="field">
+              <label class="field-label" for="f-date">Date du rapport<span class="req" aria-hidden="true">*</span></label>
+              <input id="f-date" type="date" class="control" [(ngModel)]="ficheSuivi.dateRapport" name="dateRapport" required
+                     [class.is-invalid]="hasError('dateRapport')"
+                     [attr.aria-invalid]="hasError('dateRapport') ? 'true' : null"
+                     [attr.aria-describedby]="hasError('dateRapport') ? 'e-date' : null">
+              @if (hasError('dateRapport')) {
+                <p id="e-date" class="field-error" role="alert">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getError('dateRapport') }}
+                </p>
+              }
             </div>
 
-
-
-            <!-- Projet associé -->
-
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
-
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #1e40af; margin-bottom: 0.75rem;">
-
-                <i class="fas fa-project-diagram mr-2" style="color: #3b82f6;"></i>Projet associé
-
-                <span style="color: #ef4444; margin-left: 0.25rem;">*</span>
-
-              </label>
-
-              
-
+            <div class="field span-all">
+              <label class="field-label" for="f-projet">Projet associé<span class="req" aria-hidden="true">*</span></label>
               @if (isLoadingProjets()) {
-
-                <div style="padding: 1rem; text-align: center; color: #3b82f6;">
-
-                  <i class="fas fa-spinner fa-spin mr-2"></i>Chargement des projets...
-
-                </div>
-
+                <p class="field-hint" role="status">Chargement des projets…</p>
               } @else {
-
-                <select [(ngModel)]="ficheSuivi.ficheProjetId" name="ficheProjetId" required
-
-                        (change)="onProjetChange()"
-
-                        [disabled]="isEditMode()"
-
-                        style="width: 100%; border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white; font-size: 0.95rem; transition: all 0.3s ease; cursor: pointer; font-weight: 500;"
-
-                        [style.border-color]="hasError('ficheProjetId') ? '#ef4444' : '#bfdbfe'"
-
-                        [style.background-color]="isEditMode() ? '#f9fafb' : 'white'"
-
-                        [style.cursor]="isEditMode() ? 'not-allowed' : 'pointer'">
-
-                  <option value="" disabled selected style="color: #9ca3af;">-- Sélectionnez un projet --</option>
-
-                  @for (projet of projets(); track projet.id) {
-
-                    <option [value]="projet.id" style="color: #374151; font-weight: 500;">
-
-                      {{ projet.nomProjet || projet.designationProjet }}
-
-                    </option>
-
-                  }
-
-                </select>
-                @if (hasError('ficheProjetId')) {
-                  <p style="color:#ef4444;font-size:0.78rem;margin-top:0.25rem;font-weight:600;">&#9888; {{ getError('ficheProjetId') }}</p>
-                }
-
-                
-
-                @if (isEditMode()) {
-
-                  <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
-
-                    <i class="fas fa-info-circle mr-1"></i>
-
-                    Le projet ne peut pas être modifié en mode édition
-
-                  </small>
-
-                } @else {
-
-                  <small style="display: block; margin-top: 0.5rem; color: #6b7280; font-size: 0.8rem;">
-
-                    <i class="fas fa-info-circle mr-1"></i>
-
-                    Sélectionnez le projet pour lequel vous créez cette fiche de suivi
-
-                  </small>
-
-                }
-
-              }
-
-            </div>
-
-
-
-            <!-- Experts -->
-
-            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #fcd34d;">
-
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-
-                <h3 style="font-weight: 700; color: #78350f; margin: 0; font-size: 1.1rem;">
-
-                  <i class="fas fa-user-graduate mr-2"></i>Experts
-
-                </h3>
-
-                <button type="button" (click)="addExpert()"
-
-                        style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3); display: inline-flex; align-items: center; font-size: 0.875rem;"
-
-                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(245, 158, 11, 0.4)';"
-
-                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.3)';">
-
-                  <i class="fas fa-plus mr-2"></i>Ajouter un expert
-
-                </button>
-
-              </div>
-
-
-
-              @if (!ficheSuivi.ficheSignaletique.experts || ficheSuivi.ficheSignaletique.experts.length === 0) {
-
-                <div style="background: white; padding: 2rem; border-radius: 0.75rem; text-align: center; border: 2px dashed #fcd34d;">
-
-                  <i class="fas fa-user-graduate" style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 1rem;"></i>
-
-                  <p style="color: #78350f; margin: 0; font-weight: 500;">Aucun expert ajouté. Cliquez sur "Ajouter un expert" pour commencer.</p>
-
-                </div>
-
-              } @else {
-
-                <div class="space-y-3">
-
-                  @for (expert of ficheSuivi.ficheSignaletique.experts; track $index) {
-
-                    <div style="background: white; padding: 1rem; border-radius: 0.75rem; border: 2px solid #fcd34d; display: flex; gap: 0.75rem; align-items: center; transition: all 0.3s ease;"
-
-                         onmouseover="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 2px 8px rgba(245, 158, 11, 0.2)';"
-
-                         onmouseout="this.style.borderColor='#fcd34d'; this.style.boxShadow='none';">
-
-                      <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-
-                        <i class="fas fa-user-graduate" style="color: #f59e0b; font-size: 1.1rem;"></i>
-
-                      </div>
-
-                      <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.experts[$index]" 
-
-                             [name]="'expert_' + $index"
-
-                             placeholder="Nom de l'expert (ex: Dr. Jean Dupont - Spécialiste en...)"
-
-                             style="flex: 1; border: 2px solid #fcd34d; border-radius: 0.5rem; padding: 0.75rem 1rem; background: white; transition: all 0.3s ease;"
-
-                             onfocus="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 3px rgba(245, 158, 11, 0.1)';"
-
-                             onblur="this.style.borderColor='#fcd34d'; this.style.boxShadow='none';">
-
-                      <button type="button" (click)="removeExpert($index)"
-
-                              style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3); flex-shrink: 0;"
-
-                              onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.4)';"
-
-                              onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 6px rgba(239, 68, 68, 0.3)';">
-
-                        <i class="fas fa-trash" style="font-size: 1rem;"></i>
-
-                      </button>
-
-                    </div>
-
-                  }
-
-                </div>
-
-              }
-
-              
-
-              <small style="display: block; margin-top: 1rem; color: #78350f; font-size: 0.8rem;">
-
-                <i class="fas fa-info-circle mr-1"></i>
-
-                Ajoutez les experts impliqués dans le projet (nom, spécialité, etc.)
-
-              </small>
-
-            </div>
-
-
-
-            <!-- Délais -->
-
-            <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #bfdbfe;">
-
-              <h3 style="font-weight: 700; color: #1e40af; margin-bottom: 1rem; font-size: 1.1rem;">
-
-                <i class="fas fa-clock mr-2"></i>Délais
-
-              </h3>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Prévision)</label>
-
-                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutPrevision" name="dateDebutPrevision" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Prévision)</label>
-
-                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinPrevision" name="dateFinPrevision" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Durée (Mois)</label>
-
-                  <input type="number" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dureeEnMois" name="dureeEnMois" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Début (Réalisation)</label>
-
-                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutRealisation" name="dateDebutRealisation" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Date Fin (Réalisation)</label>
-
-                  <input type="date" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinRealisation" name="dateFinRealisation" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart Conv. (jours)</label>
-
-                  <input type="number" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.ecartConventionnel" name="ecartConventionnel" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #bfdbfe; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed;">
-
-                </div>
-
-              </div>
-
-              <small style="display: block; margin-top: 0.75rem; color: #6b7280; font-size: 0.8rem;">
-
-                <i class="fas fa-info-circle mr-1"></i>Rempli automatiquement depuis la fiche projet
-
-              </small>
-
-            </div>
-
-
-
-            <!-- Financier -->
-
-            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 1.5rem; border-radius: 1rem; border: 2px solid #d1fae5;">
-
-              <h3 style="font-weight: 700; color: #065f46; margin-bottom: 1rem; font-size: 1.1rem;">
-
-                <i class="fas fa-dollar-sign mr-2"></i>Financier (Budget en MD/HT)
-
-              </h3>
-
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Prévision</label>
-
-                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetPrevision" name="budgetPrevision"
-
-                         (ngModelChange)="calculerEcartBudget()"
-
-                         class="form-control"
-
-                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-
-                  <p style="font-size: 0.75rem; color: #6b7280; margin: 0.35rem 0 0;">{{ enDinars(ficheSuivi.ficheSignaletique.financier.budgetPrevision) }}</p>
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Réalisation</label>
-
-                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetRealisation" name="budgetRealisation"
-
-                         (ngModelChange)="calculerEcartBudget()"
-
-                         class="form-control"
-
-                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: white;">
-
-                  <p style="font-size: 0.75rem; color: #6b7280; margin: 0.35rem 0 0;">{{ enDinars(ficheSuivi.ficheSignaletique.financier.budgetRealisation) }}</p>
-
-                </div>
-
-                <div>
-
-                  <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">Écart</label>
-
-                  <input type="number" step="0.01" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.ecart" name="ecart" readonly
-
-                         class="form-control"
-
-                         style="border: 2px solid #d1fae5; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb;">
-
-                  <p style="font-size: 0.75rem; color: #6b7280; margin: 0.35rem 0 0;">Calculé : prévision − réalisation</p>
-
-                </div>
-
-              </div>
-
-              @if (previsionHorsCadrage()) {
-
-                <div style="margin-top: 1rem; background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; padding: 0.75rem 1rem; border-radius: 0.75rem; font-size: 0.875rem;">
-
-                  <i class="fas fa-exclamation-triangle mr-2"></i>La prévision s'écarte fortement du budget cadré dans la fiche projet ({{ budgetCadre() }} MD, soit {{ enDinars(budgetCadre()) }}). Les montants se saisissent en millions de dinars.
-
-                </div>
-
-              }
-
-            </div>
-
-
-
-            <!-- Description du projet -->
-
-            <div>
-
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-
-                <i class="fas fa-align-left mr-2" style="color: #10b981;"></i>Description du Projet
-
-              </label>
-
-              <textarea [(ngModel)]="ficheSuivi.ficheSignaletique.descriptionProjet" name="descriptionProjet"
-
-                        rows="4" class="form-control" readonly
-
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; background: #f9fafb; cursor: not-allowed; resize: none;"></textarea>
-
-            </div>
-
-
-
-            <!-- Caractéristiques Techniques -->
-
-            <div>
-
-              <div class="flex items-center justify-between mb-3">
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-
-                  <i class="fas fa-cogs mr-2" style="color: #10b981;"></i>Caractéristiques Techniques
-
-                </label>
-
-                <button type="button" (click)="addCaracteristique()" 
-
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-
-                  <i class="fas fa-plus mr-2"></i> Ajouter
-
-                </button>
-
-              </div>
-
-              @for (carac of ficheSuivi.ficheSignaletique.caracteristiquesTechniques; track $index) {
-
-                <div class="flex gap-2 mb-2">
-
-                  <input type="text" [(ngModel)]="ficheSuivi.ficheSignaletique.caracteristiquesTechniques[$index]" 
-
-                         [name]="'carac' + $index" class="form-control"
-
-                         style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;">
-
-                  <button type="button" (click)="removeCaracteristique($index)" 
-
-                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
-
-                    <i class="fas fa-trash"></i>
-
-                  </button>
-
-                </div>
-
-              }
-
-            </div>
-
-          </div>
-
-        }
-
-
-
-        <!-- Section II: Constat Global -->
-
-        @if (currentTab() === 'constat') {
-
-          <div class="space-y-6">
-
-            <div style="display: flex; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-
-              <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-
-              <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-
-                <i class="fas fa-clipboard-check mr-3" style="color: #10b981;"></i>II. Constat Global
-
-              </h2>
-
-            </div>
-
-            
-
-            <div>
-
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-
-                <i class="fas fa-chart-line mr-2" style="color: #10b981;"></i>État d'Avancement
-
-              </label>
-
-              <textarea [(ngModel)]="ficheSuivi.constatGlobal.etatAvancement" name="etatAvancement"
-
-                        rows="3" class="form-control"
-
-                        [style.border]="hasError('etatAvancement') ? '2px solid #ef4444' : '2px solid #e5e7eb'"
-
-                        style="border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;"></textarea>
-              @if (hasError('etatAvancement')) {
-                <p style="color:#ef4444;font-size:0.78rem;margin-top:0.25rem;font-weight:600;">&#9888; {{ getError('etatAvancement') }}</p>
-              }
-
-            </div>
-
-
-
-            <div>
-
-              <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem;">
-
-                <i class="fas fa-bullseye mr-2" style="color: #10b981;"></i>Objectif Principal
-
-              </label>
-
-              <textarea [(ngModel)]="ficheSuivi.constatGlobal.objectifPrincipal" name="objectifPrincipal"
-
-                        rows="3" class="form-control"
-
-                        style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.3s ease;"></textarea>
-
-            </div>
-
-
-
-            <!-- Problèmes Rencontrés -->
-
-            <div>
-
-              <div class="flex items-center justify-between mb-3">
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-
-                  <i class="fas fa-exclamation-triangle mr-2" style="color: #f59e0b;"></i>Les Problèmes Rencontrés
-
-                </label>
-
-                <button type="button" (click)="addProbleme()" 
-
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-
-                  <i class="fas fa-plus mr-2"></i> Ajouter
-
-                </button>
-
-              </div>
-
-              @for (prob of ficheSuivi.constatGlobal.problemesRencontres; track $index) {
-
-                <div class="flex gap-2 mb-2">
-
-                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.problemesRencontres[$index]" 
-
-                           [name]="'prob' + $index" rows="2" class="form-control"
-
-                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
-
-                  <button type="button" (click)="removeProbleme($index)" 
-
-                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
-
-                    <i class="fas fa-trash"></i>
-
-                  </button>
-
-                </div>
-
-              }
-
-            </div>
-
-
-
-            <!-- Principaux Risques -->
-
-            <div>
-
-              <div class="flex items-center justify-between mb-3">
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-
-                  <i class="fas fa-shield-alt mr-2" style="color: #ef4444;"></i>Les Principaux Risques
-
-                </label>
-
-                <button type="button" (click)="addRisque()" 
-
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-
-                  <i class="fas fa-plus mr-2"></i> Ajouter
-
-                </button>
-
-              </div>
-
-              @for (risque of ficheSuivi.constatGlobal.principauxRisques; track $index) {
-
-                <div class="flex gap-2 mb-2">
-
-                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.principauxRisques[$index]" 
-
-                           [name]="'risque' + $index" rows="2" class="form-control"
-
-                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
-
-                  <button type="button" (click)="removeRisque($index)" 
-
-                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
-
-                    <i class="fas fa-trash"></i>
-
-                  </button>
-
-                </div>
-
-              }
-
-            </div>
-
-
-
-            <!-- Recommandations -->
-
-            <div>
-
-              <div class="flex items-center justify-between mb-3">
-
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #374151;">
-
-                  <i class="fas fa-lightbulb mr-2" style="color: #10b981;"></i>Les Recommandations
-
-                </label>
-
-                <button type="button" (click)="addRecommandation()" 
-
-                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-
-                  <i class="fas fa-plus mr-2"></i> Ajouter
-
-                </button>
-
-              </div>
-
-              @for (reco of ficheSuivi.constatGlobal.recommandations; track $index) {
-
-                <div class="flex gap-2 mb-2">
-
-                  <textarea [(ngModel)]="ficheSuivi.constatGlobal.recommandations[$index]" 
-
-                           [name]="'reco' + $index" rows="2" class="form-control"
-
-                           style="border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 0.75rem 1rem; flex: 1;"></textarea>
-
-                  <button type="button" (click)="removeRecommandation($index)" 
-
-                          style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.75rem 1rem; border-radius: 0.75rem; cursor: pointer; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);">
-
-                    <i class="fas fa-trash"></i>
-
-                  </button>
-
-                </div>
-
-              }
-
-            </div>
-
-          </div>
-
-        }
-
-
-
-        <!-- Section III: Tâches de Suivi -->
-
-        @if (currentTab() === 'taches') {
-
-          <div class="space-y-4">
-
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #e5e7eb;">
-
-              <div style="display: flex; align-items: center;">
-
-                <div style="width: 4px; height: 2.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 1rem;"></div>
-
-                <h2 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0;">
-
-                  <i class="fas fa-tasks mr-3" style="color: #10b981;"></i>III. État d'Avancement Global du Projet
-
-                </h2>
-
-              </div>
-
-              <button type="button" (click)="addTache()"
-
-                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
-
-                <i class="fas fa-plus mr-2"></i> Ajouter une Tâche
-
-              </button>
-
-            </div>
-
-
-
-            <div style="overflow-x: auto; border-radius: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-
-              <table style="min-width: 100%; background: white; border-collapse: separate; border-spacing: 0;">
-
-                <thead style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);">
-
-                  <tr>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Code</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Sujet</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Livrable</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Assigné à</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Début</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Échéance</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">%</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: left;">Statut</th>
-
-                    <th style="padding: 1rem; border: 1px solid #d1fae5; font-weight: 700; color: #065f46; text-align: center;">Actions</th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  @for (tache of ficheSuivi.tachesSuivi; track $index) {
-
-                    @if (tache.estTitre) {
-
-                    <tr style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);">
-
-                      <td colspan="8" style="padding: 0.75rem 1rem; border: 1px solid #e5e7eb;">
-
-                        <input type="text" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index"
-
-                               placeholder="Titre de l'action (issu du planning de la fiche de projet)"
-
-                               style="width: 100%; border: none; background: transparent; font-weight: 700; font-size: 1rem; color: #065f46;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center; white-space: nowrap;">
-
-                        <button type="button" (click)="addSousTache($index)" title="Ajouter un sous-titre détaillé"
-
-                                style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.5rem 0.65rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3); margin-right: 0.35rem;">
-
-                          <i class="fas fa-plus"></i>
-
-                        </button>
-
-                        <button type="button" (click)="removeTache($index)"
-
-                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.65rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
-
-                          <i class="fas fa-trash"></i>
-
-                        </button>
-
-                      </td>
-
-                    </tr>
-
-                    } @else {
-
-                    <tr style="transition: all 0.2s ease;">
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="text" [(ngModel)]="tache.code" [name]="'tacheCode' + $index"
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="text" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index" 
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="text" [(ngModel)]="tache.livrable" [name]="'tacheLivrable' + $index" 
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="text" [(ngModel)]="tache.assigneA" [name]="'tacheAssigne' + $index" 
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="date" [(ngModel)]="tache.debut" [name]="'tacheDebut' + $index" 
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="date" [(ngModel)]="tache.echeance" [name]="'tacheEcheance' + $index" 
-
-                               style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <input type="number" [(ngModel)]="tache.pourcentageRealise" [name]="'tachePourcent' + $index" 
-
-                               min="0" max="100" style="width: 70px; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb;">
-
-                        <select [(ngModel)]="tache.statut" [name]="'tacheStatut' + $index" 
-
-                                style="width: 100%; border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem; font-size: 0.875rem;">
-
-                          <option value="En cours">En cours</option>
-
-                          <option value="Terminé">Terminé</option>
-
-                          <option value="En retard">En retard</option>
-
-                          <option value="Bloqué">Bloqué</option>
-
-                        </select>
-
-                      </td>
-
-                      <td style="padding: 0.75rem; border: 1px solid #e5e7eb; text-align: center;">
-
-                        <button type="button" (click)="removeTache($index)" 
-
-                                style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
-
-                          <i class="fas fa-trash"></i>
-
-                        </button>
-
-                      </td>
-
-                    </tr>
-
+                <div class="select-wrap">
+                  <select id="f-projet" class="control" [(ngModel)]="ficheSuivi.ficheProjetId" name="ficheProjetId" required
+                          (change)="onProjetChange()" [disabled]="isEditMode()"
+                          [class.is-invalid]="hasError('ficheProjetId')"
+                          [attr.aria-invalid]="hasError('ficheProjetId') ? 'true' : null"
+                          [attr.aria-describedby]="hasError('ficheProjetId') ? 'e-projet h-projet' : 'h-projet'">
+                    <option value="" disabled>-- Sélectionnez un projet --</option>
+                    @for (projet of projets(); track projet.id) {
+                      <option [value]="projet.id">{{ projet.nomProjet || projet.designationProjet }}</option>
                     }
-
+                  </select>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+                @if (hasError('ficheProjetId')) {
+                  <p id="e-projet" class="field-error" role="alert">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ getError('ficheProjetId') }}
+                  </p>
+                }
+                <p id="h-projet" class="field-hint">
+                  @if (isEditMode()) {
+                    Le projet ne peut pas être modifié en mode édition.
+                  } @else {
+                    Sélectionnez le projet pour lequel vous créez cette fiche de suivi.
                   }
+                </p>
+              }
+            </div>
+          </div>
+        </section>
 
-                </tbody>
+        <!-- Experts -->
+        <section class="panel" aria-labelledby="t-experts">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-experts" class="panel-title">Experts</h2>
+              <p class="panel-sub">Les experts impliqués dans le projet (nom, spécialité…).</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addExpert()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter un expert
+            </button>
+          </div>
 
-              </table>
+          @if (!ficheSuivi.ficheSignaletique.experts || ficheSuivi.ficheSignaletique.experts.length === 0) {
+            <p class="items-empty">Aucun expert ajouté.</p>
+          } @else {
+            <div class="items">
+              @for (expert of ficheSuivi.ficheSignaletique.experts; track $index) {
+                <div class="item">
+                  <input type="text" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.experts[$index]"
+                         [name]="'expert_' + $index" [attr.aria-label]="'Expert ' + ($index + 1)"
+                         placeholder="Nom et spécialité de l'expert">
+                  <button type="button" class="icon-btn is-danger" (click)="removeExpert($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer l\'expert ' + ($index + 1)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
 
+        <!-- Délais -->
+        <section class="panel" aria-labelledby="t-delais">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-delais" class="panel-title">Délais</h2>
+              <p class="panel-sub">Repris de la fiche projet, non modifiables ici.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-3">
+            <div class="field">
+              <label class="field-label" for="f-debut-prev">Début (prévision)</label>
+              <input id="f-debut-prev" type="date" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutPrevision" name="dateDebutPrevision" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-fin-prev">Fin (prévision)</label>
+              <input id="f-fin-prev" type="date" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinPrevision" name="dateFinPrevision" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-duree">Durée (mois)</label>
+              <input id="f-duree" type="number" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dureeEnMois" name="dureeEnMois" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-debut-real">Début (réalisation)</label>
+              <input id="f-debut-real" type="date" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateDebutRealisation" name="dateDebutRealisation" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-fin-real">Fin (réalisation)</label>
+              <input id="f-fin-real" type="date" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.dateFinRealisation" name="dateFinRealisation" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-ecart-conv">Écart conventionnel (jours)</label>
+              <input id="f-ecart-conv" type="number" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.delais.ecartConventionnel" name="ecartConventionnel" readonly>
+            </div>
+          </div>
+        </section>
+
+        <!-- Financier -->
+        <section class="panel" aria-labelledby="t-financier">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-financier" class="panel-title">Financier</h2>
+              <p class="panel-sub">Budget en millions de dinars hors taxes (MD/HT).</p>
+            </div>
+          </div>
+
+          <div class="fields cols-3">
+            <div class="field">
+              <label class="field-label" for="f-prevision">Prévision</label>
+              <input id="f-prevision" type="number" step="0.01" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetPrevision"
+                     name="budgetPrevision" (ngModelChange)="calculerEcartBudget()" aria-describedby="h-prevision">
+              <p id="h-prevision" class="field-hint">{{ enDinars(ficheSuivi.ficheSignaletique.financier.budgetPrevision) || ' ' }}</p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-realisation">Réalisation</label>
+              <input id="f-realisation" type="number" step="0.01" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.budgetRealisation"
+                     name="budgetRealisation" (ngModelChange)="calculerEcartBudget()" aria-describedby="h-realisation">
+              <p id="h-realisation" class="field-hint">{{ enDinars(ficheSuivi.ficheSignaletique.financier.budgetRealisation) || ' ' }}</p>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-ecart">Écart</label>
+              <input id="f-ecart" type="number" step="0.01" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.financier.ecart"
+                     name="ecart" readonly aria-describedby="h-ecart">
+              <p id="h-ecart" class="field-hint">Calculé : prévision − réalisation.</p>
+            </div>
+          </div>
+
+          @if (previsionHorsCadrage()) {
+            <div class="notice notice-warn" role="status">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+              </svg>
+              <span>La prévision s'écarte fortement du budget cadré dans la fiche projet ({{ budgetCadre() }} MD, soit {{ enDinars(budgetCadre()) }}). Les montants se saisissent en millions de dinars.</span>
+            </div>
+          }
+        </section>
+
+        <!-- Description du projet -->
+        <section class="panel" aria-labelledby="t-description">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-description" class="panel-title">Description du projet</h2>
+              <p class="panel-sub">Reprise de la présentation de la fiche projet, non modifiable ici.</p>
+            </div>
+          </div>
+          <label class="visually-hidden" for="f-description">Description du projet</label>
+          <textarea id="f-description" class="control" rows="4" [(ngModel)]="ficheSuivi.ficheSignaletique.descriptionProjet"
+                    name="descriptionProjet" readonly></textarea>
+        </section>
+
+        <!-- Caractéristiques techniques -->
+        <section class="panel" aria-labelledby="t-carac">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-carac" class="panel-title">Caractéristiques techniques</h2>
+              <p class="panel-sub">Technologies, architecture, contraintes…</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addCaracteristique()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter une caractéristique
+            </button>
+          </div>
+
+          @if (ficheSuivi.ficheSignaletique.caracteristiquesTechniques.length === 0) {
+            <p class="items-empty">Aucune caractéristique ajoutée.</p>
+          } @else {
+            <div class="items">
+              @for (carac of ficheSuivi.ficheSignaletique.caracteristiquesTechniques; track $index) {
+                <div class="item">
+                  <input type="text" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.caracteristiquesTechniques[$index]"
+                         [name]="'carac' + $index" [attr.aria-label]="'Caractéristique technique ' + ($index + 1)">
+                  <button type="button" class="icon-btn is-danger" (click)="removeCaracteristique($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer la caractéristique ' + ($index + 1)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      <!-- ============ Étape 2 : constat global ============ -->
+      @if (currentTab() === 'constat') {
+
+        <section class="panel" aria-labelledby="t-constat">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-constat" class="panel-title">Constat global</h2>
+              <p class="panel-sub">Où en est le projet et quel est son objectif principal.</p>
+            </div>
+          </div>
+
+          <div class="fields">
+            <div class="field">
+              <label class="field-label" for="f-etat">État d'avancement<span class="req" aria-hidden="true">*</span></label>
+              <textarea id="f-etat" class="control" rows="3" [(ngModel)]="ficheSuivi.constatGlobal.etatAvancement" name="etatAvancement"
+                        [class.is-invalid]="hasError('etatAvancement')"
+                        [attr.aria-invalid]="hasError('etatAvancement') ? 'true' : null"
+                        [attr.aria-describedby]="hasError('etatAvancement') ? 'e-etat' : null"></textarea>
+              @if (hasError('etatAvancement')) {
+                <p id="e-etat" class="field-error" role="alert">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getError('etatAvancement') }}
+                </p>
+              }
             </div>
 
+            <div class="field">
+              <label class="field-label" for="f-objectif">Objectif principal</label>
+              <textarea id="f-objectif" class="control" rows="3" [(ngModel)]="ficheSuivi.constatGlobal.objectifPrincipal" name="objectifPrincipal"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Problèmes rencontrés -->
+        <section class="panel" aria-labelledby="t-problemes">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-problemes" class="panel-title"><span class="dot is-warn" aria-hidden="true"></span>Problèmes rencontrés</h2>
+              <p class="panel-sub">Ce qui freine ou bloque l'avancement.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addProbleme()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter un problème
+            </button>
           </div>
 
-        }
+          @if (ficheSuivi.constatGlobal.problemesRencontres.length === 0) {
+            <p class="items-empty">Aucun problème signalé.</p>
+          } @else {
+            <div class="items">
+              @for (prob of ficheSuivi.constatGlobal.problemesRencontres; track $index) {
+                <div class="item">
+                  <textarea class="control" rows="2" [(ngModel)]="ficheSuivi.constatGlobal.problemesRencontres[$index]"
+                            [name]="'prob' + $index" [attr.aria-label]="'Problème ' + ($index + 1)"></textarea>
+                  <button type="button" class="icon-btn is-danger" (click)="removeProbleme($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer le problème ' + ($index + 1)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
 
-
-
-
-
-
-
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 3rem; padding-top: 2rem; border-top: 2px solid #e5e7eb;">
-
-          <div style="display: flex; gap: 1rem;">
-
-            <a routerLink="/projets" 
-
-               style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); color: #374151; border: 2px solid #d1d5db; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-
-              <i class="fas fa-times mr-2"></i>
-
-              Annuler
-
-            </a>
-
-            @if (!isFirstTab()) {
-
-              <button type="button" (click)="previousTab()" 
-
-                      style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 0.875rem 1.75rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-
-                <i class="fas fa-arrow-left mr-2"></i>
-
-                Précédent
-
-              </button>
-
-            }
-
+        <!-- Principaux risques -->
+        <section class="panel" aria-labelledby="t-risques">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-risques" class="panel-title"><span class="dot is-danger" aria-hidden="true"></span>Principaux risques</h2>
+              <p class="panel-sub">Ce qui pourrait compromettre le projet à venir.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addRisque()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter un risque
+            </button>
           </div>
 
-          
+          @if (ficheSuivi.constatGlobal.principauxRisques.length === 0) {
+            <p class="items-empty">Aucun risque identifié.</p>
+          } @else {
+            <div class="items">
+              @for (risque of ficheSuivi.constatGlobal.principauxRisques; track $index) {
+                <div class="item">
+                  <textarea class="control" rows="2" [(ngModel)]="ficheSuivi.constatGlobal.principauxRisques[$index]"
+                            [name]="'risque' + $index" [attr.aria-label]="'Risque ' + ($index + 1)"></textarea>
+                  <button type="button" class="icon-btn is-danger" (click)="removeRisque($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer le risque ' + ($index + 1)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
 
-          <div style="display: flex; gap: 1rem;">
-
-            @if (!isLastTab()) {
-
-              <button type="button" (click)="nextTab()" 
-
-                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
-
-                Suivant
-
-                <i class="fas fa-arrow-right ml-2"></i>
-
-              </button>
-
-            } @else {
-
-              <button type="submit" [disabled]="isLoading()"
-
-                      [style.opacity]="isLoading() ? '0.6' : '1'"
-
-                      [style.cursor]="isLoading() ? 'not-allowed' : 'pointer'"
-
-                      style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.875rem 2rem; border-radius: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); font-size: 1rem;">
-
-                @if (isLoading()) {
-
-                  <span style="display: inline-block; width: 1rem; height: 1rem; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; margin-right: 0.5rem;"></span>
-
-                  Enregistrement...
-
-                } @else {
-
-                  <i class="fas fa-save mr-2"></i>
-
-                  Enregistrer la Fiche de Suivi
-
-                }
-
-              </button>
-
-            }
-
+        <!-- Recommandations -->
+        <section class="panel" aria-labelledby="t-reco">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-reco" class="panel-title"><span class="dot is-ok" aria-hidden="true"></span>Recommandations</h2>
+              <p class="panel-sub">Les actions conseillées pour la suite.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addRecommandation()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter une recommandation
+            </button>
           </div>
 
+          @if (ficheSuivi.constatGlobal.recommandations.length === 0) {
+            <p class="items-empty">Aucune recommandation.</p>
+          } @else {
+            <div class="items">
+              @for (reco of ficheSuivi.constatGlobal.recommandations; track $index) {
+                <div class="item">
+                  <textarea class="control" rows="2" [(ngModel)]="ficheSuivi.constatGlobal.recommandations[$index]"
+                            [name]="'reco' + $index" [attr.aria-label]="'Recommandation ' + ($index + 1)"></textarea>
+                  <button type="button" class="icon-btn is-danger" (click)="removeRecommandation($index)"
+                          title="Supprimer" [attr.aria-label]="'Supprimer la recommandation ' + ($index + 1)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      <!-- ============ Étape 3 : état d'avancement ============ -->
+      @if (currentTab() === 'taches') {
+
+        <section class="panel" aria-labelledby="t-taches">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-taches" class="panel-title">État d'avancement global du projet</h2>
+              <p class="panel-sub">Une ligne par tâche. Les titres viennent du planning de la fiche projet ; le + d'un titre ajoute une sous-tâche.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-add" (click)="addTache()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+              </svg>
+              Ajouter une tâche
+            </button>
+          </div>
+
+          @if (ficheSuivi.tachesSuivi.length === 0) {
+            <p class="items-empty">Aucune tâche pour le moment. Ajoutez une tâche pour commencer.</p>
+          } @else {
+            <div class="table-wrap">
+              <table class="tasks">
+                <caption class="visually-hidden">Tâches de suivi du projet</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-code">Code</th>
+                    <th scope="col" class="col-sujet">Sujet</th>
+                    <th scope="col" class="col-livrable">Livrable</th>
+                    <th scope="col" class="col-assigne">Assigné à</th>
+                    <th scope="col" class="col-date">Début</th>
+                    <th scope="col" class="col-date">Échéance</th>
+                    <th scope="col" class="col-pct">% réalisé</th>
+                    <th scope="col" class="col-statut">Statut</th>
+                    <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (tache of ficheSuivi.tachesSuivi; track $index) {
+                    @if (tache.estTitre) {
+                      <tr class="is-title">
+                        <td colspan="8" class="cell-sujet">
+                          <input type="text" class="title-input" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index"
+                                 [class.is-invalid]="hasError('tacheSujet_' + $index)"
+                                 [attr.aria-label]="'Titre de l\'action ' + ($index + 1)"
+                                 [attr.aria-invalid]="hasError('tacheSujet_' + $index) ? 'true' : null"
+                                 [attr.aria-describedby]="hasError('tacheSujet_' + $index) ? 'e-sujet-' + $index : null"
+                                 placeholder="Titre de l'action (issu du planning de la fiche de projet)">
+                          @if (hasError('tacheSujet_' + $index)) {
+                            <p [id]="'e-sujet-' + $index" class="field-error" role="alert">{{ getError('tacheSujet_' + $index) }}</p>
+                          }
+                        </td>
+                        <td class="cell-actions">
+                          <button type="button" class="icon-btn" (click)="addSousTache($index)"
+                                  title="Ajouter une sous-tâche détaillée" [attr.aria-label]="'Ajouter une sous-tâche sous l\'action ' + ($index + 1)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+                            </svg>
+                          </button>
+                          <button type="button" class="icon-btn is-danger" (click)="removeTache($index)"
+                                  title="Supprimer" [attr.aria-label]="'Supprimer l\'action ' + ($index + 1)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    } @else {
+                      <tr>
+                        <td class="cell-code" data-label="Code">
+                          <input type="text" class="control" [(ngModel)]="tache.code" [name]="'tacheCode' + $index"
+                                 [attr.aria-label]="'Code de la tâche ' + ($index + 1)">
+                        </td>
+                        <td class="cell-sujet" data-label="Sujet">
+                          <input type="text" class="control" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index"
+                                 [class.is-invalid]="hasError('tacheSujet_' + $index)"
+                                 [attr.aria-label]="'Sujet de la tâche ' + ($index + 1)"
+                                 [attr.aria-invalid]="hasError('tacheSujet_' + $index) ? 'true' : null"
+                                 [attr.aria-describedby]="hasError('tacheSujet_' + $index) ? 'e-sujet-' + $index : null">
+                          @if (hasError('tacheSujet_' + $index)) {
+                            <p [id]="'e-sujet-' + $index" class="field-error" role="alert">{{ getError('tacheSujet_' + $index) }}</p>
+                          }
+                        </td>
+                        <td class="cell-livrable" data-label="Livrable">
+                          <input type="text" class="control" [(ngModel)]="tache.livrable" [name]="'tacheLivrable' + $index"
+                                 [attr.aria-label]="'Livrable de la tâche ' + ($index + 1)">
+                        </td>
+                        <td class="cell-assigne" data-label="Assigné à">
+                          <input type="text" class="control" [(ngModel)]="tache.assigneA" [name]="'tacheAssigne' + $index"
+                                 [attr.aria-label]="'Responsable de la tâche ' + ($index + 1)">
+                        </td>
+                        <td class="cell-debut" data-label="Début">
+                          <input type="date" class="control" [(ngModel)]="tache.debut" [name]="'tacheDebut' + $index"
+                                 [attr.aria-label]="'Date de début de la tâche ' + ($index + 1)">
+                        </td>
+                        <td class="cell-echeance" data-label="Échéance">
+                          <input type="date" class="control" [(ngModel)]="tache.echeance" [name]="'tacheEcheance' + $index"
+                                 [class.is-invalid]="hasError('tacheEcheance_' + $index)"
+                                 [attr.aria-label]="'Échéance de la tâche ' + ($index + 1)"
+                                 [attr.aria-invalid]="hasError('tacheEcheance_' + $index) ? 'true' : null"
+                                 [attr.aria-describedby]="hasError('tacheEcheance_' + $index) ? 'e-echeance-' + $index : null">
+                          @if (hasError('tacheEcheance_' + $index)) {
+                            <p [id]="'e-echeance-' + $index" class="field-error" role="alert">{{ getError('tacheEcheance_' + $index) }}</p>
+                          }
+                        </td>
+                        <td class="cell-pct" data-label="% réalisé">
+                          <input type="number" class="control" [(ngModel)]="tache.pourcentageRealise" [name]="'tachePourcent' + $index"
+                                 min="0" max="100"
+                                 [class.is-invalid]="hasError('tachePourcent_' + $index)"
+                                 [attr.aria-label]="'Pourcentage réalisé de la tâche ' + ($index + 1)"
+                                 [attr.aria-invalid]="hasError('tachePourcent_' + $index) ? 'true' : null"
+                                 [attr.aria-describedby]="hasError('tachePourcent_' + $index) ? 'e-pct-' + $index : null">
+                          @if (hasError('tachePourcent_' + $index)) {
+                            <p [id]="'e-pct-' + $index" class="field-error" role="alert">{{ getError('tachePourcent_' + $index) }}</p>
+                          }
+                        </td>
+                        <td class="cell-statut" data-label="Statut">
+                          <div class="select-wrap">
+                            <select class="control" [(ngModel)]="tache.statut" [name]="'tacheStatut' + $index"
+                                    [attr.aria-label]="'Statut de la tâche ' + ($index + 1)">
+                              @for (s of statutsTache; track s.code) {
+                                <option [value]="s.libelle">{{ s.libelle }}</option>
+                              }
+                            </select>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                            </svg>
+                          </div>
+                        </td>
+                        <td class="cell-actions">
+                          <button type="button" class="icon-btn is-danger" (click)="removeTache($index)"
+                                  title="Supprimer" [attr.aria-label]="'Supprimer la tâche ' + ($index + 1)">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- ============ Actions ============ -->
+      <div class="panel form-actions">
+        <div class="group">
+          <a class="btn btn-secondary" routerLink="/projets">Annuler</a>
+          @if (!isFirstTab()) {
+            <button type="button" class="btn btn-secondary" (click)="previousTab()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+              </svg>
+              Précédent
+            </button>
+          }
         </div>
 
-      </form>
-
-    </div>
-
+        <div class="group">
+          @if (!isLastTab()) {
+            <button type="button" class="btn btn-primary" (click)="nextTab()">
+              Suivant
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </button>
+          } @else {
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading()">
+              @if (isLoading()) {
+                <span class="spin" aria-hidden="true"></span>
+                Enregistrement…
+              } @else {
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Enregistrer la fiche de suivi
+              }
+            </button>
+          }
+        </div>
+      </div>
+    </form>
   </div>
-
-</div>
-
-
-
-<style>
-
-@keyframes spin {
-
-  to { transform: rotate(360deg); }
-
-}
-
-
-
-input:focus, textarea:focus, select:focus {
-
-  outline: none;
-
-  border-color: #10b981 !important;
-
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
-
-}
-
-
-
-button:hover:not(:disabled) {
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
-
-}
-
-
-
-a:hover {
-
-  transform: translateY(-2px);
-
-  box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
-
-}
-
-
-
-table tbody tr:hover {
-
-  background-color: #f9fafb;
-
-}
-
-</style>
-
+</main>

@@ -1,0 +1,123 @@
+/* Étape 3 : tableau des tâches de suivi.
+   Un tableau classique tant que la page est assez large pour ses 9 colonnes ;
+   en dessous de 1200 px chaque tâche devient une carte à champs étiquetés. */
+.table-wrap {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.tasks { width: 100%; min-width: 1040px; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; }
+.tasks th {
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+  background: #f1f7f4;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-align: left;
+  white-space: nowrap;
+}
+.tasks td { padding: 0.5rem; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.tasks th:first-child, .tasks td:first-child { padding-left: 0.75rem; }
+.tasks th:last-child, .tasks td:last-child { padding-right: 0.75rem; }
+.tasks tbody tr:last-child td { border-bottom: 0; }
+
+.tasks .col-code { width: 72px; }
+.tasks .col-sujet { min-width: 200px; }
+.tasks .col-livrable { width: 130px; }
+.tasks .col-assigne { width: 110px; }
+.tasks .col-date { width: 132px; }
+.tasks .col-pct { width: 84px; }
+.tasks .col-statut { width: 124px; }
+.tasks .col-actions { width: 76px; }
+
+.tasks .control { height: 36px; padding: 0 0.6rem; border-radius: 8px; font-size: 0.875rem; }
+.tasks .select-wrap .control { padding-right: 1.9rem; }
+.tasks .select-wrap svg { right: 0.55rem; }
+.tasks .field-error { font-size: 0.78rem; }
+
+/* Grand titre : une action de la fiche projet, qui regroupe ses sous-tâches */
+.tasks tr.is-title td { background: #eef6f1; vertical-align: middle; }
+.title-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  transition: border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+}
+.title-input::placeholder { color: #5f7a6a; font-weight: 400; opacity: 1; }
+.title-input:hover { background: rgba(255, 255, 255, 0.65); }
+.title-input:focus { outline: none; border-color: #059669; background: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+.title-input.is-invalid { border-color: #dc2626; background: #fffafa; }
+
+.cell-actions { text-align: right; white-space: nowrap; }
+.cell-actions .icon-btn { display: inline-grid; width: 32px; height: 32px; vertical-align: middle; }
+.cell-actions .icon-btn + .icon-btn { margin-left: 0.3rem; }
+.cell-actions .icon-btn svg { width: 16px; height: 16px; }
+
+@media (max-width: 1200px) {
+  .table-wrap { overflow: visible; border: 0; background: transparent; }
+  .tasks { display: block; min-width: 0; }
+  /* L'en-tête reste lisible par les lecteurs d'écran ; chaque champ porte son propre libellé */
+  .tasks thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .tasks tbody { display: flex; flex-direction: column; gap: 0.75rem; }
+  .tasks tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+  .tasks td, .tasks td:first-child, .tasks td:last-child { display: block; min-width: 0; padding: 0; border: 0; }
+  .tasks td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .tasks .control { height: 42px; }
+
+  /* Ordre de saisie sur carte : code et statut, sujet, livrable et responsable, dates, avancement */
+  .tasks .cell-code { order: 1; }
+  .tasks .cell-statut { order: 2; }
+  .tasks .cell-sujet { order: 3; grid-column: 1 / -1; }
+  .tasks .cell-livrable { order: 4; }
+  .tasks .cell-assigne { order: 5; }
+  .tasks .cell-debut { order: 6; }
+  .tasks .cell-echeance { order: 7; }
+  .tasks .cell-pct { order: 8; }
+  .tasks .cell-actions { order: 9; align-self: end; }
+
+  .tasks tr.is-title { grid-template-columns: minmax(0, 1fr) auto; align-items: center; background: #eef6f1; border-color: #c9e4d6; }
+  .tasks tr.is-title td { background: transparent; }
+  .tasks tr.is-title .cell-sujet { order: 1; grid-column: auto; }
+  .tasks tr.is-title .cell-actions { order: 2; }
+}
+@media (max-width: 560px) {
+  .tasks tr { grid-template-columns: minmax(0, 1fr); }
+  /* Titre d'action : le nom sur toute la largeur, ses boutons en dessous à droite, pour qu'il ne soit pas coupé */
+  .tasks tr.is-title { grid-template-columns: minmax(0, 1fr); }
+  .tasks .cell-actions { justify-self: end; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .title-input { transition: none; }
+}

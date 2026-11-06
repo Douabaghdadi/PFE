@@ -1,0 +1,77 @@
+/* Pages de fiche en lecture seule (détail d'un projet : chef de projet et pilote qualité).
+   Même langage visuel que les listes, les formulaires et le tableau de bord pilote qualité.
+   Les styles de base (page, en-tête, boutons) viennent de pilote-qualite/pilote-ui.css ;
+   le corps de la fiche est dans components/projet-fiche. */
+:host {
+  --ink: #0f2447;
+  --ink-2: #35435f;
+  --muted: #5b6b85;
+  --line: #dde7e2;
+  --canvas: #f2f6f3;
+  --radius: 14px;
+}
+
+.page {
+  background:
+    radial-gradient(900px 340px at 0% 0%, rgba(16, 185, 129, 0.13), transparent 70%),
+    radial-gradient(800px 320px at 100% 0%, rgba(26, 67, 148, 0.08), transparent 70%),
+    var(--canvas);
+}
+.page-container.is-detail { max-width: 1200px; }
+
+/* ============ En-tête ============ */
+.page-header { align-items: flex-end; margin-bottom: 1.6rem; }
+.page-title { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.025em; color: var(--ink); overflow-wrap: anywhere; }
+.page-actions { align-items: center; gap: 0.6rem; }
+.page-actions .btn { height: 40px; border-radius: 9px; }
+.page-actions .btn-primary { font-weight: 600; box-shadow: 0 1px 2px rgba(6, 95, 70, 0.2), 0 8px 18px -10px rgba(5, 150, 105, 0.75); }
+
+/* Statut, client et référence sur une seule ligne */
+.meta-line { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.8rem; margin: 0.65rem 0 0; font-size: 0.95rem; color: var(--muted); }
+.meta-text { min-width: 0; overflow-wrap: anywhere; }
+.meta-text + .meta-text::before { content: '·'; margin-right: 0.8rem; color: #8aa396; }
+.meta-link { color: #047857; font-weight: 500; text-underline-offset: 3px; }
+.meta-link:hover { text-decoration: underline; }
+.meta-link:focus-visible { outline: 2px solid #059669; outline-offset: 2px; border-radius: 3px; }
+
+/* Statut : pastille avec texte et point de couleur, jamais la couleur seule */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  height: 26px;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill-en_cours { background: #e8eef9; color: #1a4394; box-shadow: inset 0 0 0 1px #c7d4ea; }
+.pill-termine { background: #e6f6ec; color: #0b5d43; box-shadow: inset 0 0 0 1px #bfe6cf; }
+.pill-en_attente { background: #fffbeb; color: #92400e; box-shadow: inset 0 0 0 1px #fde68a; }
+.pill-annule { background: #fef2f2; color: #b91c1c; box-shadow: inset 0 0 0 1px #fecaca; }
+.pill-autre { background: #f1f5f4; color: #475569; box-shadow: inset 0 0 0 1px #dbe3df; }
+
+/* ============ États ============ */
+.error-banner { margin-bottom: 1.25rem; }
+.error-banner .btn { height: 36px; }
+.skeleton-title { width: min(520px, 70%); height: 38px; margin-bottom: 0.8rem; }
+.skeleton-meta { width: min(340px, 50%); height: 22px; margin-bottom: 1.6rem; }
+.skeleton-strip { height: 128px; margin-bottom: 1.25rem; }
+.skeleton-panel { height: 200px; margin-bottom: 1.25rem; }
+
+@media (max-width: 720px) {
+  .page-title { font-size: 1.5rem; }
+}
+@media (max-width: 420px) {
+  /* Les numéros de rapport (« Rapport_20260930_155051 ») ne doivent pas être coupés en deux */
+  .page-title { font-size: 1.3rem; }
+}
+@media (max-width: 600px) {
+  /* Sur écran étroit la ligne se coupe n'importe où : un séparateur resterait en début de ligne */
+  .meta-text + .meta-text::before { display: none; }
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1 1 auto; justify-content: center; }
+}

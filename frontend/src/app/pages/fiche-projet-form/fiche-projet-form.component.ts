@@ -5,6 +5,7 @@ import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { UserService, UserResponse } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
+import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
 import { environment } from '../../../environments/environment';
 
 interface EstimationCharge {
@@ -42,359 +43,7 @@ interface MembreEquipe {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './fiche-projet-form.component.html',
-  styles: [`
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: #10b981 !important;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
-    }
-
-    button:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
-    }
-
-    a:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.15) !important;
-    }
-
-    table tbody tr:hover {
-      background-color: #f9fafb;
-    }
-
-    /* General Styles */
-    .bg-gradient-primary {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    }
-
-    .icon-circle {
-      width: 50px;
-      height: 50px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-    }
-
-    .rounded-top-4 {
-      border-top-left-radius: 1rem !important;
-      border-top-right-radius: 1rem !important;
-    }
-
-    .rounded-4 {
-      border-radius: 1rem !important;
-    }
-
-    /* Stepper Styles */
-    .stepper-wrapper {
-      padding: 2rem 0;
-    }
-
-    .stepper-container {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      position: relative;
-    }
-
-    .stepper-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      flex: 0 0 auto;
-    }
-
-    .stepper-circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: #e9ecef;
-      color: #6c757d;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.5rem;
-      transition: all 0.3s ease;
-      border: 3px solid #e9ecef;
-      z-index: 2;
-      position: relative;
-    }
-
-    .stepper-item.active .stepper-circle {
-      background: #0d6efd;
-      color: white;
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
-    }
-
-    .stepper-item.completed .stepper-circle {
-      background: #198754;
-      color: white;
-      border-color: #198754;
-    }
-
-    .stepper-label {
-      margin-top: 0.75rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #6c757d;
-      text-align: center;
-      max-width: 150px;
-    }
-
-    .stepper-sublabel {
-      font-size: 0.75rem;
-      color: #adb5bd;
-      text-align: center;
-      margin-top: 0.25rem;
-    }
-
-    .stepper-item.active .stepper-label {
-      color: #0d6efd;
-    }
-
-    .stepper-item.completed .stepper-label {
-      color: #198754;
-    }
-
-    .stepper-line {
-      width: 120px;
-      height: 3px;
-      background: #e9ecef;
-      margin: 0 1rem;
-      margin-top: 30px;
-      transition: all 0.3s ease;
-      position: relative;
-      z-index: 1;
-    }
-
-    .stepper-line.active {
-      background: #198754;
-    }
-
-    /* Section Card Styles */
-    .section-card {
-      border: 1px solid #e9ecef;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .section-card:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    .section-header {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      padding: 1rem 1.5rem;
-      border-bottom: 2px solid #dee2e6;
-    }
-
-    .section-title {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #495057;
-      display: flex;
-      align-items: center;
-    }
-
-    .section-number {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border-radius: 50%;
-      font-size: 0.9rem;
-      margin-right: 0.75rem;
-      font-weight: bold;
-    }
-
-    .section-body {
-      padding: 1.5rem;
-    }
-
-    /* Form Controls */
-    .form-control, .form-select {
-      border-radius: 0.5rem;
-      border: 1px solid #dee2e6;
-      padding: 0.625rem 0.875rem;
-      transition: all 0.2s ease;
-    }
-
-    .form-control:focus, .form-select:focus {
-      border-color: #10b981;
-      box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15);
-    }
-
-    .form-control-lg {
-      padding: 0.75rem 1rem;
-      font-size: 1.05rem;
-    }
-
-    .form-label {
-      font-weight: 500;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
-
-    /* Button Group Custom */
-    .btn-group-custom {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .btn-check:checked + .btn-outline-primary {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
-      color: white;
-    }
-
-    .btn-check:checked + .btn-outline-success {
-      background-color: #198754;
-      border-color: #198754;
-      color: white;
-    }
-
-    /* Table Styles */
-    .table {
-      margin-bottom: 0;
-    }
-
-    .table thead th {
-      background-color: #f8f9fa;
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: #495057;
-      border-bottom: 2px solid #dee2e6;
-      padding: 0.75rem;
-      vertical-align: middle;
-    }
-
-    .table tbody td {
-      vertical-align: middle;
-      padding: 0.75rem;
-    }
-
-    .table-hover tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-
-    .table td.text-center input[type="checkbox"] {
-      cursor: pointer;
-      width: 20px;
-      height: 20px;
-    }
-
-    /* Animations */
-    .animate-fade-in {
-      animation: fadeIn 0.4s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Buttons */
-    .btn {
-      border-radius: 0.5rem;
-      font-weight: 500;
-      padding: 0.625rem 1.25rem;
-      transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      border: none;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    }
-
-    .btn-success {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      border: none;
-    }
-
-    .btn-success:hover {
-      background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .stepper-container {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .stepper-line {
-        width: 3px;
-        height: 40px;
-        margin: 0.5rem 0;
-      }
-
-      .stepper-circle {
-        width: 50px;
-        height: 50px;
-        font-size: 1.25rem;
-      }
-
-      .stepper-label {
-        font-size: 0.85rem;
-        max-width: 120px;
-      }
-
-      .stepper-sublabel {
-        font-size: 0.7rem;
-      }
-
-      .section-body {
-        padding: 1rem;
-      }
-
-      .btn-group-custom {
-        flex-direction: column;
-      }
-
-      .btn-group-custom .btn {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 576px) {
-      .card-body {
-        padding: 1.5rem !important;
-      }
-
-      .stepper-wrapper {
-        padding: 1rem 0;
-      }
-    }
-  `]
+  styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/form-ui.css', './fiche-projet-form.component.css']
 })
 export class FicheProjetFormComponent implements OnInit {
   http = inject(HttpClient);
@@ -402,6 +51,7 @@ export class FicheProjetFormComponent implements OnInit {
   route = inject(ActivatedRoute);
   userService = inject(UserService);
   authService = inject(AuthService);
+  nomenclatureService = inject(NomenclatureService);
 
   errorMessage = signal('');
   successMessage = signal('');
@@ -410,7 +60,14 @@ export class FicheProjetFormComponent implements OnInit {
   currentTab = signal('identification');
 
   errors: { [key: string]: string } = {};
-  
+
+  /** Nombre de champs signalés en erreur par la dernière validation (affiché dans le message en haut de page). */
+  get nbErreurs(): number {
+    return Object.keys(this.errors).length;
+  }
+
+  readonly moisPlanning = Array.from({ length: 12 }, (_, i) => String(i + 1));
+
   isEditMode = signal(false);
   projetId: string | null = null;
   
@@ -418,9 +75,13 @@ export class FicheProjetFormComponent implements OnInit {
   chefProjetName = signal('');
   chefProjetId = signal('');
 
-  // Nomenclatures
-  statuts: any[] = [];
-  categories: any[] = [];
+  // Choix proposés : valeurs actives de la page Nomenclature (gérée par l'administrateur)
+  statuts: Nomenclature[] = [];
+  categories: Nomenclature[] = [];
+  caracteres: Nomenclature[] = [];
+  types: Nomenclature[] = [];
+  modalites: Nomenclature[] = [];
+  nomenclaturesChargees = signal(false);
 
   formData = {
     nomProjet: '',
@@ -512,7 +173,16 @@ export class FicheProjetFormComponent implements OnInit {
     });
   }
 
+  /**
+   * Après une validation en échec, les erreurs se mettent à jour à mesure que l'on corrige les champs :
+   * un champ rempli cesse d'être signalé et le compteur du message en haut de page baisse.
+   */
+  revalider() {
+    if (this.nbErreurs > 0) this.validateTab();
+  }
+
   setTab(tab: string) {
+    this.errors = {};
     this.currentTab.set(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -605,6 +275,7 @@ export class FicheProjetFormComponent implements OnInit {
     const tabs = ['identification', 'estimations', 'risques'];
     const currentIndex = tabs.indexOf(this.currentTab());
     if (currentIndex > 0) {
+      this.errors = {};
       this.currentTab.set(tabs[currentIndex - 1]);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -719,35 +390,20 @@ export class FicheProjetFormComponent implements OnInit {
   }
 
   /**
-   * Charge les nomenclatures (statuts et catégories) depuis l'API
+   * Charge les listes de choix (statut, catégorie, caractère, type, modalité) depuis la nomenclature
    */
   loadNomenclatures() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    this.nomenclatureService.charger().subscribe(() => {
+      this.statuts = this.nomenclatureService.actives('STATUT');
+      this.categories = this.nomenclatureService.actives('CATEGORIE_PROJET');
+      this.caracteres = this.nomenclatureService.actives('CARACTERE_PROJET');
+      this.types = this.nomenclatureService.actives('TYPE_PROJET');
+      this.modalites = this.nomenclatureService.actives('MODALITE_DEVELOPPEMENT');
+      this.nomenclaturesChargees.set(true);
 
-    // Charger les statuts depuis l'endpoint public
-    this.http.get<any[]>(`${environment.apiUrl}/api/nomenclatures`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).subscribe({
-      next: (data) => {
-        this.statuts = data.filter(n => n.type === 'STATUT' && n.actif);
-        this.categories = data.filter(n => n.type === 'CATEGORIE_PROJET' && n.actif);
-        
-        console.log('Statuts chargés:', this.statuts);
-        
-        // Définir un statut par défaut si aucun n'est sélectionné
-        if (!this.formData.statut && this.statuts.length > 0) {
-          this.formData.statut = this.statuts[0].code;
-        }
-      },
-      error: (error) => {
-        console.error('Error loading nomenclatures:', error);
-        // En cas d'erreur, utiliser des valeurs par défaut
-        this.statuts = [
-          { code: 'EN_COURS', libelle: 'En cours' },
-          { code: 'TERMINE', libelle: 'Terminé' },
-          { code: 'EN_ATTENTE', libelle: 'En attente' }
-        ];
+      // Définir un statut par défaut si aucun n'est sélectionné
+      if (!this.formData.statut && this.statuts.length > 0) {
+        this.formData.statut = this.statuts[0].code;
       }
     });
   }

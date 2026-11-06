@@ -1,7 +1,9 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { PiloteQualiteNotificationService } from '../../../services/pilote-qualite-notification.service';
@@ -46,7 +48,6 @@ interface ProjetRow {
   derniereFicheId?: string;
   /** Rubriques absentes de la dernière fiche déposée. */
   manquantes: string[];
-  cases: HeatCase[];
 }
 
 type Probleme = 'retard' | 'jamais' | 'incomplete';
@@ -62,10 +63,12 @@ interface ProjetATraiter {
   ficheId?: string;
 }
 
-interface HeatCase {
+/** Dépôts d'un mois, classés selon l'échéance de chaque fiche (périodicité du projet). */
+interface MoisPonctualite {
   label: string;
-  count: number;
-  niveau: number;
+  libelleLong: string;
+  aTemps: number;
+  enRetard: number;
 }
 
 interface KpiCard {
@@ -73,10 +76,11 @@ interface KpiCard {
   title: string;
   value: string;
   hint: string;
-  icon: string;
   accent: string;
+  /** Pourcentage affiché en barre sous la valeur (indicateurs exprimés en %). */
+  percent?: number;
   /** Sans action, la carte est purement informative et n'est pas cliquable. */
-  action?: 'conformite' | 'route';
+  action?: 'route';
   payload?: string;
 }
 
@@ -140,14 +144,14 @@ const RUBRIQUES: { cle: keyof AuditFiche; label: string }[] = [
 const DONUT_CIRCUMFERENCE = 2 * Math.PI * 54;
 const JOUR_MS = 24 * 60 * 60 * 1000;
 const MOIS_JOURS = 30.44;
-const NB_MOIS_HEATMAP = 6;
+const NB_MOIS_PONCTUALITE = 12;
 
 @Component({
   selector: 'app-pilote-dashboard',
   standalone: true,
   imports: [CommonModule, RouterModule, ChatbotComponent],
   templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
+  styleUrls: ['../pilote-ui.css', './dashboard.component.css']
 })
 export class PiloteDashboardComponent implements OnInit {
   private ficheProjetService = inject(PiloteQualiteFicheProjetService);
@@ -155,6 +159,7 @@ export class PiloteDashboardComponent implements OnInit {
   private notificationService = inject(PiloteQualiteNotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private http = inject(HttpClient);
 
   loading = true;
   error: string | null = null;
@@ -167,14 +172,14 @@ export class PiloteDashboardComponent implements OnInit {
   /** Nom du compte de chaque chef de projet, par identifiant. */
   nomsChefs = new Map<string, string>();
 
-  // --- Filtre (clic sur une carte de conformité) ---
-  conformiteFilter: '' | Conformite = '';
+  // --- Export Excel de l'audit ---
+  exportEnCours = false;
+  exportErreur: string | null = null;
 
   // --- Options d'affichage ---
   /** Les alertes s'ouvrent repliées : les plus en retard d'abord, les autres sur demande. */
   alertesOuvertes = false;
   toutesLesLignes = false;
-  heatmapComplete = false;
   /** Pendant l'impression, les listes raccourcies à l'écran sont imprimées en entier. */
   impression = false;
 
@@ -183,13 +188,12 @@ export class PiloteDashboardComponent implements OnInit {
   relances = new Map<string, { ok: boolean; message: string }>();
 
   // --- Données calculées ---
-  rowsAll: ProjetRow[] = [];
   rows: ProjetRow[] = [];
   auditsParFiche = new Map<string, AuditFiche>();
   kpis: KpiCard[] = [];
   conformiteSegments: ConformiteSegment[] = [];
   rubriques: RubriqueStat[] = [];
-  moisLabels: string[] = [];
+  ponctualite: MoisPonctualite[] = [];
   echeanceBuckets: EcheanceBucket[] = [];
   chefStats: ChefStat[] = [];
   derniersDepots: Depot[] = [];
@@ -201,6 +205,9 @@ export class PiloteDashboardComponent implements OnInit {
   nbEnRetard = 0;
   nbJamaisSuivi = 0;
   nbEcheances30j = 0;
+  nbDepotsEvalues = 0;
+  tauxPonctualite = 0;
+  maxDepotsMois = 0;
 
   readonly donutCircumference = DONUT_CIRCUMFERENCE;
   readonly rubriqueDefs = RUBRIQUES;
@@ -227,7 +234,7 @@ export class PiloteDashboardComponent implements OnInit {
       this.nomsChefs = new Map((chefs || []).map(c => [c.id, c.username]));
       this.auditerFiches();
       this.generatedAt = new Date();
-      this.applyFilters();
+      this.buildDashboard();
       this.loading = false;
     }).catch(err => {
       console.error('Erreur lors du chargement des données:', err);
@@ -281,21 +288,11 @@ export class PiloteDashboardComponent implements OnInit {
     return RUBRIQUES.filter(r => audit[r.cle] !== true).map(r => r.label);
   }
 
-  // ==================== Filtres ====================
+  // ==================== Calcul du tableau de bord ====================
 
-  applyFilters() {
-    this.rowsAll = this.buildRows();
-    this.rows = this.rowsAll.filter(r => !this.conformiteFilter || r.conformite === this.conformiteFilter);
+  private buildDashboard() {
+    this.rows = this.buildRows();
     this.computeAggregates();
-  }
-
-  setConformiteFilter(key: Conformite) {
-    this.conformiteFilter = this.conformiteFilter === key ? '' : key;
-    this.applyFilters();
-  }
-
-  get conformiteFilterLabel(): string {
-    return CONFORMITE_DEFS.find(d => d.key === this.conformiteFilter)?.label || '';
   }
 
   // ==================== Construction des lignes ====================
@@ -311,7 +308,6 @@ export class PiloteDashboardComponent implements OnInit {
     }
 
     const statusParProjet = new Map(this.suiviStatus.map(s => [s.projetId, s]));
-    this.moisLabels = this.construireMoisLabels();
 
     return this.fichesProjet.filter(p => !!p.id).map(p => {
       const id = p.id!;
@@ -344,42 +340,76 @@ export class PiloteDashboardComponent implements OnInit {
         completude,
         derniereFicheId: liste[0]?.id,
         manquantes: liste[0] ? this.rubriquesManquantes(liste[0]) : [],
-        cases: this.construireCases(liste),
       };
     });
   }
 
-  private construireMoisLabels(): string[] {
-    const labels: string[] = [];
-    const now = new Date();
-    for (let i = NB_MOIS_HEATMAP - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      labels.push(d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''));
-    }
-    return labels;
-  }
+  // ==================== Ponctualité des dépôts ====================
 
-  private construireCases(liste: FicheSuivi[]): HeatCase[] {
-    const cases: HeatCase[] = [];
+  /**
+   * Même règle que le serveur : la 1re fiche est attendue une périodicité après le début du projet,
+   * chaque fiche suivante une périodicité après la précédente. Une fiche déposée au plus tard
+   * à son échéance est « à temps ». Chaque dépôt est compté dans le mois où il a été fait.
+   */
+  private construirePonctualite(rows: ProjetRow[]) {
+    const now = new Date();
     const cles: string[] = [];
-    const now = new Date();
-
-    for (let i = NB_MOIS_HEATMAP - 1; i >= 0; i--) {
+    this.ponctualite = [];
+    for (let i = NB_MOIS_PONCTUALITE - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       cles.push(`${d.getFullYear()}-${d.getMonth()}`);
-      cases.push({ label: d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }), count: 0, niveau: 0 });
+      this.ponctualite.push({
+        label: d.toLocaleDateString('fr-FR', { month: 'short' }).replace('.', ''),
+        libelleLong: d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }),
+        aTemps: 0,
+        enRetard: 0,
+      });
     }
 
-    for (const f of liste) {
-      if (!f.dateRapport) continue;
-      const d = new Date(f.dateRapport);
-      if (isNaN(d.getTime())) continue;
-      const index = cles.indexOf(`${d.getFullYear()}-${d.getMonth()}`);
-      if (index >= 0) cases[index].count++;
+    const debuts = new Map(this.fichesProjet.map(p => [p.id, p.dateDebut]));
+
+    for (const r of rows) {
+      const periodicite = r.periodicite || 1;
+      const liste = this.fichesSuivi
+        .filter(f => f.ficheProjetId === r.id && this.jourOf(f.dateRapport) != null)
+        .sort((a, b) => this.jourOf(a.dateRapport)! - this.jourOf(b.dateRapport)!);
+
+      let reference = this.jourOf(debuts.get(r.id));
+      for (const f of liste) {
+        const depot = this.jourOf(f.dateRapport)!;
+        if (reference != null) {
+          const index = cles.indexOf(`${new Date(depot).getUTCFullYear()}-${new Date(depot).getUTCMonth()}`);
+          if (index >= 0) {
+            const retard = Math.round((depot - this.ajouterMois(reference, periodicite)) / JOUR_MS);
+            if (retard > 0) {
+              this.ponctualite[index].enRetard++;
+            } else {
+              this.ponctualite[index].aTemps++;
+            }
+          }
+        }
+        reference = depot;
+      }
     }
 
-    cases.forEach(c => (c.niveau = c.count === 0 ? 0 : Math.min(3, c.count)));
-    return cases;
+    this.nbDepotsEvalues = this.ponctualite.reduce((s, m) => s + m.aTemps + m.enRetard, 0);
+    this.maxDepotsMois = Math.max(0, ...this.ponctualite.map(m => m.aTemps + m.enRetard));
+    const nbATemps = this.ponctualite.reduce((s, m) => s + m.aTemps, 0);
+    this.tauxPonctualite = this.nbDepotsEvalues ? Math.round((nbATemps / this.nbDepotsEvalues) * 100) : 0;
+  }
+
+  /** Date « AAAA-MM-JJ » ramenée à minuit UTC, pour compter les jours sans effet de fuseau. */
+  private jourOf(date?: string): number | null {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(date || '');
+    return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+
+  /** Ajoute des mois comme LocalDate.plusMonths : le 31 janvier + 1 mois donne le 28 février. */
+  private ajouterMois(jour: number, mois: number): number {
+    const d = new Date(jour);
+    const cible = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + mois, 1));
+    const dernierJour = new Date(Date.UTC(cible.getUTCFullYear(), cible.getUTCMonth() + 1, 0)).getUTCDate();
+    return Date.UTC(cible.getUTCFullYear(), cible.getUTCMonth(), Math.min(d.getUTCDate(), dernierJour));
   }
 
   // ==================== Agrégats ====================
@@ -431,6 +461,9 @@ export class PiloteDashboardComponent implements OnInit {
 
     // --- Échéancier ---
     this.construireEcheancier(rows);
+
+    // --- Ponctualité des dépôts ---
+    this.construirePonctualite(rows);
 
     // --- Discipline par chef de projet ---
     this.chefStats = this.construireChefStats(rows);
@@ -533,42 +566,50 @@ export class PiloteDashboardComponent implements OnInit {
   }
 
   private buildKpis() {
+    // Espace fine insécable avant « % » (typographie française)
     this.kpis = [
       {
-        key: 'conformite', title: 'Conformité du suivi', value: `${this.tauxConformite}%`, icon: '✅', accent: 'green',
-        hint: `${this.rows.length - this.nbEnRetard - this.nbJamaisSuivi}/${this.rows.length} projets à jour`,
+        key: 'conformite', title: 'Conformité du suivi', value: `${this.tauxConformite} %`, accent: 'green',
+        percent: this.tauxConformite,
+        hint: `${this.rows.length - this.nbEnRetard - this.nbJamaisSuivi} sur ${this.rows.length} projets à jour`,
       },
       {
-        key: 'retard', title: 'Fiches en retard', value: `${this.nbEnRetard}`, icon: '⏰', accent: 'red',
-        hint: this.nbEnRetard ? 'Cliquer pour isoler' : 'Aucun retard 🎉',
-        action: 'conformite', payload: 'EN_RETARD',
+        key: 'retard', title: 'Fiches en retard', value: `${this.nbEnRetard}`, accent: 'red',
+        hint: this.nbEnRetard ? `sur ${this.pl(this.rows.length, 'projet')}` : 'Aucun retard',
       },
       {
-        key: 'jamais', title: 'Jamais suivis', value: `${this.nbJamaisSuivi}`, icon: '📭', accent: 'gray',
-        hint: 'Aucune fiche déposée à ce jour',
-        action: 'conformite', payload: 'JAMAIS_SUIVI',
+        key: 'jamais', title: 'Jamais suivis', value: `${this.nbJamaisSuivi}`, accent: 'gray',
+        hint: this.nbJamaisSuivi ? `sur ${this.pl(this.rows.length, 'projet')}` : 'Tous les projets ont une fiche',
       },
       {
-        key: 'completude', title: 'Complétude des fiches', value: `${this.completudeMoyenne}%`, icon: '📝', accent: 'indigo',
-        hint: `${RUBRIQUES.length} rubriques auditées`,
+        key: 'completude', title: 'Complétude des fiches', value: `${this.completudeMoyenne} %`, accent: 'green',
+        percent: this.completudeMoyenne,
+        hint: `${RUBRIQUES.length} rubriques contrôlées`,
       },
       {
-        key: 'echeances', title: 'Échéances sous 30 j', value: `${this.nbEcheances30j}`, icon: '🔔', accent: 'blue',
-        hint: `${this.nbFichesAuditees} fiche(s) déposée(s)`,
+        key: 'echeances', title: 'Échéances sous 30 jours', value: `${this.nbEcheances30j}`, accent: 'amber',
+        hint: 'Ouvrir la messagerie',
         action: 'route', payload: '/pilote-qualite/notifications',
       },
     ];
+  }
+
+  /** Initiales d'un nom de compte (« mehdi.bouaziz » → MB, « chefprojet » → CH). */
+  initiales(nom: string): string {
+    const parts = (nom || '').split(/[\s._-]+/).filter(Boolean);
+    if (!parts.length) return '?';
+    return (parts.length === 1 ? parts[0].slice(0, 2) : parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  /** Accord simple : pl(1, 'projet') → « 1 projet », pl(3, 'projet') → « 3 projets ». */
+  pl(n: number, singulier: string, pluriel = singulier + 's'): string {
+    return `${n} ${n > 1 ? pluriel : singulier}`;
   }
 
   // ==================== Tri & rendu ====================
 
   get projetsATraiterVisibles(): ProjetATraiter[] {
     return this.toutesLesLignes || this.impression ? this.projetsATraiter : this.projetsATraiter.slice(0, 6);
-  }
-
-  get heatmapRows(): ProjetRow[] {
-    const liste = [...this.rows].sort((a, b) => a.nom.localeCompare(b.nom));
-    return this.heatmapComplete || this.impression ? liste : liste.slice(0, 8);
   }
 
   get alertes(): ProjetRow[] {
@@ -630,13 +671,17 @@ export class PiloteDashboardComponent implements OnInit {
     return '#ef4444';
   }
 
-  caseColor(niveau: number): string {
-    switch (niveau) {
-      case 0: return '#f1f5f9';
-      case 1: return '#bbf7d0';
-      case 2: return '#4ade80';
-      default: return '#09C82C';
-    }
+  /** Même palier que completudeColor, en teinte plus foncée pour rester lisible en texte sur fond blanc. */
+  completudeTextColor(score: number): string {
+    if (score >= 100) return '#047857';
+    if (score >= 67) return '#b45309';
+    if (score >= 34) return '#c2410c';
+    return '#b91c1c';
+  }
+
+  /** Hauteur d'une barre du mois, relative au mois le plus chargé. */
+  hauteurDepots(n: number): number {
+    return this.maxDepotsMois ? (n / this.maxDepotsMois) * 100 : 0;
   }
 
   private dateOf(f: FicheSuivi): number {
@@ -662,27 +707,75 @@ export class PiloteDashboardComponent implements OnInit {
 
   // ==================== Export & navigation ====================
 
-  exportCsv() {
-    const entetes = ['Projet', 'Statut', 'Chef de projet', 'Conformite', 'Jours de retard', 'Periodicite (mois)',
-      'Derniere fiche', 'Prochaine echeance', 'Fiches deposees', 'Completude (%)'];
+  /**
+   * Classeur Excel de l'audit : la page envoie ce qu'elle affiche (indicateurs et lignes par projet),
+   * le serveur met en forme le fichier comme l'export Excel du rapport KPI.
+   */
+  exportExcel() {
+    if (this.exportEnCours || !this.rows.length) return;
+    this.exportEnCours = true;
+    this.exportErreur = null;
 
-    const lignes = this.rows.map(r => [
-      r.nom, r.statut, r.chefProjet, this.conformiteLabel(r.conformite), r.joursRetard, r.periodicite ?? '',
-      r.derniereFiche ? new Date(r.derniereFiche).toLocaleDateString('fr-FR') : '',
-      r.prochaineFiche ? new Date(r.prochaineFiche).toLocaleDateString('fr-FR') : '',
-      r.nbFiches, r.completude
-    ]);
+    // Les projets en retard d'abord (du plus ancien retard), puis les jamais suivis, puis ceux à jour
+    const ordre: Record<Conformite, number> = { EN_RETARD: 0, JAMAIS_SUIVI: 1, A_JOUR: 2 };
+    const projets = [...this.rows]
+      .sort((a, b) => ordre[a.conformite] - ordre[b.conformite] || b.joursRetard - a.joursRetard || a.nom.localeCompare(b.nom))
+      .map(r => ({
+        nom: r.nom,
+        statut: r.statut,
+        chefProjet: r.chefProjet,
+        conformite: this.conformiteLabel(r.conformite),
+        joursRetard: r.joursRetard,
+        periodiciteMois: r.periodicite ?? null,
+        derniereFiche: this.jourIso(r.derniereFiche),
+        prochaineEcheance: this.jourIso(r.prochaineFiche),
+        fichesDeposees: r.nbFiches,
+        completude: r.completude,
+        rubriquesManquantes: r.manquantes,
+      }));
 
-    const echapper = (v: any) => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
-    const csv = '﻿' + [entetes, ...lignes].map(l => l.map(echapper).join(';')).join('\r\n');
+    const audit = {
+      nbProjets: this.rows.length,
+      nbFichesDeposees: this.fichesSuivi.length,
+      tauxConformite: this.tauxConformite,
+      nbEnRetard: this.nbEnRetard,
+      nbJamaisSuivi: this.nbJamaisSuivi,
+      completudeMoyenne: this.completudeMoyenne,
+      nbRubriques: RUBRIQUES.length,
+      nbEcheances30j: this.nbEcheances30j,
+      projets,
+    };
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `audit-reporting-qualite-${new Date().toISOString().slice(0, 10)}.csv`;
-    lien.click();
-    URL.revokeObjectURL(url);
+    this.http.post(`${environment.apiUrl}/api/pilote-qualite/rapports/audit-reporting/excel`, audit,
+      { responseType: 'blob', observe: 'response' }).subscribe({
+      next: (response) => {
+        const disposition = response.headers.get('Content-Disposition');
+        const nom = disposition ? /filename="?([^"]+)"?/.exec(disposition)?.[1] : undefined;
+        if (response.body) {
+          const url = URL.createObjectURL(response.body);
+          const lien = document.createElement('a');
+          lien.href = url;
+          lien.download = nom || `audit-reporting-qualite-${this.jourIso(new Date().toISOString())}.xlsx`;
+          lien.click();
+          URL.revokeObjectURL(url);
+        }
+        this.exportEnCours = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors de l\'export Excel:', err);
+        this.exportErreur = 'L\'export Excel n\'a pas pu être généré.';
+        this.exportEnCours = false;
+      }
+    });
+  }
+
+  /** Date du jour au format AAAA-MM-JJ, lue en heure locale comme à l'écran (undefined si absente). */
+  private jourIso(valeur?: string): string | undefined {
+    if (!valeur) return undefined;
+    const d = new Date(valeur);
+    if (isNaN(d.getTime())) return undefined;
+    const deux = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
   }
 
   imprimer() {
@@ -703,10 +796,7 @@ export class PiloteDashboardComponent implements OnInit {
   }
 
   onKpiClick(kpi: KpiCard) {
-    switch (kpi.action) {
-      case 'conformite': this.setConformiteFilter(kpi.payload as Conformite); break;
-      case 'route': this.navigateTo(kpi.payload!); break;
-    }
+    if (kpi.action === 'route') this.navigateTo(kpi.payload!);
   }
 
   /** Envoie au chef de projet l'email de relance du projet, sans quitter le tableau de bord. */

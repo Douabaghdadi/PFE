@@ -9,7 +9,7 @@ import { TeamSuggestionService, TeamSuggestionRequest, TeamSuggestionResponse } 
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './team-suggestion.component.html',
-  styleUrls: ['./team-suggestion.component.css']
+  styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/form-ui.css', './team-suggestion.component.css']
 })
 export class TeamSuggestionComponent {
   private teamService = inject(TeamSuggestionService);
@@ -18,6 +18,8 @@ export class TeamSuggestionComponent {
   loading = false;
   result: TeamSuggestionResponse | null = null;
   error: string | null = null;
+  /** Vrai après un premier envoi : les champs obligatoires restés vides sont alors signalés. */
+  submitted = false;
 
   form: TeamSuggestionRequest = {
     typeProjet: '',
@@ -32,7 +34,17 @@ export class TeamSuggestionComponent {
   complexites = ['FAIBLE', 'MOYENNE', 'ELEVEE'];
   modalites = ['interne', 'ST', 'CO', 'Co-traitance'];
 
+  // Libellés affichés ; les valeurs envoyées à l'IA ne changent pas
+  readonly libellesComplexite: Record<string, string> = { FAIBLE: 'Faible', MOYENNE: 'Moyenne', ELEVEE: 'Élevée' };
+  readonly libellesModalite: Record<string, string> = {
+    interne: 'Interne',
+    ST: 'Sous-traitance (ST)',
+    CO: 'Co-traitance (CO)',
+    'Co-traitance': 'Co-traitance'
+  };
+
   suggest() {
+    this.submitted = true;
     if (!this.form.typeProjet || !this.form.complexite) {
       this.error = 'Veuillez remplir au moins le type de projet et la complexité.';
       return;
@@ -62,6 +74,7 @@ export class TeamSuggestionComponent {
   reset() {
     this.result = null;
     this.error = null;
+    this.submitted = false;
     this.form = {
       typeProjet: '',
       budgetMDH: '',

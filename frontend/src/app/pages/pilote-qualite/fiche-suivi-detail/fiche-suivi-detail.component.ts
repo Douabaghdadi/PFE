@@ -2,25 +2,28 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
-import { FicheSuivi, TacheSuivi } from '../../../services/fiche-suivi.service';
-import { HistoriqueComponent } from '../../../components/historique/historique.component';
+import { PiloteQualiteFicheProjetService } from '../../../services/pilote-qualite-fiche-projet.service';
+import { FicheSuivi } from '../../../services/fiche-suivi.service';
+import { FicheSuiviCorpsComponent } from '../../../components/fiche-suivi-corps/fiche-suivi-corps.component';
 
 @Component({
   selector: 'app-pilote-fiche-suivi-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, HistoriqueComponent],
+  imports: [CommonModule, RouterModule, FicheSuiviCorpsComponent],
   templateUrl: './fiche-suivi-detail.component.html',
-  styleUrls: ['./fiche-suivi-detail.component.css']
+  styleUrls: ['../pilote-ui.css', '../../shared/detail-ui.css']
 })
 export class PiloteFicheSuiviDetailComponent implements OnInit {
   private ficheSuiviService = inject(PiloteQualiteFicheSuiviService);
+  private ficheProjetService = inject(PiloteQualiteFicheProjetService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
   ficheSuivi: FicheSuivi | null = null;
   loading = true;
   error: string | null = null;
-  currentTab = 'signaletique';
+  /** Nom du projet suivi, affiché dans l'en-tête ; vide tant qu'il n'est pas connu. */
+  projetNom = '';
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -40,6 +43,7 @@ export class PiloteFicheSuiviDetailComponent implements OnInit {
       next: (fiche) => {
         this.ficheSuivi = fiche;
         this.loading = false;
+        this.loadProjetNom(fiche.ficheProjetId);
       },
       error: (err) => {
         console.error('Erreur lors du chargement de la fiche de suivi:', err);
@@ -49,8 +53,13 @@ export class PiloteFicheSuiviDetailComponent implements OnInit {
     });
   }
 
-  setTab(tab: string) {
-    this.currentTab = tab;
+  /** Le nom du projet est un plus : s'il ne se charge pas, l'en-tête s'en passe. */
+  private loadProjetNom(projetId: string | undefined) {
+    if (!projetId) return;
+    this.ficheProjetService.getFicheProjetById(projetId).subscribe({
+      next: (projet) => { this.projetNom = projet.nomProjet || projet.designationProjet || ''; },
+      error: () => { this.projetNom = ''; }
+    });
   }
 
   formatDate(date: any): string {
@@ -61,42 +70,6 @@ export class PiloteFicheSuiviDetailComponent implements OnInit {
       month: 'long',
       day: 'numeric'
     });
-  }
-
-  formatShortDate(date: any): string {
-    if (!date) return '-';
-    const d = new Date(date);
-    return d.toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-  }
-
-  /**
-   * Une ligne est un "grand titre" (action de la fiche de projet) si elle est
-   * marquée estTitre, ou - pour les fiches enregistrées avant l'ajout de ce
-   * marqueur - si elle ne porte aucune des infos propres à une sous-tâche.
-   */
-  isTitre(t: TacheSuivi): boolean {
-    return !!t.estTitre || (!t.code && !t.livrable && !t.assigneA && !t.debut && !t.echeance);
-  }
-
-  getStatutStyle(statut: string | undefined): string {
-    let bg = '';
-    switch (statut?.toLowerCase()) {
-      case 'terminé':
-        bg = 'linear-gradient(135deg, #10b981 0%, #059669 100%)'; break;
-      case 'en cours':
-        bg = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'; break;
-      case 'en retard':
-        bg = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'; break;
-      case 'bloqué':
-        bg = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'; break;
-      default:
-        bg = 'linear-gradient(135deg, #6b7280 0%, #4b5563 100%)';
-    }
-    return `background: ${bg}; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; display: inline-block;`;
   }
 
   goBack() {

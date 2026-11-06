@@ -1,216 +1,117 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { AuthLayoutComponent } from '../../components/auth-layout/auth-layout.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, FormsModule, RouterLink, AuthLayoutComponent],
   template: `
-    <div class="login-page">
-      <div class="login-card">
+    <app-auth-layout>
+      <header class="auth-head">
+        <h1 class="auth-title">Connexion</h1>
+        <p class="auth-subtitle">Accédez à votre espace de pilotage qualité.</p>
+      </header>
 
-        <!-- LEFT: Form -->
-        <div class="login-left">
-          <h2 class="login-title">Connexion</h2>
-
-          @if (errorMessage()) {
-            <div class="error-box">{{ errorMessage() }}</div>
-          }
-
-          <form (ngSubmit)="onSubmit()" class="login-form">
-            <div class="field-group">
-              <label>Email</label>
-              <input type="email" [(ngModel)]="username" name="username"
-                placeholder="mail@gmail.com" required />
-            </div>
-
-            <div class="field-group">
-              <div class="field-row">
-                <label>Mot de passe</label>
-                <a routerLink="/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
-              </div>
-              <input type="password" [(ngModel)]="password" name="password"
-                placeholder="••••••" required />
-            </div>
-
-            <button type="submit" [disabled]="isLoading()" class="login-btn">
-              @if (isLoading()) { <span class="spinner"></span> }
-              LOGIN
-            </button>
-          </form>
-
-          <p class="register-text">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+      @if (errorMessage()) {
+        <div class="alert alert-error" role="alert">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
+          </svg>
+          <span>{{ errorMessage() }}</span>
         </div>
+      }
 
-        <!-- RIGHT: Illustration -->
-        <div class="login-right">
-          <div class="right-bg">
-            <div class="deco-circle c1"></div>
-            <div class="deco-circle c2"></div>
-            <div class="brand-medal">
-              <img src="assets/images/branding/qualinet-logo.png" alt="Qualinet - Suivi projets & qualité" />
-            </div>
+      <form (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <div class="control">
+            <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+            </svg>
+            <input #emailInput id="login-email" type="email" [(ngModel)]="username" name="username"
+              autocomplete="username" autocapitalize="off" spellcheck="false"
+              placeholder="nom@exemple.com" required
+              (input)="errorMessage.set('')" />
           </div>
         </div>
 
-      </div>
-    </div>
+        <div class="field">
+          <label for="login-password">Mot de passe</label>
+          <div class="control has-toggle">
+            <svg class="control-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input #passwordInput id="login-password" [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="password" name="password" autocomplete="current-password" required
+              (input)="errorMessage.set('')" />
+            <button type="button" class="toggle-visibility" aria-label="Afficher le mot de passe"
+              [attr.aria-pressed]="showPassword()" (click)="showPassword.set(!showPassword())">
+              @if (showPassword()) {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+          <a routerLink="/forgot-password" class="text-link forgot-link">Mot de passe oublié&nbsp;?</a>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner" aria-hidden="true"></span>
+            Connexion en cours…
+          } @else {
+            Se connecter
+            <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          }
+        </button>
+      </form>
+
+      <p class="auth-switch">Pas encore de compte&nbsp;? <a routerLink="/register" class="text-link">Créer un compte</a></p>
+    </app-auth-layout>
   `,
+  styleUrl: '../auth-form.css',
   styles: [`
-    .login-page {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f5f6fa;
-    }
-    .login-card {
-      display: flex;
-      width: 820px;
-      min-height: 490px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.13);
-      overflow: hidden;
-    }
-    .login-left {
-      flex: 1;
-      padding: 42px 48px;
-      display: flex;
-      flex-direction: column;
-    }
-    .login-title {
-      font-size: 28px;
-      font-weight: 800;
-      color: #111827;
-      margin: 0 0 32px 0;
-      letter-spacing: -0.5px;
-      text-align: center;
-    }
-    .error-box {
-      background: #fef2f2;
-      border-left: 4px solid #ef4444;
-      color: #b91c1c;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-    }
-    .login-form { display: flex; flex-direction: column; gap: 22px; }
-    .field-group { display: flex; flex-direction: column; gap: 6px; }
-    .field-group label { font-size: 12px; color: #9ca3af; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; }
-    .field-row { display: flex; justify-content: space-between; align-items: center; }
-    .forgot-link { font-size: 12px; color: #10b981; text-decoration: none; font-weight: 500; }
-    .forgot-link:hover { text-decoration: underline; }
-    .field-group input {
-      border: 1.5px solid #e5e7eb;
-      border-radius: 8px;
-      outline: none;
-      padding: 11px 14px;
-      font-size: 14px;
-      color: #111827;
-      background: #f9fafb;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .field-group input:focus {
-      border-color: #10b981;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
-    }
-    .login-btn {
-      margin-top: 6px;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: opacity 0.2s, transform 0.1s;
-      box-shadow: 0 4px 14px rgba(16,185,129,0.35);
-    }
-    .login-btn:hover:not(:disabled) { opacity: 0.92; transform: translateY(-1px); }
-    .login-btn:active:not(:disabled) { transform: translateY(0); }
-    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .switch-account { text-align: center; font-size: 12px; color: #888; margin: 14px 0 4px; }
-    .switch-account a { color: #10b981; text-decoration: none; }
-    .switch-account a:hover { text-decoration: underline; }
-    .or-text { text-align: center; font-size: 12px; color: #bbb; margin: 4px 0; }
-    .social-icons { display: flex; justify-content: center; gap: 14px; margin: 8px 0; }
-    .social-btn {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      border: 1.5px solid #e5e7eb;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: box-shadow 0.2s;
-    }
-    .social-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-    .register-text { text-align: center; font-size: 12px; color: #888; margin-top: 16px; }
-    .register-text a { color: #10b981; text-decoration: none; }
-    .register-text a:hover { text-decoration: underline; }
-    .terms-text { text-align: center; font-size: 11px; color: #bbb; margin: 0; }
-    .terms-text a { color: #10b981; text-decoration: none; }
-    .terms-text a:hover { text-decoration: underline; }
-    .login-right { width: 360px; position: relative; overflow: hidden; }
-    .right-bg {
-      width: 100%; height: 100%;
-      background: linear-gradient(135deg, #059669 0%, #10b981 55%, #34d399 100%);
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .deco-circle { position: absolute; border-radius: 50%; }
-    .c1 { width: 210px; height: 210px; background: rgba(255,255,255,0.12); top: -70px; right: -70px; }
-    .c2 { width: 130px; height: 130px; background: rgba(255,255,255,0.1); bottom: 10px; left: -40px; }
-    .brand-medal {
-      position: relative;
-      z-index: 1;
-      width: 268px;
-      height: 268px;
-      border-radius: 50%;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 18px 40px rgba(4,90,60,0.25), 0 0 0 12px rgba(255,255,255,0.18);
-    }
-    .brand-medal img { width: 192px; height: auto; }
+    .forgot-link { align-self: flex-end; font-size: 14px; }
   `]
 })
 export class LoginComponent {
   authService = inject(AuthService);
   router = inject(Router);
 
+  emailInput = viewChild<ElementRef<HTMLInputElement>>('emailInput');
+  passwordInput = viewChild<ElementRef<HTMLInputElement>>('passwordInput');
+
   username = '';
   password = '';
   errorMessage = signal('');
   isLoading = signal(false);
+  showPassword = signal(false);
+
+  constructor() {
+    // Focus direct sur l'email, sauf sur écran tactile (le clavier masquerait la page)
+    afterNextRender(() => {
+      if (window.matchMedia('(pointer: fine)').matches) {
+        this.emailInput()?.nativeElement.focus();
+      }
+    });
+  }
 
   onSubmit() {
     if (!this.username || !this.password) {
-      this.errorMessage.set('Veuillez remplir tous les champs');
+      this.errorMessage.set('Saisissez votre email et votre mot de passe.');
+      (this.username ? this.passwordInput() : this.emailInput())?.nativeElement.focus();
       return;
     }
     this.errorMessage.set('');
@@ -232,11 +133,11 @@ export class LoginComponent {
       error: (error) => {
         this.isLoading.set(false);
         if (error.status === 401) {
-          this.errorMessage.set('Email ou mot de passe incorrect');
+          this.errorMessage.set('Email ou mot de passe incorrect. Vérifiez vos identifiants ou réinitialisez votre mot de passe.');
         } else if (error.status === 0) {
-          this.errorMessage.set('Impossible de se connecter au serveur.');
+          this.errorMessage.set('Impossible de joindre le serveur. Vérifiez votre connexion puis réessayez.');
         } else {
-          this.errorMessage.set('Une erreur est survenue. Veuillez réessayer.');
+          this.errorMessage.set('Une erreur est survenue. Réessayez dans quelques instants.');
         }
       }
     });

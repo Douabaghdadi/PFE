@@ -1,0 +1,66 @@
+<main class="page">
+  <div class="page-container is-detail">
+
+    <!-- ============ Chargement ============ -->
+    @if (isLoading()) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-title"></div>
+        <div class="skeleton skeleton-meta"></div>
+        <div class="skeleton skeleton-strip"></div>
+        <div class="skeleton skeleton-panel"></div>
+        <div class="skeleton skeleton-panel"></div>
+      </div>
+    }
+
+    <!-- ============ Erreur ============ -->
+    @if (errorMessage() && !isLoading()) {
+      <div class="error-banner" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <a class="btn btn-secondary" routerLink="/projets">Retour à la liste</a>
+      </div>
+    }
+
+    <!-- ============ Fiche ============ -->
+    @if (projet(); as p) {
+      @if (!isLoading()) {
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">{{ p.nomProjet || p.designationProjet }}</h1>
+            <p class="meta-line">
+              <span class="pill" [ngClass]="'pill-' + statutKey(p.statut)">{{ statutDef(p.statut).label }}</span>
+              @if (p.designationClient) {
+                <span class="meta-text"><span class="visually-hidden">Client : </span>{{ p.designationClient }}</span>
+              }
+              @if (p.reference) {
+                <span class="meta-text"><span class="visually-hidden">Référence : </span>{{ p.reference }}</span>
+              }
+            </p>
+          </div>
+
+          <div class="page-actions">
+            <a class="btn btn-secondary" routerLink="/projets">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+              </svg>
+              Retour
+            </a>
+            <a class="btn btn-secondary" [routerLink]="['/projets', p.id, 'historique']">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Historique
+            </a>
+            <button type="button" class="btn btn-primary" (click)="editProjet()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              Modifier le projet
+            </button>
+          </div>
+        </header>
+
+        <app-projet-fiche [projet]="p" />
+      }
+    }
+  </div>
+</main>

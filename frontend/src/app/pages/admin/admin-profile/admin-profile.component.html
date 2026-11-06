@@ -1,0 +1,292 @@
+<div class="page is-admin">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Mon profil</h1>
+        <p class="page-meta">Vos informations de compte Qualinet.</p>
+      </div>
+    </header>
+
+    <!-- Confirmation d'une modification -->
+    <div class="message-zone" role="status" aria-live="polite">
+      @if (message()) {
+        <p class="notice notice-ok is-banner">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+          </svg>
+          {{ message() }}
+        </p>
+      }
+    </div>
+
+    @if (user(); as u) {
+      <div class="profil">
+
+        <!-- ============ Identité ============ -->
+        <section class="panel carte" aria-labelledby="t-identite">
+          <span class="avatar" aria-hidden="true">{{ initiales() }}</span>
+          <div class="carte-texte">
+            <h2 id="t-identite" class="carte-nom">{{ u.username }}</h2>
+            <p class="carte-role"><span class="visually-hidden">Rôle : </span><span class="role">{{ role() }}</span></p>
+          </div>
+          <p class="carte-statut"><span class="dot is-ok" aria-hidden="true"></span>Compte actif</p>
+        </section>
+
+        <div class="colonne">
+
+          <!-- ============ Informations personnelles ============ -->
+          <section class="panel" aria-labelledby="t-infos">
+            <div class="panel-head">
+              <div>
+                <h2 id="t-infos" class="panel-title">Informations personnelles</h2>
+                <p class="panel-sub">Ces informations sont visibles de l'équipe Qualinet.</p>
+              </div>
+              <button type="button" class="btn btn-primary" (click)="ouvrirProfil()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                </svg>
+                Modifier le profil
+              </button>
+            </div>
+
+            <dl class="liste">
+              <div>
+                <dt>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  Nom d'utilisateur
+                </dt>
+                <dd>{{ u.username }}</dd>
+              </div>
+              <div>
+                <dt>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  Adresse e-mail
+                </dt>
+                <dd>{{ u.email }}</dd>
+              </div>
+              <div>
+                <dt>
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                  </svg>
+                  Rôle
+                </dt>
+                <dd>{{ role() }}</dd>
+              </div>
+              @if (membreDepuis()) {
+                <div>
+                  <dt>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Membre depuis
+                  </dt>
+                  <dd>{{ membreDepuis() }}</dd>
+                </div>
+              }
+            </dl>
+          </section>
+
+          <!-- ============ Mot de passe ============ -->
+          <section class="panel" aria-labelledby="t-securite">
+            <div class="panel-head securite">
+              <div>
+                <h2 id="t-securite" class="panel-title">Mot de passe</h2>
+                <p class="panel-sub">Utilisez un mot de passe robuste et unique.</p>
+              </div>
+              <button type="button" class="btn btn-secondary" (click)="ouvrirMdp()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Changer le mot de passe
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ============ Modifier le profil ============ -->
+<dialog #profilDialog class="dlg is-form" aria-labelledby="profil-titre"
+        (click)="onDialogClick($event, profilDialog)" (cancel)="profilEnCours() && $event.preventDefault()">
+  <form class="dlg-inner" (ngSubmit)="enregistrerProfil()" novalidate>
+    <button type="button" class="icon-btn dlg-close" (click)="fermerProfil()" [disabled]="profilEnCours()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+      </span>
+      <div>
+        <h2 id="profil-titre" class="dlg-title">Modifier le profil</h2>
+        <p class="dlg-sub">Votre nom et votre adresse de connexion.</p>
+      </div>
+    </div>
+
+    <div class="champs">
+      <div class="champ">
+        <label class="champ-label" for="p-nom">Nom d'utilisateur<span class="req" aria-hidden="true">*</span></label>
+        <input id="p-nom" name="username" type="text" class="control" autocomplete="username" spellcheck="false"
+               [(ngModel)]="profil.username" required
+               [class.is-invalid]="profilTentative() && !!erreurNom()"
+               [attr.aria-invalid]="profilTentative() && !!erreurNom()"
+               [attr.aria-describedby]="profilTentative() && erreurNom() ? 'p-nom-err' : 'p-nom-aide'">
+        @if (profilTentative() && erreurNom()) {
+          <p class="champ-error" id="p-nom-err">{{ erreurNom() }}</p>
+        } @else {
+          <p class="champ-hint" id="p-nom-aide">Nom affiché dans la plateforme, unique, 3 caractères minimum.</p>
+        }
+      </div>
+
+      <div class="champ">
+        <label class="champ-label" for="p-email">Adresse e-mail<span class="req" aria-hidden="true">*</span></label>
+        <input id="p-email" name="email" type="email" class="control" autocomplete="email" spellcheck="false"
+               [(ngModel)]="profil.email" required
+               [class.is-invalid]="profilTentative() && !!erreurEmail()"
+               [attr.aria-invalid]="profilTentative() && !!erreurEmail()"
+               [attr.aria-describedby]="profilTentative() && erreurEmail() ? 'p-email-err' : 'p-email-aide'">
+        @if (profilTentative() && erreurEmail()) {
+          <p class="champ-error" id="p-email-err">{{ erreurEmail() }}</p>
+        } @else {
+          <p class="champ-hint" id="p-email-aide">Sert à se connecter et à recevoir les notifications.</p>
+        }
+        @if (emailModifie() && !erreurEmail()) {
+          <p class="notice notice-warn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            Votre session se terminera : reconnectez-vous ensuite avec cette nouvelle adresse.
+          </p>
+        }
+      </div>
+    </div>
+
+    @if (profilErreur()) {
+      <div class="notice notice-error" role="alert">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ profilErreur() }}
+      </div>
+    }
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-secondary" (click)="fermerProfil()" [disabled]="profilEnCours()">Annuler</button>
+      <button type="submit" class="btn btn-primary" [disabled]="profilEnCours()">
+        {{ profilEnCours() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ============ Changer le mot de passe ============ -->
+<dialog #mdpDialog class="dlg is-form" aria-labelledby="mdp-titre"
+        (click)="onDialogClick($event, mdpDialog)" (close)="fermerMdp()" (cancel)="mdpEnCours() && $event.preventDefault()">
+  <form class="dlg-inner" (ngSubmit)="enregistrerMdp()" novalidate>
+    <button type="button" class="icon-btn dlg-close" (click)="fermerMdp()" [disabled]="mdpEnCours()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </span>
+      <div>
+        <h2 id="mdp-titre" class="dlg-title">Changer le mot de passe</h2>
+        <p class="dlg-sub">Votre session reste ouverte après le changement.</p>
+      </div>
+    </div>
+
+    <div class="champs">
+      <div class="champ">
+        <label class="champ-label" for="m-actuel">Mot de passe actuel<span class="req" aria-hidden="true">*</span></label>
+        <div class="mdp">
+          <input id="m-actuel" name="actuel" class="control" autocomplete="current-password"
+                 [type]="voirActuel() ? 'text' : 'password'" [(ngModel)]="mdp.actuel" required
+                 [class.is-invalid]="mdpTentative() && !!erreurActuel()"
+                 [attr.aria-invalid]="mdpTentative() && !!erreurActuel()"
+                 [attr.aria-describedby]="mdpTentative() && erreurActuel() ? 'm-actuel-err' : null">
+          <button type="button" class="mdp-voir" (click)="voirActuel.set(!voirActuel())"
+                  [attr.aria-pressed]="voirActuel()" [attr.aria-label]="voirActuel() ? 'Masquer le mot de passe actuel' : 'Afficher le mot de passe actuel'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </button>
+        </div>
+        @if (mdpTentative() && erreurActuel()) {
+          <p class="champ-error" id="m-actuel-err">{{ erreurActuel() }}</p>
+        }
+      </div>
+
+      <div class="champ">
+        <label class="champ-label" for="m-nouveau">Nouveau mot de passe<span class="req" aria-hidden="true">*</span></label>
+        <div class="mdp">
+          <input id="m-nouveau" name="nouveau" class="control" autocomplete="new-password"
+                 [type]="voirNouveau() ? 'text' : 'password'" [(ngModel)]="mdp.nouveau" required
+                 [class.is-invalid]="mdpTentative() && !!erreurNouveau()"
+                 [attr.aria-invalid]="mdpTentative() && !!erreurNouveau()"
+                 [attr.aria-describedby]="mdpTentative() && erreurNouveau() ? 'm-nouveau-err' : 'm-nouveau-aide'">
+          <button type="button" class="mdp-voir" (click)="voirNouveau.set(!voirNouveau())"
+                  [attr.aria-pressed]="voirNouveau()" [attr.aria-label]="voirNouveau() ? 'Masquer le nouveau mot de passe' : 'Afficher le nouveau mot de passe'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </button>
+        </div>
+        @if (mdpTentative() && erreurNouveau()) {
+          <p class="champ-error" id="m-nouveau-err">{{ erreurNouveau() }}</p>
+        } @else {
+          <p class="champ-hint" id="m-nouveau-aide" [class.is-ok]="mdpValide()">8 caractères minimum, avec au moins une majuscule et un chiffre.</p>
+        }
+      </div>
+
+      <div class="champ">
+        <label class="champ-label" for="m-confirmation">Confirmer le nouveau mot de passe<span class="req" aria-hidden="true">*</span></label>
+        <input id="m-confirmation" name="confirmation" class="control" autocomplete="new-password"
+               [type]="voirNouveau() ? 'text' : 'password'" [(ngModel)]="mdp.confirmation" required
+               [class.is-invalid]="mdpTentative() && !!erreurConfirmation()"
+               [attr.aria-invalid]="mdpTentative() && !!erreurConfirmation()"
+               [attr.aria-describedby]="mdpTentative() && erreurConfirmation() ? 'm-confirmation-err' : null">
+        @if (mdpTentative() && erreurConfirmation()) {
+          <p class="champ-error" id="m-confirmation-err">{{ erreurConfirmation() }}</p>
+        }
+      </div>
+    </div>
+
+    @if (mdpErreur()) {
+      <div class="notice notice-error" role="alert">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {{ mdpErreur() }}
+      </div>
+    }
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-secondary" (click)="fermerMdp()" [disabled]="mdpEnCours()">Annuler</button>
+      <button type="submit" class="btn btn-primary" [disabled]="mdpEnCours()">
+        {{ mdpEnCours() ? 'Enregistrement…' : 'Changer le mot de passe' }}
+      </button>
+    </div>
+  </form>
+</dialog>

@@ -1,0 +1,305 @@
+<main class="page">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Mes projets</h1>
+        @if (!isLoading() && !errorMessage() && projets().length > 0) {
+          <p class="page-meta">
+            {{ pl(projets().length, 'projet') }}, dont {{ stats()[0].count }} en cours.
+          </p>
+        }
+      </div>
+
+      <div class="page-actions">
+        <a class="btn btn-primary" routerLink="/fiche-projet/new">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+          </svg>
+          Créer un projet
+        </a>
+      </div>
+    </header>
+
+    <!-- ============ Chargement ============ -->
+    @if (isLoading()) {
+      <div aria-busy="true">
+        <div class="skeleton skeleton-strip"></div>
+        <div class="cards">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+        </div>
+      </div>
+    }
+
+    <!-- ============ Erreur ============ -->
+    @if (errorMessage() && !isLoading()) {
+      <div class="error-banner" role="alert">
+        <span>{{ errorMessage() }}</span>
+        <button type="button" class="btn btn-secondary" (click)="loadProjets()">Réessayer</button>
+      </div>
+    }
+
+    <!-- ============ Contenu ============ -->
+    @if (!isLoading() && !errorMessage()) {
+
+      @if (projets().length > 0) {
+
+        <!-- Indicateurs : une carte par statut, le total en tête -->
+        <section class="kpi-strip" aria-label="Indicateurs de vos projets">
+          <div class="kpi kpi-lead">
+            <span class="kpi-label">Projets</span>
+            <span class="kpi-value">{{ projets().length }}</span>
+            <span class="kpi-bar" aria-hidden="true">
+              <i [style.width.%]="stats()[1].percent" style="background: #09c82c;"></i>
+            </span>
+            <span class="kpi-hint">{{ stats()[1].count }} terminé{{ stats()[1].count > 1 ? 's' : '' }} sur {{ projets().length }}</span>
+          </div>
+          @for (s of kpiStatuts(); track s.key) {
+            <div class="kpi">
+              <span class="kpi-label"><span class="dot" [style.background]="s.color" aria-hidden="true"></span>{{ s.label }}</span>
+              <span class="kpi-value">{{ s.count }}</span>
+              <span class="kpi-hint">{{ s.percent }}&#8239;% des projets</span>
+            </div>
+          }
+        </section>
+
+        <!-- Filtres -->
+        <section class="panel filters" aria-label="Filtrer les projets">
+          <div class="field-search">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"/>
+            </svg>
+            <label for="recherche" class="visually-hidden">Rechercher un projet</label>
+            <input id="recherche" type="search" class="control" autocomplete="off"
+                   [(ngModel)]="searchTerm" (input)="filterProjets()"
+                   placeholder="Rechercher un projet ou un client">
+          </div>
+
+          <div class="field-select">
+            <label for="statut" class="visually-hidden">Filtrer par statut</label>
+            <select id="statut" class="control" [(ngModel)]="filterStatut" (change)="filterProjets()">
+              <option value="">Tous les statuts</option>
+              <option value="en_cours">En cours</option>
+              <option value="termine">Terminé</option>
+              <option value="en_attente">En attente</option>
+              <option value="annule">Annulé</option>
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <div class="field-select">
+            <label for="type" class="visually-hidden">Filtrer par type</label>
+            <select id="type" class="control" [(ngModel)]="filterType" (change)="filterProjets()">
+              <option value="">Tous les types</option>
+              @for (t of typesProjet; track t.code) {
+                <option [value]="t.code">{{ t.libelle }}</option>
+              }
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
+          <button type="button" class="btn btn-secondary" (click)="toggleSortOrder()"
+                  [attr.aria-label]="sortOrder === 'desc' ? 'Tri : plus récent d\'abord. Inverser le tri' : 'Tri : plus ancien d\'abord. Inverser le tri'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"
+                 [style.transform]="sortOrder === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)'">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
+            </svg>
+            {{ sortOrder === 'desc' ? 'Plus récent' : 'Plus ancien' }}
+          </button>
+
+          <button type="button" class="btn btn-secondary" (click)="resetFilters()" [disabled]="!filtresActifs && sortOrder === 'desc'">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Réinitialiser
+          </button>
+        </section>
+      }
+
+      <!-- Aucun projet du tout / aucun résultat -->
+      @if (filteredProjets().length === 0) {
+        <div class="panel empty">
+          <div class="empty-icon" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+          </div>
+          @if (projets().length === 0) {
+            <h2 class="empty-title">Aucun projet pour le moment</h2>
+            <p class="empty-text">Vous n'avez pas encore créé de projet. Commencez par créer votre première fiche de projet.</p>
+            <a class="btn btn-primary" routerLink="/fiche-projet/new">Créer mon premier projet</a>
+          } @else {
+            <h2 class="empty-title">Aucun projet trouvé</h2>
+            <p class="empty-text">Aucun de vos projets ne correspond à cette recherche.</p>
+            <button type="button" class="btn btn-primary" (click)="resetFilters()">Réinitialiser les filtres</button>
+          }
+        </div>
+      } @else {
+
+        <!-- Liste des projets -->
+        <section aria-label="Liste de vos projets">
+          <p class="result-count" role="status">
+            {{ pl(filteredProjets().length, 'projet') }}@if (filteredProjets().length !== projets().length) { sur {{ projets().length }}}
+          </p>
+
+          <div class="cards">
+            @for (projet of paginatedProjets(); track projet.id) {
+              <article class="pcard" (click)="viewProjet(projet.id)">
+
+                <div class="pcard-body">
+                  <div class="pcard-head">
+                    <div class="pcard-id">
+                      <span class="pcard-icon" aria-hidden="true">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                      </span>
+                      <div class="pcard-name">
+                        <a class="pcard-title" [routerLink]="['/projets', projet.id]" (click)="$event.stopPropagation()"
+                           [title]="projet.nomProjet || projet.designationProjet">{{ projet.nomProjet || projet.designationProjet }}</a>
+                        @if (getTypeEtCaractere(projet)) {
+                          <span class="pcard-ref">{{ getTypeEtCaractere(projet) }}</span>
+                        }
+                      </div>
+                    </div>
+                    <span class="pill" [ngClass]="'pill-' + statutKey(projet.statut)">{{ statutDef(projet.statut).label }}</span>
+                  </div>
+
+                  <dl class="facts">
+                    <div>
+                      <dt>Client</dt>
+                      @if (projet.designationClient) {
+                        <dd [title]="projet.designationClient">{{ projet.designationClient }}</dd>
+                      } @else {
+                        <dd class="is-empty">Non renseigné</dd>
+                      }
+                    </div>
+                    <div>
+                      <dt>Créé le</dt>
+                      @if (projet.dateCreation) {
+                        <dd>{{ formatDate(projet.dateCreation) }}</dd>
+                      } @else {
+                        <dd class="is-empty">Non renseignée</dd>
+                      }
+                    </div>
+                  </dl>
+                </div>
+
+                <div class="pcard-foot">
+                  <button type="button" class="icon-btn" (click)="viewFichesSuivi(projet.id); $event.stopPropagation()"
+                          title="Fiches de suivi" [attr.aria-label]="'Fiches de suivi de ' + (projet.nomProjet || projet.designationProjet)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                  </button>
+
+                  <button type="button" class="icon-btn" (click)="editProjet(projet.id); $event.stopPropagation()"
+                          title="Modifier" [attr.aria-label]="'Modifier ' + (projet.nomProjet || projet.designationProjet)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+
+                  <button type="button" class="icon-btn is-danger" (click)="deleteProjet(projet); $event.stopPropagation()"
+                          title="Supprimer" [attr.aria-label]="'Supprimer ' + (projet.nomProjet || projet.designationProjet)">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+
+                  <button type="button" class="btn btn-primary btn-details" (click)="viewProjet(projet.id); $event.stopPropagation()"
+                          [attr.aria-label]="'Voir ' + (projet.nomProjet || projet.designationProjet)">
+                    Voir
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                  </button>
+                </div>
+              </article>
+            }
+          </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <nav class="pager" aria-label="Pagination">
+              <button type="button" class="pager-btn" (click)="goToPage(currentPage() - 1)" [disabled]="currentPage() === 1" aria-label="Page précédente">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+
+              @for (page of getPageNumbers(); track $index) {
+                @if (page === -1) {
+                  <span class="pager-gap" aria-hidden="true">…</span>
+                } @else {
+                  <button type="button" class="pager-btn" [class.is-current]="currentPage() === page"
+                          [attr.aria-current]="currentPage() === page ? 'page' : null" [attr.aria-label]="'Page ' + page"
+                          (click)="goToPage(page)">{{ page }}</button>
+                }
+              }
+
+              <button type="button" class="pager-btn" (click)="goToPage(currentPage() + 1)" [disabled]="currentPage() === totalPages()" aria-label="Page suivante">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </nav>
+          }
+        </section>
+      }
+    }
+  </div>
+</main>
+
+<!-- ============ Confirmation de suppression ============ -->
+<dialog #suppressionDialog class="dlg" aria-labelledby="suppression-titre"
+        (click)="onDialogClick($event)" (close)="onSuppressionClosed()">
+  @if (projetASupprimer(); as projet) {
+    <div class="dlg-inner">
+      <button type="button" class="icon-btn dlg-close" (click)="annulerSuppression()" aria-label="Fermer" title="Fermer">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <div class="dlg-head">
+        <span class="dlg-icon is-danger" aria-hidden="true">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="suppression-titre" class="dlg-title">Supprimer ce projet ?</h2>
+          <p class="dlg-sub" [title]="projet.nomProjet || projet.designationProjet">{{ projet.nomProjet || projet.designationProjet }}</p>
+        </div>
+      </div>
+
+      <p class="dlg-text">Cette action est définitive : la fiche projet sera supprimée et ne pourra pas être récupérée.</p>
+
+      @if (erreurSuppression()) {
+        <div class="notice notice-error" role="alert">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ erreurSuppression() }}
+        </div>
+      }
+
+      <div class="dlg-actions">
+        <button type="button" class="btn btn-secondary" data-autofocus (click)="annulerSuppression()">Annuler</button>
+        <button type="button" class="btn btn-danger" (click)="confirmerSuppression()" [disabled]="suppressionEnCours()">
+          {{ suppressionEnCours() ? 'Suppression…' : 'Supprimer' }}
+        </button>
+      </div>
+    </div>
+  }
+</dialog>
+
+<app-chatbot context="chef_projet"></app-chatbot>

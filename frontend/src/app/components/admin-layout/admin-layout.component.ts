@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -142,8 +142,12 @@ import { AuthService } from '../../services/auth.service';
       height: calc(100vh - 280px);
     }
     
-    .xl\\:ml-68 {
-      margin-left: 17rem;
+    /* Place laissée à la barre latérale : seulement quand elle est affichée (xl de Tailwind, 1280 px).
+       En dessous, elle est masquée et s'ouvre par-dessus le contenu. */
+    @media (min-width: 1280px) {
+      .xl\\:ml-68 {
+        margin-left: 17rem;
+      }
     }
     
     .max-w-64 {
@@ -182,14 +186,11 @@ export class AdminLayoutComponent {
   router = inject(Router);
   
   sidebarOpen = signal(false);
-  currentUser = signal('Admin');
-
-  ngOnInit() {
+  // Calculé : le nom affiché suit une modification faite depuis la page Profil
+  currentUser = computed(() => {
     const user = this.authService.currentUser();
-    if (user) {
-      this.currentUser.set(user.username || user.email);
-    }
-  }
+    return user?.username || user?.email || 'Admin';
+  });
 
   toggleSidebar() {
     this.sidebarOpen.update(v => !v);

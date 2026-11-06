@@ -1,0 +1,117 @@
+<main class="page">
+  <div class="page-container is-compte">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Modifier le profil</h1>
+        <p class="page-meta">Mettez à jour vos informations personnelles. Les champs marqués d'un <span class="req" aria-hidden="true">*</span><span class="visually-hidden">astérisque</span> sont obligatoires.</p>
+      </div>
+
+      <div class="page-actions">
+        <a routerLink="/profile" class="btn btn-secondary">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
+          Retour au profil
+        </a>
+      </div>
+    </header>
+
+    <form [formGroup]="editProfileForm" (ngSubmit)="onSubmit()" novalidate [attr.aria-busy]="isLoading">
+
+      <!-- ============ Informations personnelles ============ -->
+      <section class="panel" aria-labelledby="t-infos">
+        <div class="panel-head">
+          <div>
+            <h2 id="t-infos" class="panel-title">Informations personnelles</h2>
+            <p class="panel-sub">Ces informations sont visibles de l'équipe Qualinet.</p>
+          </div>
+        </div>
+
+        <div class="fields cols-2">
+          <div class="field">
+            <label class="field-label" for="f-username">Nom d'utilisateur<span class="req" aria-hidden="true">*</span></label>
+            <input id="f-username" type="text" class="control" formControlName="username" autocomplete="username"
+                   placeholder="Votre nom d'utilisateur" aria-required="true"
+                   [class.is-invalid]="username.invalid && username.touched"
+                   [attr.aria-invalid]="username.invalid && username.touched ? 'true' : null"
+                   [attr.aria-describedby]="username.invalid && username.touched ? 'e-username' : null">
+            @if (username.invalid && username.touched) {
+              <p id="e-username" class="field-error">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Le nom d'utilisateur est requis.
+              </p>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-email">Adresse e-mail<span class="req" aria-hidden="true">*</span></label>
+            <input id="f-email" type="email" class="control" formControlName="email" autocomplete="email"
+                   placeholder="votre.email@exemple.com" aria-required="true"
+                   [class.is-invalid]="email.invalid && email.touched"
+                   [attr.aria-invalid]="email.invalid && email.touched ? 'true' : null"
+                   [attr.aria-describedby]="email.invalid && email.touched ? 'e-email' : null">
+            @if (email.invalid && email.touched) {
+              <p id="e-email" class="field-error">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                L'adresse e-mail est requise et doit être valide.
+              </p>
+            }
+          </div>
+
+          <div class="field span-all">
+            <label class="field-label" for="f-phone">Numéro de téléphone</label>
+            <input id="f-phone" type="tel" class="control" formControlName="phoneNumber" autocomplete="tel"
+                   placeholder="+216 XX XXX XXX">
+          </div>
+        </div>
+
+        @if (emailModifie && email.valid && !successMessage) {
+          <div class="notice notice-warn">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            Votre session se terminera : reconnectez-vous ensuite avec cette nouvelle adresse.
+          </div>
+        }
+        @if (errorMessage) {
+          <div class="notice notice-error" role="alert">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {{ errorMessage }}
+          </div>
+        }
+        @if (successMessage) {
+          <div class="notice notice-ok" role="status">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            {{ successMessage }}
+          </div>
+        }
+      </section>
+
+      <!-- ============ Actions ============ -->
+      <div class="panel form-actions is-end">
+        <div class="group">
+          <a routerLink="/profile" class="btn btn-secondary">Annuler</a>
+          <button type="submit" class="btn btn-primary" [disabled]="isLoading || !!successMessage">
+            @if (isLoading) {
+              <span class="spin" aria-hidden="true"></span>
+              Enregistrement…
+            } @else {
+              Enregistrer les modifications
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</main>

@@ -1,0 +1,241 @@
+/* Formulaires de saisie (fiche de suivi : créer et modifier).
+   Même langage visuel que les listes de projets et le tableau de bord pilote qualité :
+   - mêmes jetons : encre bleue du logo pour les titres, vert de l'app pour l'action ;
+   - panneaux blancs à bordure teintée, une seule ombre douce, lavis vert et bleu en haut de page ;
+   - champs à bordure verdie nette, focus vert, erreurs en rouge avec texte (jamais la couleur seule).
+   Les styles de base (page, en-tête, boutons, panneaux) viennent de pilote-qualite/pilote-ui.css.
+   Les jetons et les champs sont repris de projets-ui.css : ce fichier-ci reste autonome pour ne pas
+   charger les styles de cartes et d'indicateurs, inutiles dans un formulaire. */
+:host {
+  --ink: #0f2447;
+  --ink-2: #35435f;
+  --muted: #5b6b85;
+  --line: #dde7e2;
+  --line-soft: #ebf1ee;
+  --canvas: #f2f6f3;
+  --blue: #1a4394;
+  --blue-soft: #e8eef9;
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(10, 50, 40, 0.04), 0 14px 30px -24px rgba(10, 50, 40, 0.3);
+  --field-line: #7f9a8a;
+}
+
+.page {
+  background:
+    radial-gradient(900px 340px at 0% 0%, rgba(16, 185, 129, 0.13), transparent 70%),
+    radial-gradient(800px 320px at 100% 0%, rgba(26, 67, 148, 0.08), transparent 70%),
+    var(--canvas);
+}
+
+/* Colonne un peu plus étroite que les listes (1320 px) pour la lecture, mais assez large pour le tableau des tâches */
+.page-container.is-form { max-width: 1200px; }
+/* Pages du compte (modifier le profil, mot de passe) : un formulaire court, sans besoin de largeur */
+.page-container.is-compte { max-width: 760px; }
+.page-container.is-compte.is-etroit { max-width: 640px; }
+/* L'introduction se replie sur deux lignes plutôt que de repousser le bouton « Retour » sous le titre */
+.page-container.is-compte .page-header > div:first-child { flex: 1 1 300px; min-width: 0; }
+
+/* ============ En-tête ============ */
+.page-header { align-items: flex-end; margin-bottom: 1.6rem; }
+.page-title { font-size: 1.85rem; font-weight: 600; letter-spacing: -0.025em; color: var(--ink); }
+.page-meta { margin-top: 0.45rem; font-size: 0.95rem; color: var(--muted); }
+.page-actions { align-items: center; gap: 0.75rem; }
+.page-actions .btn { height: 40px; border-radius: 9px; }
+
+.panel { border-radius: var(--radius); box-shadow: var(--shadow); }
+.panel-title { font-weight: 600; letter-spacing: -0.01em; }
+.panel-head > div { min-width: 0; }
+.error-banner { margin-bottom: 1.25rem; }
+
+.req { margin-left: 0.2rem; color: #b91c1c; }
+.page-meta .req { margin-left: 0; }
+/* Dans un titre de panneau, l'astérisque se colle au titre malgré l'espacement du titre */
+.panel-title .req { margin-left: -0.3rem; }
+
+/* ============ Étapes ============ */
+.steps { padding: 0.45rem; }
+.steps ol { display: flex; gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.steps li { flex: 1 1 0; min-width: 0; }
+.step {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.step:hover { background: #f1f7f4; color: var(--ink); }
+.step:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.step-num {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #9bb3a5;
+  border-radius: 50%;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.step.is-current { border-color: #c9e4d6; background: #e9f6ef; color: var(--ink); font-weight: 600; }
+.step.is-current .step-num { border-color: #047857; background: #047857; color: #fff; }
+
+/* ============ Champs ============ */
+.fields { display: grid; gap: 1rem 1.25rem; }
+.fields.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fields.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fields + .fields { margin-top: 1rem; }
+.field { min-width: 0; }
+.field.span-all { grid-column: 1 / -1; }
+.field-label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; font-weight: 500; color: var(--ink-2); }
+.field-hint { margin: 0.4rem 0 0; font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #b91c1c;
+}
+.field-error svg { flex-shrink: 0; width: 15px; height: 15px; margin-top: 1px; }
+
+.control {
+  width: 100%;
+  height: 42px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--field-line);
+  border-radius: 10px;
+  background: #fcfefd;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+.control::placeholder { color: #5f7a6a; opacity: 1; }
+.control:hover:not(:disabled):not([readonly]) { border-color: #5f7a6a; }
+.control:focus { outline: none; border-color: #059669; background: #fff; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18); }
+/* Champs repris de la fiche projet ou calculés : lisibles, mais clairement non modifiables */
+.control[readonly], .control:disabled { border-color: var(--line); background: #f3f7f5; color: var(--ink-2); }
+.control[readonly] { cursor: default; }
+.control:disabled { cursor: not-allowed; opacity: 1; }
+textarea.control { height: auto; min-height: 92px; padding: 0.65rem 0.9rem; line-height: 1.5; resize: vertical; }
+textarea.control[readonly] { resize: none; }
+.control.is-invalid { border-color: #dc2626; background: #fffafa; }
+.control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16); }
+
+.select-wrap { position: relative; }
+.select-wrap svg {
+  position: absolute;
+  right: 0.8rem;
+  top: 50%;
+  width: 15px;
+  height: 15px;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+.select-wrap .control { appearance: none; -webkit-appearance: none; padding-right: 2.2rem; cursor: pointer; }
+.select-wrap .control:disabled { cursor: not-allowed; }
+
+/* ============ Listes de lignes à ajouter et à supprimer ============ */
+.btn-add { height: 36px; padding: 0 0.85rem; border-radius: 9px; font-size: 0.85rem; }
+.btn-add svg { width: 15px; height: 15px; }
+.items { display: flex; flex-direction: column; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.item { display: flex; align-items: flex-start; gap: 0.5rem; }
+.item .control { flex: 1; min-width: 0; }
+.items-empty {
+  margin: 0;
+  padding: 1.1rem 1rem;
+  border: 1px dashed #c3d4ca;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.dot.is-warn { background: #f59e0b; }
+.dot.is-danger { background: #ef4444; }
+.dot.is-ok { background: #09c82c; }
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.icon-btn svg { width: 17px; height: 17px; }
+.icon-btn:hover { border-color: #b9d6c7; background: #f1f7f4; color: #047857; }
+.icon-btn.is-danger:hover { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+.icon-btn:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+.item .icon-btn { width: 42px; height: 42px; }
+
+/* ============ Messages ============ */
+.notice { display: flex; align-items: flex-start; gap: 0.55rem; margin-top: 1rem; padding: 0.65rem 0.85rem; border: 1px solid; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
+.notice svg { width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px; }
+.notice.is-banner { margin: 0 0 1.25rem; }
+.notice-ok { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.notice-warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.notice-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+/* ============ Actions ============ */
+.form-actions { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0; padding: 0.9rem 1rem; }
+.form-actions .group { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.form-actions.is-end { justify-content: flex-end; }
+.form-actions .btn { height: 42px; padding: 0 1.2rem; border-radius: 10px; font-weight: 600; }
+.form-actions .btn-primary { box-shadow: 0 1px 2px rgba(6, 95, 70, 0.2), 0 8px 18px -10px rgba(5, 150, 105, 0.75); }
+.form-actions .btn-secondary { font-weight: 500; }
+.spin {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============ Adaptation ============ */
+@media (max-width: 900px) {
+  .fields.cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .page-title { font-size: 1.5rem; }
+  .step { padding: 0.5rem 0.65rem; font-size: 0.9rem; }
+  /* Étroit : seule l'étape en cours garde son nom, les autres se réduisent à leur numéro */
+  .steps li { flex: 0 0 auto; }
+  .steps li.is-current { flex: 1 1 0; }
+  .step:not(.is-current) { width: auto; justify-content: center; }
+  .step:not(.is-current) .step-label { display: none; }
+}
+@media (max-width: 560px) {
+  .fields.cols-2, .fields.cols-3 { grid-template-columns: minmax(0, 1fr); }
+  .panel-head .btn-add { width: 100%; justify-content: center; }
+  .form-actions { flex-direction: column-reverse; align-items: stretch; }
+  .form-actions .group { flex-direction: column-reverse; }
+  .form-actions .btn { width: 100%; }
+  .page-actions { width: 100%; }
+  .page-actions .btn { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step, .control, .icon-btn { transition: none; }
+  .spin { animation: none; }
+}

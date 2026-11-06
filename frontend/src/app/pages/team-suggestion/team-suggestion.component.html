@@ -1,142 +1,235 @@
-<div class="ts-page">
-  <div class="ts-container">
+<main class="page">
+  <div class="page-container is-narrow">
 
-    <!-- En-tête, comme les tableaux de bord -->
-    <header class="ts-hero">
-      <div class="ts-hero-content">
-        <div>
-          <span class="ts-hero-badge"><i></i> SUGGESTION IA</span>
-          <h1 class="ts-hero-title">Suggestion d'équipe</h1>
-          <p class="ts-hero-subtitle">L'IA compare votre projet à l'historique et propose une équipe adaptée</p>
-        </div>
-        <div class="ts-hero-actions">
-          <button *ngIf="result?.success" type="button" class="ts-hero-btn" (click)="reset()">Nouvelle suggestion</button>
-          <button type="button" class="ts-hero-btn ts-hero-btn-plein" (click)="goBack()">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
-            Retour
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Suggestion d'équipe</h1>
+        <p class="page-meta">L'IA compare votre projet à l'historique et propose une équipe adaptée.</p>
+      </div>
+
+      <div class="page-actions">
+        @if (result?.success) {
+          <button type="button" class="btn btn-secondary" (click)="reset()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Nouvelle suggestion
           </button>
-        </div>
+        }
+        <button type="button" class="btn btn-secondary" (click)="goBack()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16l-4-4m0 0l4-4m-4 4h18"/>
+          </svg>
+          Retour
+        </button>
       </div>
     </header>
 
     <!-- ============ Formulaire ============ -->
-    <section *ngIf="!result" class="ts-panel">
-      <h2 class="ts-panel-title">Caractéristiques du nouveau projet</h2>
-      <p class="ts-panel-subtitle">Plus la description est précise, plus la proposition est pertinente.</p>
+    @if (!result) {
+      <form (ngSubmit)="suggest()" novalidate [attr.aria-busy]="loading">
 
-      <div class="ts-form-grid">
-        <label class="ts-field">
-          <span class="ts-label">Type de projet <span class="ts-required">*</span></span>
-          <select [(ngModel)]="form.typeProjet" class="ts-control">
-            <option value="">Sélectionner</option>
-            <option *ngFor="let t of typesProjet" [value]="t">{{ t }}</option>
-          </select>
-        </label>
-
-        <label class="ts-field">
-          <span class="ts-label">Complexité <span class="ts-required">*</span></span>
-          <select [(ngModel)]="form.complexite" class="ts-control">
-            <option *ngFor="let c of complexites" [value]="c">{{ c }}</option>
-          </select>
-        </label>
-
-        <label class="ts-field">
-          <span class="ts-label">Budget (MDHT)</span>
-          <input type="number" [(ngModel)]="form.budgetMDH" placeholder="ex : 0.40" class="ts-control" />
-        </label>
-
-        <label class="ts-field">
-          <span class="ts-label">Durée (mois)</span>
-          <input type="number" [(ngModel)]="form.dureeEnMois" placeholder="ex : 8" class="ts-control" />
-        </label>
-
-        <label class="ts-field ts-field-full">
-          <span class="ts-label">Modalité de développement</span>
-          <select [(ngModel)]="form.modaliteDeveloppement" class="ts-control">
-            <option value="">Sélectionner</option>
-            <option *ngFor="let m of modalites" [value]="m">{{ m }}</option>
-          </select>
-        </label>
-
-        <label class="ts-field ts-field-full">
-          <span class="ts-label">Description du projet</span>
-          <textarea [(ngModel)]="form.description" rows="4" class="ts-control ts-textarea"
-                    placeholder="Objectifs, périmètre, contraintes techniques ou de calendrier..."></textarea>
-        </label>
-      </div>
-
-      <div *ngIf="error" class="ts-error">{{ error }}</div>
-
-      <div class="ts-form-footer">
-        <span class="ts-hint">L'IA s'appuie sur vos projets passés et les équipes déjà constituées.</span>
-        <button type="button" class="ts-btn-primary" (click)="suggest()" [disabled]="loading">
-          <span *ngIf="loading" class="ts-btn-spinner"></span>
-          {{ loading ? 'Analyse en cours...' : 'Suggérer une équipe' }}
-        </button>
-      </div>
-    </section>
-
-    <!-- ============ Résultats ============ -->
-    <ng-container *ngIf="result?.success && result as r">
-
-      <section class="ts-panel ts-summary">
-        <div>
-          <span class="ts-summary-label">Équipe recommandée</span>
-          <span class="ts-summary-value">{{ r.tailleEquipeRecommandee }} <small>personne(s)</small></span>
-        </div>
-        <p *ngIf="r.projetsSimilairesAnalyses && r.projetsSimilairesAnalyses !== 'N/A'" class="ts-summary-text">
-          <strong>Projets similaires :</strong> {{ r.projetsSimilairesAnalyses }}
-        </p>
-      </section>
-
-      <div class="ts-grid-2">
-        <section *ngIf="r.profils?.length" class="ts-panel">
-          <h2 class="ts-panel-title">Profils nécessaires</h2>
-          <div *ngFor="let profil of r.profils" class="ts-row">
-            <span class="ts-count">{{ profil.nombrePersonnes }}</span>
-            <div class="ts-row-main">
-              <p class="ts-row-title">{{ profil.role }}</p>
-              <p class="ts-row-text">{{ profil.competencesRequises }}</p>
+        <section class="panel" aria-labelledby="t-projet">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-projet" class="panel-title">Caractéristiques du nouveau projet</h2>
+              <p class="panel-sub">Plus la description est précise, plus la proposition est pertinente. Les champs marqués d'un <span class="req" aria-hidden="true">*</span><span class="visually-hidden">astérisque</span> sont obligatoires.</p>
             </div>
           </div>
-        </section>
 
-        <section *ngIf="r.membresRecommandes?.length" class="ts-panel">
-          <h2 class="ts-panel-title">Membres proposés</h2>
-          <div *ngFor="let membre of r.membresRecommandes" class="ts-row">
-            <ng-container *ngIf="decomposerMembre(membre) as m">
-              <span class="ts-avatar" [class.ts-avatar-libre]="m.aRecruter">{{ m.aRecruter ? '+' : initiales(m.nom) }}</span>
-              <div class="ts-row-main">
-                <p class="ts-row-title">{{ m.aRecruter ? 'À recruter' : m.nom }}</p>
-                <p class="ts-row-text" *ngIf="m.role">{{ m.role }}</p>
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-type">Type de projet<span class="req" aria-hidden="true">*</span></label>
+              <div class="select-wrap">
+                <select id="f-type" name="typeProjet" class="control" [(ngModel)]="form.typeProjet"
+                        [class.is-invalid]="submitted && !form.typeProjet"
+                        [attr.aria-invalid]="submitted && !form.typeProjet ? 'true' : null"
+                        [attr.aria-describedby]="error ? 'e-ia' : null">
+                  <option value="">Sélectionner</option>
+                  @for (t of typesProjet; track t) {
+                    <option [value]="t">{{ t }}</option>
+                  }
+                </select>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                </svg>
               </div>
-            </ng-container>
-          </div>
-        </section>
-      </div>
+            </div>
 
-      <section class="ts-panel">
-        <h2 class="ts-panel-title">Pourquoi cette équipe</h2>
-        <p class="ts-text">{{ r.justification }}</p>
+            <div class="field">
+              <label class="field-label" for="f-complexite">Complexité<span class="req" aria-hidden="true">*</span></label>
+              <div class="select-wrap">
+                <select id="f-complexite" name="complexite" class="control" [(ngModel)]="form.complexite"
+                        [class.is-invalid]="submitted && !form.complexite"
+                        [attr.aria-invalid]="submitted && !form.complexite ? 'true' : null">
+                  @for (c of complexites; track c) {
+                    <option [value]="c">{{ libellesComplexite[c] }}</option>
+                  }
+                </select>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="f-budget">Budget (MD/HT)</label>
+              <input id="f-budget" name="budgetMDH" type="number" step="0.01" class="control" [(ngModel)]="form.budgetMDH" placeholder="ex : 0.40">
+            </div>
+
+            <div class="field">
+              <label class="field-label" for="f-duree">Durée (mois)</label>
+              <input id="f-duree" name="dureeEnMois" type="number" class="control" [(ngModel)]="form.dureeEnMois" placeholder="ex : 8">
+            </div>
+
+            <div class="field span-all">
+              <label class="field-label" for="f-modalite">Modalité de développement</label>
+              <div class="select-wrap">
+                <select id="f-modalite" name="modaliteDeveloppement" class="control" [(ngModel)]="form.modaliteDeveloppement">
+                  <option value="">Sélectionner</option>
+                  @for (m of modalites; track m) {
+                    <option [value]="m">{{ libellesModalite[m] }}</option>
+                  }
+                </select>
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="field span-all">
+              <label class="field-label" for="f-description">Description du projet</label>
+              <textarea id="f-description" name="description" class="control" rows="4" [(ngModel)]="form.description"
+                        placeholder="Objectifs, périmètre, contraintes techniques ou de calendrier…"></textarea>
+            </div>
+          </div>
+
+          @if (error) {
+            <div id="e-ia" class="notice notice-error" role="alert">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ error }}
+            </div>
+          }
+        </section>
+
+        <div class="panel form-actions">
+          <p class="hint">L'IA s'appuie sur vos projets passés et les équipes déjà constituées.</p>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            @if (loading) {
+              <span class="spin" aria-hidden="true"></span>
+              Analyse en cours…
+            } @else {
+              Suggérer une équipe
+            }
+          </button>
+        </div>
+      </form>
+    }
+
+    <!-- ============ Résultats ============ -->
+    @if (result && result.success) {
+      @let r = result;
+
+      <section class="panel summary" aria-labelledby="t-resume">
+        <div class="summary-figure">
+          <h2 id="t-resume" class="summary-label">Équipe recommandée</h2>
+          <p class="summary-value">{{ r.tailleEquipeRecommandee }} <small>{{ r.tailleEquipeRecommandee > 1 ? 'personnes' : 'personne' }}</small></p>
+        </div>
+        @if (r.projetsSimilairesAnalyses && r.projetsSimilairesAnalyses !== 'N/A') {
+          <div class="summary-text prose">
+            <h3>Projets similaires analysés</h3>
+            <p>{{ r.projetsSimilairesAnalyses }}</p>
+          </div>
+        }
+        <p class="summary-note">Proposition générée par l'IA : à valider avant toute décision.</p>
       </section>
 
-      <div class="ts-grid-2">
-        <section class="ts-panel ts-accent-vert">
-          <h2 class="ts-panel-title">Facteurs clés de succès</h2>
-          <p class="ts-text">{{ r.facteursCles }}</p>
+      <div class="grid-2">
+        @if (r.profils && r.profils.length) {
+          <section class="panel" aria-labelledby="t-profils">
+            <div class="panel-head is-bare">
+              <div><h2 id="t-profils" class="panel-title">Profils nécessaires</h2></div>
+            </div>
+            <ul class="lignes">
+              @for (profil of r.profils; track $index) {
+                <li class="ligne">
+                  <span class="badge-count" [attr.aria-label]="profil.nombrePersonnes + (profil.nombrePersonnes > 1 ? ' personnes' : ' personne')">{{ profil.nombrePersonnes }}</span>
+                  <div class="ligne-main">
+                    <p class="ligne-titre">{{ profil.role }}</p>
+                    <p class="ligne-texte">{{ profil.competencesRequises }}</p>
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (r.membresRecommandes && r.membresRecommandes.length) {
+          <section class="panel" aria-labelledby="t-membres">
+            <div class="panel-head is-bare">
+              <div><h2 id="t-membres" class="panel-title">Membres proposés</h2></div>
+            </div>
+            <ul class="lignes">
+              @for (membre of r.membresRecommandes; track $index) {
+                @let m = decomposerMembre(membre);
+                <li class="ligne">
+                  <span class="avatar" [class.is-libre]="m.aRecruter" aria-hidden="true">{{ m.aRecruter ? '+' : initiales(m.nom) }}</span>
+                  <div class="ligne-main">
+                    <p class="ligne-titre">{{ m.aRecruter ? 'À recruter' : m.nom }}</p>
+                    @if (m.role) {
+                      <p class="ligne-texte">{{ m.role }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <section class="panel" aria-labelledby="t-pourquoi">
+        <div class="panel-head is-bare">
+          <div><h2 id="t-pourquoi" class="panel-title">Pourquoi cette équipe</h2></div>
+        </div>
+        <div class="prose"><p>{{ r.justification }}</p></div>
+      </section>
+
+      <div class="grid-2">
+        <section class="panel" aria-labelledby="t-facteurs">
+          <div class="panel-head is-bare">
+            <div><h2 id="t-facteurs" class="panel-title"><span class="dot is-ok" aria-hidden="true"></span>Facteurs clés de succès</h2></div>
+          </div>
+          <div class="prose"><p>{{ r.facteursCles }}</p></div>
         </section>
-        <section class="ts-panel ts-accent-ambre">
-          <h2 class="ts-panel-title">Risques à surveiller</h2>
-          <p class="ts-text">{{ r.risquesEquipe }}</p>
+        <section class="panel" aria-labelledby="t-risques">
+          <div class="panel-head is-bare">
+            <div><h2 id="t-risques" class="panel-title"><span class="dot is-warn" aria-hidden="true"></span>Risques à surveiller</h2></div>
+          </div>
+          <div class="prose"><p>{{ r.risquesEquipe }}</p></div>
         </section>
       </div>
-    </ng-container>
+    }
 
     <!-- ============ Échec de l'IA ============ -->
-    <section *ngIf="result && !result.success" class="ts-panel ts-echec">
-      <p class="ts-echec-texte">{{ result.errorMessage }}</p>
-      <button type="button" class="ts-btn-secondaire" (click)="reset()">Réessayer</button>
-    </section>
+    @if (result && !result.success) {
+      <section class="panel" aria-labelledby="t-echec">
+        <div class="panel-head is-bare">
+          <div><h2 id="t-echec" class="panel-title">La suggestion n'a pas pu être générée</h2></div>
+        </div>
+        <div class="notice notice-error is-flush" role="alert">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          {{ result.errorMessage }}
+        </div>
+        <div class="echec-actions">
+          <button type="button" class="btn btn-secondary" (click)="reset()">Réessayer</button>
+        </div>
+      </section>
+    }
 
   </div>
-</div>
+</main>

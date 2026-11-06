@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FicheSuiviService, FicheSuivi, TacheSuivi } from '../../services/fiche-suivi.service';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
 import { environment } from '../../../environments/environment';
 
 interface PlanningAction {
@@ -35,7 +36,8 @@ interface FicheProjet {
   selector: 'app-fiche-suivi-form',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './fiche-suivi-form.component.html'
+  templateUrl: './fiche-suivi-form.component.html',
+  styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/form-ui.css', './fiche-suivi-form.component.css']
 })
 export class FicheSuiviFormComponent implements OnInit {
   ficheSuiviService = inject(FicheSuiviService);
@@ -43,6 +45,7 @@ export class FicheSuiviFormComponent implements OnInit {
   route = inject(ActivatedRoute);
   http = inject(HttpClient);
   authService = inject(AuthService);
+  nomenclatureService = inject(NomenclatureService);
 
   isEditMode = signal(false);
   ficheSuiviId = signal<string | null>(null);
@@ -54,6 +57,10 @@ export class FicheSuiviFormComponent implements OnInit {
   
   projets = signal<FicheProjet[]>([]);
   isLoadingProjets = signal(false);
+
+  // Statuts de tâche de la nomenclature. Le libellé est enregistré, pas le code : les indicateurs
+  // et le Gantt reconnaissent le statut à son texte (« En cours », « En retard », « Bloqué »…).
+  statutsTache: Nomenclature[] = [];
 
   ficheSuivi: FicheSuivi = {
     ficheProjetId: '',
@@ -76,7 +83,10 @@ export class FicheSuiviFormComponent implements OnInit {
 
   ngOnInit() {
     this.loadProjets();
-    
+    this.nomenclatureService.charger().subscribe(() => {
+      this.statutsTache = this.nomenclatureService.actives('STATUT_TACHE');
+    });
+
     const id = this.route.snapshot.paramMap.get('id');
     const projetId = this.route.snapshot.queryParamMap.get('projetId');
     
@@ -503,6 +513,8 @@ export class FicheSuiviFormComponent implements OnInit {
       this.currentTab.set(tab);
       if (!this.validateCurrentTab()) {
         this.errorMessage.set('Veuillez corriger les erreurs avant de soumettre.');
+        // Le message est en haut de la page : sans cela il reste hors de vue quand on valide depuis le bas
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
     }
@@ -521,6 +533,7 @@ export class FicheSuiviFormComponent implements OnInit {
       next: (response) => {
         this.isLoading.set(false);
         this.successMessage.set('Fiche de suivi enregistrée avec succès!');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         setTimeout(() => {
           this.router.navigate(['/fiches-suivi']);
         }, 1500);
@@ -551,6 +564,7 @@ export class FicheSuiviFormComponent implements OnInit {
         }
         
         this.errorMessage.set(errorMsg);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     });
   }

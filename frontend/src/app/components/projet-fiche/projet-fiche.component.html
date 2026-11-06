@@ -1,0 +1,327 @@
+@let p = projet();
+
+<!-- ============ Résumé ============ -->
+<section class="kpi-strip" aria-label="Résumé du projet">
+  <div class="kpi kpi-lead">
+    <span class="kpi-label">Budget (MD/HT)</span>
+    <span class="kpi-value">{{ nombre(budget()?.budgetMDHT) || '—' }}</span>
+    <span class="kpi-hint">
+      @if (nombre(budget()?.total)) {
+        Total : {{ nombre(budget()?.total) }} DT
+      } @else {
+        Budget non estimé
+      }
+    </span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Équipe</span>
+    <span class="kpi-value">{{ equipe().membres.length || '—' }}</span>
+    <span class="kpi-hint">
+      @if (equipe().membres.length === 0) { Aucun membre renseigné }
+      @else if (equipe().membres.length === 1) { membre dans le projet }
+      @else { membres dans le projet }
+    </span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Estimation des charges</span>
+    <span class="kpi-value">{{ charges().length || '—' }}</span>
+    <span class="kpi-hint">
+      @if (charges().length === 0) { Aucune estimation }
+      @else if (charges().length === 1) { ligne de prestations }
+      @else { lignes de prestations }
+    </span>
+  </div>
+  <div class="kpi">
+    <span class="kpi-label">Planning</span>
+    <span class="kpi-value">{{ planning().length || '—' }}</span>
+    <span class="kpi-hint">
+      @if (planning().length === 0) { Aucune action planifiée }
+      @else if (planning().length === 1) { action planifiée }
+      @else { actions planifiées }
+    </span>
+  </div>
+</section>
+
+<!-- ============ Identification ============ -->
+<section class="panel" aria-labelledby="d-identification">
+  <div class="panel-head">
+    <div>
+      <h2 id="d-identification" class="panel-title">Identification</h2>
+      <p class="panel-sub">Nom, client, cadre contractuel, nature du projet.</p>
+    </div>
+  </div>
+  <dl class="info cols-2">
+    <div>
+      <dt>Nom du projet</dt>
+      <dd [class.is-empty]="!p.nomProjet">{{ p.nomProjet || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Désignation du projet</dt>
+      <dd [class.is-empty]="!p.designationProjet">{{ p.designationProjet || 'Non renseignée' }}</dd>
+    </div>
+    <div>
+      <dt>Désignation du client</dt>
+      <dd [class.is-empty]="!p.designationClient">{{ p.designationClient || 'Non renseignée' }}</dd>
+    </div>
+    <div>
+      <dt>Cadre contractuel</dt>
+      <dd [class.is-empty]="!p.cadreContractuelProjet">{{ p.cadreContractuelProjet || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Caractère du projet</dt>
+      <dd [class.is-empty]="!p.caractereProjet">{{ getCaractereLabel(p.caractereProjet) || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Type de projet</dt>
+      <dd [class.is-empty]="!p.typeProjet">{{ getTypeLabel(p.typeProjet) || 'Non renseigné' }}</dd>
+    </div>
+  </dl>
+</section>
+
+<!-- ============ Contexte ============ -->
+@if (p.presentation || p.historique || p.perimetre) {
+  <section class="panel" aria-labelledby="d-contexte">
+    <div class="panel-head">
+      <div>
+        <h2 id="d-contexte" class="panel-title">Contexte du projet</h2>
+        <p class="panel-sub">Ce que le projet est, d'où il vient, jusqu'où il va.</p>
+      </div>
+    </div>
+    <div class="prose-group">
+      @if (p.presentation) {
+        <div class="prose">
+          <h3>Présentation</h3>
+          <p>{{ p.presentation }}</p>
+        </div>
+      }
+      @if (p.historique) {
+        <div class="prose">
+          <h3>Historique</h3>
+          <p>{{ p.historique }}</p>
+        </div>
+      }
+      @if (p.perimetre) {
+        <div class="prose">
+          <h3>Périmètre</h3>
+          <p>{{ p.perimetre }}</p>
+        </div>
+      }
+    </div>
+  </section>
+}
+
+<!-- ============ Organisation ============ -->
+<section class="panel" aria-labelledby="d-organisation">
+  <div class="panel-head">
+    <div>
+      <h2 id="d-organisation" class="panel-title">Organisation et conduite de projet</h2>
+      <p class="panel-sub">Maîtres d'ouvrage et d'œuvre, équipe du projet.</p>
+    </div>
+  </div>
+  <dl class="info cols-2">
+    <div>
+      <dt>Maître d'ouvrage</dt>
+      <dd [class.is-empty]="!p.maitreOuvrage">{{ p.maitreOuvrage || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Maître d'œuvre</dt>
+      <dd [class.is-empty]="!p.maitreOeuvre">{{ p.maitreOeuvre || 'Non renseigné' }}</dd>
+    </div>
+  </dl>
+
+  @if (equipe().membres.length > 0 || equipe().texte) {
+    <div class="prose subsection">
+      <h3>Équipe du projet</h3>
+      @if (equipe().membres.length > 0) {
+        <ul class="members">
+          @for (membre of equipe().membres; track $index) {
+            <li class="member">
+              <span class="avatar" aria-hidden="true">{{ initiales(membre.nom) }}</span>
+              <div class="member-text">
+                <p class="member-name">{{ membre.nom }}</p>
+                @if (membre.role) {
+                  <p class="member-role">{{ membre.role }}</p>
+                }
+                @if (membre.email) {
+                  <a class="member-mail" [href]="'mailto:' + membre.email">{{ membre.email }}</a>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      } @else {
+        <p>{{ equipe().texte }}</p>
+      }
+    </div>
+  }
+</section>
+
+<!-- ============ Estimation des charges ============ -->
+@if (charges().length > 0 || p.modaliteDeveloppement) {
+  <section class="panel" aria-labelledby="d-charges">
+    <div class="panel-head">
+      <div>
+        <h2 id="d-charges" class="panel-title">Estimation des charges</h2>
+        <p class="panel-sub">Prestations, profils, période et charge en homme-mois.</p>
+      </div>
+    </div>
+
+    @if (charges().length > 0) {
+      <div class="table-wrap is-charges">
+        <table class="tbl tbl-charges">
+          <caption class="visually-hidden">Estimation des charges</caption>
+          <thead>
+            <tr>
+              <th scope="col">Prestations</th>
+              <th scope="col">Profil</th>
+              <th scope="col">Période</th>
+              <th scope="col">Charge (HM)</th>
+              <th scope="col">Livrables</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (charge of charges(); track $index) {
+              <tr>
+                <td class="cell-main" data-label="Prestations">{{ charge.prestations }}</td>
+                <td data-label="Profil">{{ charge.profil }}</td>
+                <td data-label="Période">{{ charge.periode }}</td>
+                <td class="cell-num" data-label="Charge (HM)">{{ charge.chargeHM }}</td>
+                <td data-label="Livrables">{{ charge.livrables }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (p.modaliteDeveloppement) {
+      <dl class="info" [class.with-gap]="charges().length > 0">
+        <div>
+          <dt>Modalité de développement</dt>
+          <dd>{{ getModaliteLabel(p.modaliteDeveloppement) }}</dd>
+        </div>
+      </dl>
+    }
+  </section>
+}
+
+<!-- ============ Estimation du budget ============ -->
+@if (budget(); as b) {
+  <section class="panel" aria-labelledby="d-budget">
+    <div class="panel-head">
+      <div>
+        <h2 id="d-budget" class="panel-title">Estimation du budget</h2>
+        <p class="panel-sub">Montants en dinars ; le budget est exprimé en MD/HT (millions de dinars hors taxes).</p>
+      </div>
+    </div>
+    <dl class="info cols-3">
+      <div>
+        <dt>CP (chef de projet)</dt>
+        <dd [class.is-empty]="!nombre(b.cp)">{{ nombre(b.cp) || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>ID (ingénieur développeur)</dt>
+        <dd [class.is-empty]="!nombre(b.id)">{{ nombre(b.id) || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Total</dt>
+        <dd [class.is-empty]="!nombre(b.total)">{{ nombre(b.total) || 'Non renseigné' }}</dd>
+      </div>
+    </dl>
+    <dl class="info with-gap">
+      <div class="highlight">
+        <dt>Budget en MD/HT</dt>
+        <dd class="is-big" [class.is-empty]="!nombre(b.budgetMDHT)">{{ nombre(b.budgetMDHT) ? nombre(b.budgetMDHT) + ' MD' : 'Non renseigné' }}</dd>
+      </div>
+    </dl>
+  </section>
+}
+
+<!-- ============ Délais prévisionnels ============ -->
+@if (p.delaisPrevisionnels) {
+  <section class="panel" aria-labelledby="d-delais">
+    <div class="panel-head">
+      <div>
+        <h2 id="d-delais" class="panel-title">Délais prévisionnels</h2>
+      </div>
+    </div>
+    <div class="prose"><p>{{ p.delaisPrevisionnels }}</p></div>
+  </section>
+}
+
+<!-- ============ Risques et pré-requis ============ -->
+@if (p.risquesPotentiels || p.preRequis) {
+  <section class="panel" aria-labelledby="d-risques">
+    <div class="panel-head">
+      <div>
+        <h2 id="d-risques" class="panel-title">Risques et pré-requis</h2>
+        <p class="panel-sub">Ce qui pourrait gêner le projet, et ce qu'il faut avoir avant de commencer.</p>
+      </div>
+    </div>
+    <div class="prose-group">
+      @if (p.risquesPotentiels) {
+        <div class="prose">
+          <h3><span class="dot is-warn" aria-hidden="true"></span>Risques potentiels</h3>
+          <p>{{ p.risquesPotentiels }}</p>
+        </div>
+      }
+      @if (p.preRequis) {
+        <div class="prose">
+          <h3><span class="dot is-ok" aria-hidden="true"></span>Pré-requis</h3>
+          <p>{{ p.preRequis }}</p>
+        </div>
+      }
+    </div>
+  </section>
+}
+
+<!-- ============ Planning ============ -->
+<section class="panel" aria-labelledby="d-planning">
+  <div class="panel-head">
+    <div>
+      <h2 id="d-planning" class="panel-title">Planning du projet</h2>
+      <p class="panel-sub">Une ligne par action ; les colonnes 1 à 12 sont les mois du projet.</p>
+    </div>
+  </div>
+
+  @if (planning().length === 0) {
+    <p class="items-empty">Aucun planning n'a été défini pour ce projet.</p>
+  } @else {
+    <div class="table-wrap is-planning">
+      <table class="tbl tbl-planning">
+        <caption class="visually-hidden">Planning du projet : une ligne par action, une colonne par mois</caption>
+        <thead>
+          <tr>
+            <th scope="col" class="col-intitule">Action</th>
+            <th scope="col" class="col-profil">Profil des intervenants</th>
+            <th scope="col" class="col-charge">Charge H/M</th>
+            @for (m of mois; track m) {
+              <th scope="col" class="col-mois"><span class="visually-hidden">Mois </span>{{ m }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (plan of planning(); track $index) {
+            <tr>
+              <td class="cell-main cell-intitule" data-label="Action">{{ plan.action }}</td>
+              <td class="cell-profil" data-label="Profil des intervenants">{{ plan.profilIntervenants }}</td>
+              <td class="cell-num cell-charge" data-label="Charge H/M">{{ plan.chargeHM }}</td>
+              @for (m of mois; track m) {
+                <td class="cell-month" [attr.data-label]="'M' + m">
+                  <span class="mois" [class.is-on]="plan.mois?.[m]">
+                    @if (plan.mois?.[m]) {
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="visually-hidden">Mois {{ m }} : planifié</span>
+                    }
+                  </span>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

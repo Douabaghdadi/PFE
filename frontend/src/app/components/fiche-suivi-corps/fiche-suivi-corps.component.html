@@ -1,0 +1,271 @@
+@let f = fiche();
+@let sig = f.ficheSignaletique;
+@let cg = f.constatGlobal;
+
+<!-- ============ Onglets ============ -->
+<nav class="tabs panel" aria-label="Sections de la fiche de suivi">
+  <ul>
+    @for (o of onglets; track o.cle) {
+      <li>
+        <button type="button" class="tab" [class.is-current]="onglet() === o.cle"
+                [attr.aria-current]="onglet() === o.cle ? 'true' : null" (click)="setOnglet(o.cle)">{{ o.libelle }}</button>
+      </li>
+    }
+  </ul>
+</nav>
+
+<!-- ============ Fiche signalétique ============ -->
+@if (onglet() === 'signaletique') {
+
+  @if (showIdentification()) {
+    <section class="panel" aria-labelledby="s-identification">
+      <div class="panel-head">
+        <div>
+          <h2 id="s-identification" class="panel-title">Identification du projet</h2>
+          <p class="panel-sub">Responsable de la fiche de suivi.</p>
+        </div>
+      </div>
+      <dl class="info cols-2">
+        <div>
+          <dt>Chef de projet</dt>
+          <dd [class.is-empty]="!sig?.chefProjet?.nom">{{ sig?.chefProjet?.nom || 'Non renseigné' }}</dd>
+        </div>
+        <div>
+          <dt>Suppléant</dt>
+          <dd [class.is-empty]="!sig?.chefProjet?.suppleant">{{ sig?.chefProjet?.suppleant || 'Non renseigné' }}</dd>
+        </div>
+      </dl>
+    </section>
+  }
+
+  @if (sig?.descriptionProjet) {
+    <section class="panel" aria-labelledby="s-description">
+      <div class="panel-head">
+        <div><h2 id="s-description" class="panel-title">Description du projet</h2></div>
+      </div>
+      <div class="prose"><p>{{ sig.descriptionProjet }}</p></div>
+    </section>
+  }
+
+  @if (sig?.experts && sig.experts!.length > 0) {
+    <section class="panel" aria-labelledby="s-experts">
+      <div class="panel-head">
+        <div><h2 id="s-experts" class="panel-title">Experts</h2></div>
+      </div>
+      <ul class="chips">
+        @for (expert of sig.experts; track $index) {
+          <li class="chip is-blue">{{ expert }}</li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="panel" aria-labelledby="s-delais">
+    <div class="panel-head">
+      <div>
+        <h2 id="s-delais" class="panel-title">Délais</h2>
+        <p class="panel-sub">Dates prévues et dates réelles du projet.</p>
+      </div>
+    </div>
+    <dl class="info cols-3">
+      <div>
+        <dt>Début (prévision)</dt>
+        <dd [class.is-empty]="!sig?.delais?.dateDebutPrevision">{{ sig?.delais?.dateDebutPrevision ? formatShortDate(sig.delais.dateDebutPrevision) : 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Fin (prévision)</dt>
+        <dd [class.is-empty]="!sig?.delais?.dateFinPrevision">{{ sig?.delais?.dateFinPrevision ? formatShortDate(sig.delais.dateFinPrevision) : 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Durée (mois)</dt>
+        <dd [class.is-empty]="!sig?.delais?.dureeEnMois">{{ sig?.delais?.dureeEnMois || 'Non renseignée' }}</dd>
+      </div>
+      <div>
+        <dt>Début (réalisation)</dt>
+        <dd [class.is-empty]="!sig?.delais?.dateDebutRealisation">{{ sig?.delais?.dateDebutRealisation ? formatShortDate(sig.delais.dateDebutRealisation) : 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Fin (réalisation)</dt>
+        <dd [class.is-empty]="!sig?.delais?.dateFinRealisation">{{ sig?.delais?.dateFinRealisation ? formatShortDate(sig.delais.dateFinRealisation) : 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Écart conventionnel</dt>
+        <dd [class.is-empty]="sig?.delais?.ecartConventionnel === null || sig?.delais?.ecartConventionnel === undefined">{{ sig?.delais?.ecartConventionnel ?? 'Non renseigné' }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="panel" aria-labelledby="s-financier">
+    <div class="panel-head">
+      <div>
+        <h2 id="s-financier" class="panel-title">Financier</h2>
+        <p class="panel-sub">Budget en millions de dinars hors taxes (MD/HT).</p>
+      </div>
+    </div>
+    <dl class="info cols-3">
+      <div>
+        <dt>Budget prévision</dt>
+        <dd [class.is-empty]="nombre(sig?.financier?.budgetPrevision) === ''" [class.is-figure]="nombre(sig?.financier?.budgetPrevision) !== ''">{{ nombre(sig?.financier?.budgetPrevision) || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Budget réalisation</dt>
+        <dd [class.is-empty]="nombre(sig?.financier?.budgetRealisation) === ''" [class.is-figure]="nombre(sig?.financier?.budgetRealisation) !== ''">{{ nombre(sig?.financier?.budgetRealisation) || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Écart</dt>
+        <dd [class.is-empty]="nombre(sig?.financier?.ecart) === ''" [class.is-figure]="nombre(sig?.financier?.ecart) !== ''"
+            [class.is-neg]="(sig?.financier?.ecart ?? 0) < 0">{{ nombre(sig?.financier?.ecart) || 'Non renseigné' }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  @if (sig?.caracteristiquesTechniques && sig.caracteristiquesTechniques.length > 0) {
+    <section class="panel" aria-labelledby="s-carac">
+      <div class="panel-head">
+        <div><h2 id="s-carac" class="panel-title">Caractéristiques techniques</h2></div>
+      </div>
+      <ul class="chips">
+        @for (c of sig.caracteristiquesTechniques; track $index) {
+          <li class="chip is-green">{{ c }}</li>
+        }
+      </ul>
+    </section>
+  }
+}
+
+<!-- ============ Constat global ============ -->
+@if (onglet() === 'constat') {
+
+  <section class="panel" aria-labelledby="c-constat">
+    <div class="panel-head">
+      <div>
+        <h2 id="c-constat" class="panel-title">Constat global</h2>
+        <p class="panel-sub">Où en est le projet et quel est son objectif principal.</p>
+      </div>
+    </div>
+    <div class="prose-group">
+      <div class="prose">
+        <h3>État d'avancement</h3>
+        @if (cg?.etatAvancement) {
+          <p>{{ cg.etatAvancement }}</p>
+        } @else {
+          <p class="is-empty">Non renseigné</p>
+        }
+      </div>
+      @if (cg?.objectifPrincipal) {
+        <div class="prose">
+          <h3>Objectif principal</h3>
+          <p>{{ cg.objectifPrincipal }}</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  @if (cg?.problemesRencontres && cg.problemesRencontres.length > 0) {
+    <section class="panel" aria-labelledby="c-problemes">
+      <div class="panel-head">
+        <div><h2 id="c-problemes" class="panel-title"><span class="dot is-warn" aria-hidden="true"></span>Problèmes rencontrés</h2></div>
+      </div>
+      <ul class="bullets is-warn">
+        @for (p of cg.problemesRencontres; track $index) {
+          <li>{{ p }}</li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (cg?.principauxRisques && cg.principauxRisques.length > 0) {
+    <section class="panel" aria-labelledby="c-risques">
+      <div class="panel-head">
+        <div><h2 id="c-risques" class="panel-title"><span class="dot is-danger" aria-hidden="true"></span>Principaux risques</h2></div>
+      </div>
+      <ul class="bullets is-danger">
+        @for (r of cg.principauxRisques; track $index) {
+          <li>{{ r }}</li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (cg?.recommandations && cg.recommandations.length > 0) {
+    <section class="panel" aria-labelledby="c-reco">
+      <div class="panel-head">
+        <div><h2 id="c-reco" class="panel-title"><span class="dot is-ok" aria-hidden="true"></span>Recommandations</h2></div>
+      </div>
+      <ul class="bullets is-ok">
+        @for (rec of cg.recommandations; track $index) {
+          <li>{{ rec }}</li>
+        }
+      </ul>
+    </section>
+  }
+}
+
+<!-- ============ Tâches ============ -->
+@if (onglet() === 'taches') {
+  <section class="panel" aria-labelledby="t-taches">
+    <div class="panel-head">
+      <div>
+        <h2 id="t-taches" class="panel-title">Suivi des tâches @if (taches().length > 0) { <span class="count">{{ taches().length }}</span> }</h2>
+        <p class="panel-sub">État d'avancement global du projet, action par action.</p>
+      </div>
+      @if (taches().length > 0) {
+        <a class="btn" [routerLink]="ganttLink()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h10M4 12h14M4 18h8"/>
+          </svg>
+          Diagramme de Gantt
+        </a>
+      }
+    </div>
+
+    @if (taches().length === 0) {
+      <p class="items-empty">Aucune tâche enregistrée.</p>
+    } @else {
+      <div class="table-wrap is-taches">
+        <table class="tbl tbl-taches">
+          <caption class="visually-hidden">Tâches de suivi du projet</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="col-code">Code</th>
+              <th scope="col" class="col-sujet">Sujet</th>
+              <th scope="col" class="col-livrable">Livrable</th>
+              <th scope="col" class="col-assigne">Assigné à</th>
+              <th scope="col" class="col-date">Début</th>
+              <th scope="col" class="col-date">Échéance</th>
+              <th scope="col" class="col-pct">% réalisé</th>
+              <th scope="col" class="col-statut">Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of taches(); track $index) {
+              @if (isTitre(t)) {
+                <tr class="is-title">
+                  <th scope="rowgroup" colspan="8" class="cell-titre">{{ t.sujet }}</th>
+                </tr>
+              } @else {
+                <tr>
+                  <td class="cell-code" data-label="Code"><strong>{{ t.code || '-' }}</strong></td>
+                  <td class="cell-sujet" data-label="Sujet">{{ t.sujet || '-' }}</td>
+                  <td class="cell-livrable" data-label="Livrable">{{ t.livrable || '-' }}</td>
+                  <td class="cell-assigne" data-label="Assigné à">{{ t.assigneA || '-' }}</td>
+                  <td class="cell-debut" data-label="Début">{{ formatShortDate(t.debut) }}</td>
+                  <td class="cell-echeance" data-label="Échéance">{{ formatShortDate(t.echeance) }}</td>
+                  <td class="cell-pct" data-label="% réalisé">
+                    <div class="pct">
+                      <span class="track" aria-hidden="true"><i [style.width.%]="t.pourcentageRealise || 0"></i></span>
+                      <span class="pct-text">{{ t.pourcentageRealise || 0 }}&#8239;%</span>
+                    </div>
+                  </td>
+                  <td class="cell-statut" data-label="Statut">
+                    <span class="pill" [ngClass]="'pill-' + statutTache(t.statut)">{{ t.statut || '-' }}</span>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+}
