@@ -3,11 +3,14 @@ package com.example.demo.controller;
 import com.example.demo.dto.FicheSuiviRequest;
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.FicheSuivi;
+import com.example.demo.repository.FicheProjetRepository;
+import com.example.demo.security.ControleAcces;
 import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.FicheSuiviService;
 import com.example.demo.service.UserNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,6 +29,12 @@ public class FicheSuiviController {
     @Autowired
     private UserNotificationService userNotificationService;
 
+    @Autowired
+    private FicheProjetRepository ficheProjetRepository;
+
+    @Autowired
+    private ControleAcces controleAcces;
+
     @GetMapping
     public ResponseEntity<List<FicheSuivi>> getMyFichesSuivi(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -39,21 +48,35 @@ public class FicheSuiviController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FicheSuivi> getFicheSuiviById(@PathVariable String id) {
+    public ResponseEntity<FicheSuivi> getFicheSuiviById(@PathVariable String id, Authentication authentication) {
         try {
-            return ResponseEntity.ok(ficheSuiviService.getFicheSuiviById(id));
+            FicheSuivi ficheSuivi = ficheSuiviService.getFicheSuiviById(id);
+            if (!controleAcces.peutLire(ficheSuivi.getChefProjetId(), authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.ok(ficheSuivi);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/projet/{ficheProjetId}")
-    public ResponseEntity<List<FicheSuivi>> getFichesSuiviByProjet(@PathVariable String ficheProjetId) {
-        return ResponseEntity.ok(ficheSuiviService.getFichesSuiviByProjet(ficheProjetId));
+    public ResponseEntity<List<FicheSuivi>> getFichesSuiviByProjet(@PathVariable String ficheProjetId,
+                                                                   Authentication authentication) {
+        return ResponseEntity.ok(ficheSuiviService.getFichesSuiviByProjet(ficheProjetId).stream()
+                .filter(fiche -> controleAcces.peutLire(fiche.getChefProjetId(), authentication))
+                .toList());
     }
 
     @GetMapping("/projet/{ficheProjetId}/name")
-    public ResponseEntity<String> getProjetName(@PathVariable String ficheProjetId) {
+    public ResponseEntity<String> getProjetName(@PathVariable String ficheProjetId, Authentication authentication) {
+        // Un projet supprimé n'a plus rien à protéger : le service renvoie alors son libellé de repli.
+        boolean autorise = ficheProjetRepository.findById(ficheProjetId)
+                .map(projet -> controleAcces.peutLire(projet.getChefProjetId(), authentication))
+                .orElse(true);
+        if (!autorise) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         String projetName = ficheSuiviService.getProjetName(ficheProjetId);
         return ResponseEntity.ok(projetName);
     }

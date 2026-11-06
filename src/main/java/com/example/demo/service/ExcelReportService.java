@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.AlerteKPIDTO;
+import com.example.demo.dto.AuditReportingExportDTO;
 import com.example.demo.dto.ChargeMembreDTO;
 import com.example.demo.dto.ComposanteScoreDTO;
 import com.example.demo.dto.MembreEquipeDTO;
@@ -114,6 +115,131 @@ public class ExcelReportService {
         }
     }
 
+    /**
+     * Export Excel de l'audit du reporting (tableau de bord du pilote qualité) : un onglet « Synthèse »
+     * avec les indicateurs du haut de page, un onglet « Projets » avec une ligne par projet suivi.
+     */
+    public byte[] generateAuditReportingExcel(AuditReportingExportDTO audit) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            Styles styles = new Styles(workbook);
+
+            ecrireSyntheseAudit(workbook, audit, styles);
+            ecrireProjetsAudit(workbook, audit, styles);
+
+            workbook.getProperties().getCoreProperties().setTitle("Audit du reporting qualité");
+            workbook.getProperties().getCoreProperties().setCreator("Qualinet");
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            workbook.write(outputStream);
+            return outputStream.toByteArray();
+        }
+    }
+
+    private void ecrireSyntheseAudit(XSSFWorkbook workbook, AuditReportingExportDTO audit, Styles s) {
+        XSSFSheet sheet = workbook.createSheet("Synthèse");
+        sheet.setDisplayGridlines(false);
+        sheet.setColumnWidth(0, 40 * 256);
+        sheet.setColumnWidth(1, 20 * 256);
+        sheet.setColumnWidth(2, 64 * 256);
+        miseEnPage(sheet, "Audit du reporting qualité", false);
+
+        Row ligneTitre = sheet.createRow(0);
+        ligneTitre.setHeightInPoints(40);
+        ajouterLogo(workbook, sheet);
+        ecrire(ligneTitre, 1, "AUDIT DU REPORTING QUALITÉ", s.titre);
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 1, 2));
+
+        Row ligneSujet = sheet.createRow(1);
+        ligneSujet.setHeightInPoints(24);
+        ecrire(ligneSujet, 0, "Supervision du processus qualité", s.nomProjet);
+        sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 2));
+
+        Row ligneInfo = sheet.createRow(2);
+        ecrire(ligneInfo, 0, pluriel(audit.getNbProjets(), "projet suivi", "projets suivis") + ", "
+            + pluriel(audit.getNbFichesDeposees(), "fiche déposée", "fiches déposées") + "     Généré le "
+            + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm")), s.sousTitre);
+        sheet.addMergedRegion(new CellRangeAddress(2, 2, 0, 2));
+
+        int projets = audit.getNbProjets();
+        int row = 4;
+        row = section(sheet, row, "INDICATEURS DU PROCESSUS", s);
+        row = enteteColonnes(sheet, row, s, "Indicateur", "Valeur", "Lecture");
+        row = ligneNombre(sheet, row, s, "Conformité du suivi", audit.getTauxConformite() / 100.0, s.valeurPctEntier,
+            (projets - audit.getNbEnRetard() - audit.getNbJamaisSuivi()) + " sur " + pluriel(projets, "projet", "projets") + " à jour",
+            tonPourcentage(audit.getTauxConformite()));
+        row = ligneNombre(sheet, row, s, "Fiches en retard", audit.getNbEnRetard(), s.valeurEntier,
+            audit.getNbEnRetard() > 0 ? "sur " + pluriel(projets, "projet", "projets") : "Aucun retard",
+            audit.getNbEnRetard() > 0 ? Ton.MAUVAIS : Ton.BON);
+        row = ligneNombre(sheet, row, s, "Jamais suivis", audit.getNbJamaisSuivi(), s.valeurEntier,
+            audit.getNbJamaisSuivi() > 0 ? "sur " + pluriel(projets, "projet", "projets") : "Tous les projets ont une fiche",
+            audit.getNbJamaisSuivi() > 0 ? Ton.NEUTRE : Ton.BON);
+        row = ligneNombre(sheet, row, s, "Complétude des fiches", audit.getCompletudeMoyenne() / 100.0, s.valeurPctEntier,
+            audit.getNbRubriques() + " rubriques contrôlées", tonPourcentage(audit.getCompletudeMoyenne()));
+        row = ligneNombre(sheet, row, s, "Échéances sous 30 jours", audit.getNbEcheances30j(), s.valeurEntier,
+            "Fiches de suivi attendues dans les 30 prochains jours", Ton.NEUTRE);
+        row++;
+
+        ecrire(sheet.createRow(row), 0, "Le détail par projet se trouve dans l'onglet « Projets ».", s.sousTitre);
+    }
+
+    private void ecrireProjetsAudit(XSSFWorkbook workbook, AuditReportingExportDTO audit, Styles s) {
+        XSSFSheet sheet = workbook.createSheet("Projets");
+        int[] largeurs = {30, 12, 18, 16, 11, 19, 15, 20, 16, 13, 44};
+        for (int i = 0; i < largeurs.length; i++) {
+            sheet.setColumnWidth(i, largeurs[i] * 256);
+        }
+        miseEnPage(sheet, "Audit du reporting qualité", true);
+        int row = titreOnglet(sheet, "Audit du reporting par projet",
+            "Une ligne par projet suivi : conformité du suivi, échéances et complétude des fiches déposées", s);
+
+        int entete = row;
+        row = entetes(sheet, row, "Projet", "Statut", "Chef de projet", "Conformité", "Retard (j)",
+            "Périodicité (mois)", "Dernière fiche", "Prochaine échéance", "Fiches déposées", "Complétude",
+            "Rubriques manquantes (dernière fiche)");
+        List<AuditReportingExportDTO.ProjetAudit> lignes = audit.getProjets();
+        if (lignes.isEmpty()) {
+            // Un tableau Excel doit compter au moins une ligne de données
+            ecrire(sheet.createRow(row++), 0, "Aucun projet suivi", s.tTexte);
+        }
+        for (AuditReportingExportDTO.ProjetAudit projet : lignes) {
+            Row ligne = sheet.createRow(row++);
+            ecrire(ligne, 0, orDash(projet.getNom()), s.tTexteGras);
+            ecrire(ligne, 1, orDash(projet.getStatut()), s.tTexte);
+            ecrire(ligne, 2, orDash(projet.getChefProjet()), s.tTexte);
+            ecrire(ligne, 3, orDash(projet.getConformite()), s.tConformite.get(tonConformite(projet.getConformite())));
+            ecrireNombre(ligne, 4, projet.getJoursRetard(), s.tEntier);
+            ecrireEntierOuVide(ligne, 5, projet.getPeriodiciteMois(), s.tEntier);
+            ecrireDate(ligne, 6, projet.getDerniereFiche(), s.tDate, s.tDateAbsente, "Aucune");
+            ecrireDate(ligne, 7, projet.getProchaineEcheance(), s.tDate, s.tDateAbsente, "Non définie");
+            ecrireNombre(ligne, 8, projet.getFichesDeposees(), s.tEntier);
+            ecrireNombre(ligne, 9, projet.getCompletude() / 100.0, s.tPct);
+            String manquantes = projet.getFichesDeposees() == 0 ? "-"
+                : (projet.getRubriquesManquantes().isEmpty() ? "Aucune" : String.join(", ", projet.getRubriquesManquantes()));
+            ecrire(ligne, 10, manquantes, s.tTexte);
+            ajusterHauteur(ligne, manquantes, 46);
+        }
+        tableau(sheet, "Projets", entete, row - 1, 0, 10);
+        sheet.createFreezePane(1, entete + 1);
+    }
+
+    /** Mêmes paliers que les barres du tableau de bord : complet en vert, partiel en orange, faible en rouge. */
+    private Ton tonPourcentage(int pourcentage) {
+        if (pourcentage >= 100) return Ton.BON;
+        if (pourcentage >= 34) return Ton.ATTENTION;
+        return Ton.MAUVAIS;
+    }
+
+    private Ton tonConformite(String libelle) {
+        if (libelle == null) return Ton.NEUTRE;
+        if (libelle.startsWith("Suivi")) return Ton.BON;
+        if (libelle.contains("retard")) return Ton.MAUVAIS;
+        return Ton.NEUTRE;
+    }
+
+    private static String pluriel(int n, String singulier, String pluriel) {
+        return n + " " + (n > 1 ? pluriel : singulier);
+    }
+
     /* ------------------------------------------------------------------ */
     /* Onglet « Synthèse » : les indicateurs de la page KPI                 */
     /* ------------------------------------------------------------------ */
@@ -157,8 +283,12 @@ public class ExcelReportService {
         } else {
             row = ligneTexte(sheet, row, s, "Indice de délai (SPI)", "–", spiLabel(kpi), Ton.NEUTRE);
         }
-        row = ligneNombre(sheet, row, s, "Santé du projet", kpi.getScoreSante(), s.valeurScore,
-            niveauSanteLabel(kpi.getNiveauSante()), tonSante(kpi.getScoreSante()));
+        if (ProjetKPIReportDTO.NON_EVALUE.equals(kpi.getNiveauSante())) {
+            row = ligneTexte(sheet, row, s, "Santé du projet", "–", niveauSanteLabel(kpi.getNiveauSante()), Ton.NEUTRE);
+        } else {
+            row = ligneNombre(sheet, row, s, "Santé du projet", kpi.getScoreSante(), s.valeurScore,
+                niveauSanteLabel(kpi.getNiveauSante()), tonSante(kpi.getScoreSante()));
+        }
         int bloquantes = compterAlertes(kpi, AlerteKPIDTO.CRITIQUE) + compterAlertes(kpi, AlerteKPIDTO.MAJEUR);
         row = ligneNombre(sheet, row, s, "Alertes", taille(kpi.getAlertes()), s.valeurEntier,
             bloquantes > 0 ? bloquantes + " à traiter en priorité (détail dans l'onglet Alertes et qualité)" : "Aucune alerte bloquante",
@@ -279,7 +409,11 @@ public class ExcelReportService {
         Row total = sheet.createRow(row);
         ecrire(total, 0, "Score total", s.totalLibelle);
         Cell cellTotal = total.createCell(1);
-        cellTotal.setCellValue(kpi.getScoreSante());
+        if (ProjetKPIReportDTO.NON_EVALUE.equals(kpi.getNiveauSante())) {
+            cellTotal.setCellValue("–");
+        } else {
+            cellTotal.setCellValue(kpi.getScoreSante());
+        }
         cellTotal.setCellStyle(s.totalScore);
         ecrire(total, 2, niveauSanteLabel(kpi.getNiveauSante()) + " : " + niveauSanteDescription(kpi.getNiveauSante()),
             s.totalLibelle);
@@ -631,6 +765,10 @@ public class ExcelReportService {
 
     /** Mise en page d'impression : A4, une page en largeur, pied de page avec le projet et la pagination. */
     private void miseEnPage(XSSFSheet sheet, ProjetKPIReportDTO kpi, boolean paysage) {
+        miseEnPage(sheet, "Rapport KPI - " + orDash(kpi.getNomProjet()), paysage);
+    }
+
+    private void miseEnPage(XSSFSheet sheet, String piedDePage, boolean paysage) {
         PrintSetup impression = sheet.getPrintSetup();
         impression.setPaperSize(PrintSetup.A4_PAPERSIZE);
         impression.setLandscape(paysage);
@@ -638,7 +776,7 @@ public class ExcelReportService {
         impression.setFitHeight((short) 0);
         sheet.setFitToPage(true);
         sheet.setHorizontallyCenter(true);
-        sheet.getFooter().setLeft("Qualinet - Rapport KPI - " + orDash(kpi.getNomProjet()));
+        sheet.getFooter().setLeft("Qualinet - " + piedDePage);
         sheet.getFooter().setRight("Page &P / &N");
     }
 
@@ -687,13 +825,17 @@ public class ExcelReportService {
 
     /** Une vraie date Excel quand la valeur est lisible, sinon le texte tel quel. */
     private void ecrireDate(Row row, int colonne, String iso, CellStyle styleDate, CellStyle styleTexte) {
+        ecrireDate(row, colonne, iso, styleDate, styleTexte, "Non définie");
+    }
+
+    private void ecrireDate(Row row, int colonne, String iso, CellStyle styleDate, CellStyle styleTexte, String siAbsente) {
         Cell cell = row.createCell(colonne);
         LocalDate date = parseDate(iso);
         if (date != null) {
             cell.setCellValue(date);
             cell.setCellStyle(styleDate);
         } else {
-            cell.setCellValue(iso == null || iso.isBlank() ? "Non définie" : iso);
+            cell.setCellValue(iso == null || iso.isBlank() ? siAbsente : iso);
             cell.setCellStyle(styleTexte);
         }
     }
@@ -725,6 +867,7 @@ public class ExcelReportService {
         final XSSFCellStyle libelle;
         final XSSFCellStyle valeurTexte;
         final XSSFCellStyle valeurPct;
+        final XSSFCellStyle valeurPctEntier;
         final XSSFCellStyle valeurDecimal;
         final XSSFCellStyle valeurEntier;
         final XSSFCellStyle valeurJours;
@@ -743,6 +886,10 @@ public class ExcelReportService {
         final XSSFCellStyle tDecimal;
         final XSSFCellStyle tPct;
         final XSSFCellStyle tDate;
+        /** Conformité d'un projet dans le tableau de l'audit : texte gras de la couleur de l'état. */
+        final Map<Ton, XSSFCellStyle> tConformite = new HashMap<>();
+        /** Date absente (« Aucune », « Non définie ») : alignée à droite comme les dates, en gris. */
+        final XSSFCellStyle tDateAbsente;
 
         private final XSSFWorkbook workbook;
         private final XSSFDataFormat formats;
@@ -766,6 +913,7 @@ public class ExcelReportService {
             libelle = ligne(style(police(11, false, ENCRE), null));
             valeurTexte = ligne(style(police(11, true, ENCRE), null));
             valeurPct = format(valeurTexte, "0.0%");
+            valeurPctEntier = format(valeurTexte, "0%");
             valeurDecimal = format(valeurTexte, "0.00");
             valeurEntier = format(valeurTexte, "0");
             valeurJours = format(valeurTexte, "0\" j\"");
@@ -774,7 +922,7 @@ public class ExcelReportService {
             valeurScore = format(valeurTexte, "0\" / 100\"");
             valeurDinars = format(valeurTexte, "#,##0\" DT\"");
             valeurDate = format(valeurTexte, "dd/mm/yyyy");
-            for (XSSFCellStyle st : List.of(valeurTexte, valeurPct, valeurDecimal, valeurEntier, valeurJours,
+            for (XSSFCellStyle st : List.of(valeurTexte, valeurPct, valeurPctEntier, valeurDecimal, valeurEntier, valeurJours,
                     valeurPoints, valeurPointsScore, valeurScore, valeurDinars, valeurDate)) {
                 st.setAlignment(HorizontalAlignment.RIGHT);
             }
@@ -803,6 +951,16 @@ public class ExcelReportService {
             for (XSSFCellStyle st : List.of(tEntier, tDecimal, tPct, tDate)) {
                 st.setVerticalAlignment(VerticalAlignment.TOP);
             }
+            tConformite.put(Ton.NEUTRE, style(police(10, true, GRIS_TEXTE), null));
+            tConformite.put(Ton.BON, style(police(10, true, TON_BON), null));
+            tConformite.put(Ton.ATTENTION, style(police(10, true, TON_ATTENTION), null));
+            tConformite.put(Ton.MAUVAIS, style(police(10, true, TON_MAUVAIS), null));
+            for (XSSFCellStyle st : tConformite.values()) {
+                st.setVerticalAlignment(VerticalAlignment.TOP);
+            }
+            tDateAbsente = style(police(10, false, GRIS_TEXTE), null);
+            tDateAbsente.setAlignment(HorizontalAlignment.RIGHT);
+            tDateAbsente.setVerticalAlignment(VerticalAlignment.TOP);
         }
 
         private XSSFFont police(int taille, boolean gras, byte[] couleur) {
@@ -880,6 +1038,7 @@ public class ExcelReportService {
             case "EXCELLENT": return "Excellent";
             case "BON": return "Bon";
             case "ATTENTION": return "Attention";
+            case ProjetKPIReportDTO.NON_EVALUE: return "Non évalué";
             default: return "Critique";
         }
     }
@@ -890,6 +1049,7 @@ public class ExcelReportService {
             case "EXCELLENT": return "les indicateurs sont au vert sur les quatre axes de pilotage.";
             case "BON": return "le projet avance correctement, avec quelques points de vigilance.";
             case "ATTENTION": return "plusieurs indicateurs se dégradent, un arbitrage est nécessaire.";
+            case ProjetKPIReportDTO.NON_EVALUE: return "aucune fiche de suivi, le score sera calculé dès le premier dépôt.";
             default: return "le projet est en difficulté, une intervention rapide est recommandée.";
         }
     }

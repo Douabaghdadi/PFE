@@ -32,10 +32,6 @@ public class DataInitializer implements CommandLineRunner {
 
         // Initialiser les nomenclatures par défaut
         if (nomenclatureRepository.count() == 0) {
-            // Types de fiches
-            nomenclatureRepository.save(new Nomenclature("TYPE_FICHE", "FICHE_PROJET", "Fiche Projet"));
-            nomenclatureRepository.save(new Nomenclature("TYPE_FICHE", "FICHE_SUIVI", "Fiche de Suivi"));
-
             // Statuts
             nomenclatureRepository.save(new Nomenclature("STATUT", "EN_COURS", "En Cours"));
             nomenclatureRepository.save(new Nomenclature("STATUT", "TERMINE", "Terminé"));

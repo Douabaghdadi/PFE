@@ -3,11 +3,13 @@ package com.example.demo.controller;
 import com.example.demo.dto.FicheProjetRequest;
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.FicheProjet;
+import com.example.demo.security.ControleAcces;
 import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.FicheProjetService;
 import com.example.demo.service.UserNotificationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,9 @@ public class FicheProjetController {
     @Autowired
     private UserNotificationService userNotificationService;
 
+    @Autowired
+    private ControleAcces controleAcces;
+
     @GetMapping
     public ResponseEntity<List<FicheProjet>> getMyFichesProjet(Authentication authentication) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -39,22 +44,34 @@ public class FicheProjetController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<FicheProjet> getFicheProjetById(@PathVariable String id) {
+    public ResponseEntity<FicheProjet> getFicheProjetById(@PathVariable String id, Authentication authentication) {
         try {
-            return ResponseEntity.ok(ficheProjetService.getFicheProjetById(id));
+            FicheProjet ficheProjet = ficheProjetService.getFicheProjetById(id);
+            if (!controleAcces.peutLire(ficheProjet.getChefProjetId(), authentication)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+            return ResponseEntity.ok(ficheProjet);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping("/statut/{statut}")
-    public ResponseEntity<List<FicheProjet>> getFichesProjetByStatut(@PathVariable String statut) {
-        return ResponseEntity.ok(ficheProjetService.getFichesProjetByStatut(statut));
+    public ResponseEntity<List<FicheProjet>> getFichesProjetByStatut(@PathVariable String statut,
+                                                                     Authentication authentication) {
+        return ResponseEntity.ok(fichesLisibles(ficheProjetService.getFichesProjetByStatut(statut), authentication));
     }
 
     @GetMapping("/categorie/{categorie}")
-    public ResponseEntity<List<FicheProjet>> getFichesProjetByCategorie(@PathVariable String categorie) {
-        return ResponseEntity.ok(ficheProjetService.getFichesProjetByCategorie(categorie));
+    public ResponseEntity<List<FicheProjet>> getFichesProjetByCategorie(@PathVariable String categorie,
+                                                                        Authentication authentication) {
+        return ResponseEntity.ok(fichesLisibles(ficheProjetService.getFichesProjetByCategorie(categorie), authentication));
+    }
+
+    private List<FicheProjet> fichesLisibles(List<FicheProjet> fiches, Authentication authentication) {
+        return fiches.stream()
+                .filter(fiche -> controleAcces.peutLire(fiche.getChefProjetId(), authentication))
+                .toList();
     }
 
     @PostMapping

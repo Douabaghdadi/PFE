@@ -14,6 +14,8 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: COMPTES_INITIAUX_MOT_DE_PASSE
+        sync: false
       # Emails : API Brevo (Render bloque le SMTP sur le plan gratuit) ; expéditeur validé dans Brevo
       - key: BREVO_API_KEY
         sync: false

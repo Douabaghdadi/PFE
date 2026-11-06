@@ -75,14 +75,6 @@ public class UserNotificationController {
     }
     
     /**
-     * Endpoint de test pour vérifier les notifications (DEBUG)
-     */
-    @GetMapping("/debug/all")
-    public ResponseEntity<List<Notification>> getAllNotificationsDebug() {
-        return ResponseEntity.ok(userNotificationService.getAllNotificationsForDebug());
-    }
-
-    /**
      * Récupérer l'ID de l'utilisateur connecté
      */
     private String getCurrentUserId(Authentication authentication) {

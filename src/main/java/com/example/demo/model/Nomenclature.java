@@ -11,7 +11,7 @@ public class Nomenclature {
     private String id;
 
     @NotBlank
-    private String type; // TYPE_FICHE, STATUT, CATEGORIE_PROJET
+    private String type; // STATUT, CATEGORIE_PROJET, CARACTERE_PROJET, TYPE_PROJET, MODALITE_DEVELOPPEMENT, STATUT_TACHE
 
     @NotBlank
     private String code;

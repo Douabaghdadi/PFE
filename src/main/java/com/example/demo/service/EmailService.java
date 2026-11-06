@@ -73,7 +73,7 @@ public class EmailService {
 
         String text = String.format(
             "Bonjour %s,\n\n" +
-            "Nous vous informons que la fiche de suivi mensuelle pour le projet \"%s\" est en retard de %d jour(s).\n\n" +
+            "Nous vous informons que la fiche de suivi périodique pour le projet \"%s\" est en retard de %d jour(s).\n\n" +
             "Veuillez remplir la fiche de suivi dans les plus brefs délais via la plateforme Qualinet.\n\n" +
             "Détails:\n" +
             "- Projet: %s\n" +

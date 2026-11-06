@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class HistoriqueService {
@@ -131,8 +133,17 @@ public class HistoriqueService {
         historique.addAll(histoProjet);
         
         // 2. Récupérer l'historique de toutes les fiches de suivi liées à ce projet
+        // Les entrées de la fiche projet portent aussi le projetId : sans ce filtre, chacune sortirait deux fois
+        Set<String> dejaRecuperes = new HashSet<>();
+        for (HistoriqueModification entree : histoProjet) {
+            dejaRecuperes.add(entree.getId());
+        }
         List<HistoriqueModification> histoFichesSuivi = historiqueRepository.findByProjetIdOrderByDateModificationDesc(projetId);
-        historique.addAll(histoFichesSuivi);
+        for (HistoriqueModification entree : histoFichesSuivi) {
+            if (!dejaRecuperes.contains(entree.getId())) {
+                historique.add(entree);
+            }
+        }
         
         // Tri par date décroissante (plus récent en premier)
         historique.sort((a, b) -> b.getDateModification().compareTo(a.getDateModification()));

@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.example.demo.config.WebSocketConfig;
+import com.example.demo.dto.NotificationEvent;
 import com.example.demo.model.ERole;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.Notification;
@@ -8,6 +10,7 @@ import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.FicheProjetRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +27,26 @@ public class UserNotificationService {
     
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
+    /**
+     * Enregistrer une notification puis la pousser en temps réel à son destinataire.
+     * Un destinataire non connecté la retrouvera à sa prochaine connexion ; un échec
+     * d'envoi ne doit jamais faire échouer l'action qui a produit la notification.
+     */
+    private Notification saveAndPush(Notification notification) {
+        Notification saved = notificationRepository.save(notification);
+        try {
+            long unreadCount = notificationRepository.countByUserIdAndRead(saved.getUserId(), false);
+            messagingTemplate.convertAndSendToUser(saved.getUserId(),
+                WebSocketConfig.USER_QUEUE_NOTIFICATIONS, new NotificationEvent(saved, unreadCount));
+        } catch (Exception e) {
+            System.err.println("Envoi temps réel de la notification impossible: " + e.getMessage());
+        }
+        return saved;
+    }
 
     /**
      * Récupérer toutes les notifications d'un utilisateur (30 derniers jours)
@@ -96,7 +119,7 @@ public class UserNotificationService {
                     actorId,
                     actorName
                 );
-                notificationRepository.save(notification);
+                saveAndPush(notification);
             }
         }
     }
@@ -128,7 +151,7 @@ public class UserNotificationService {
                     actorId,
                     actorName
                 );
-                notificationRepository.save(notification);
+                saveAndPush(notification);
             }
         }
     }
@@ -184,10 +207,40 @@ public class UserNotificationService {
             piloteName
         );
         
-        Notification saved = notificationRepository.save(notification);
+        Notification saved = saveAndPush(notification);
         System.out.println("Notification créée avec succès! ID: " + saved.getId());
         System.out.println("Message: " + message);
         System.out.println("====================================");
+    }
+
+    /**
+     * Notifier le chef de projet qu'un pilote qualité l'a relancé pour une fiche de suivi en retard
+     */
+    public void createRelanceNotification(FicheProjet projet, int joursRetard, String piloteQualiteId) {
+        if (projet.getChefProjetId() == null) return;
+
+        User pilote = piloteQualiteId != null ? userRepository.findById(piloteQualiteId).orElse(null) : null;
+        String piloteName = pilote == null ? "Le pilote qualité"
+            : pilote.getFirstName() != null && pilote.getLastName() != null
+                ? pilote.getFirstName() + " " + pilote.getLastName()
+                : pilote.getUsername();
+
+        String message = piloteName + " vous a relancé : la fiche de suivi du projet \""
+            + projet.getNomProjet() + "\" est en retard";
+        if (joursRetard > 0) {
+            message += " de " + joursRetard + (joursRetard > 1 ? " jours" : " jour");
+        }
+
+        Notification notification = new Notification(
+            projet.getChefProjetId(),
+            "RELANCE_FICHE_SUIVI",
+            message,
+            projet.getId(),
+            "FICHE_PROJET",
+            piloteQualiteId,
+            piloteName
+        );
+        saveAndPush(notification);
     }
 
     /**
@@ -198,13 +251,6 @@ public class UserNotificationService {
         notificationRepository.deleteByCreatedAtBefore(thirtyDaysAgo);
     }
     
-    /**
-     * Méthode de debug pour récupérer toutes les notifications
-     */
-    public List<Notification> getAllNotificationsForDebug() {
-        return notificationRepository.findAll();
-    }
-
     // Méthodes utilitaires privées
 
     private String buildFicheProjetMessage(String action, String actorName, String projetName) {

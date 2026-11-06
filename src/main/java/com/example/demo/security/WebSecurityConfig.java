@@ -81,7 +81,9 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
+                        // Doit rester AVANT "/api/auth/**" : c'est la première règle qui correspond qui s'applique
+                        auth.requestMatchers("/api/auth/change-password").authenticated()
+                                .requestMatchers("/api/auth/**").permitAll()
                                 // Données Power BI (projets, utilisateurs, stats) : pilote qualité et admin uniquement.
                                 // Doit rester AVANT "/api/public/**" : c'est la première règle qui correspond qui s'applique.
                                 .requestMatchers("/api/public/powerbi/**").hasAnyRole("PILOTE_QUALITE", "ADMIN")
@@ -89,6 +91,9 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/test/all").permitAll()
                                 .requestMatchers("/api/gemini/**").permitAll()
                                 .requestMatchers("/api/chat").authenticated()
+                                // Handshake WebSocket : le navigateur ne peut pas y mettre d'en-tête Authorization,
+                                // le jeton est vérifié sur la trame STOMP CONNECT (voir WebSocketConfig)
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers("/error").permitAll()
                                 .anyRequest().authenticated()
                 );

@@ -47,37 +47,6 @@ public class AdminRoleController {
     }
 
     /**
-     * Endpoint public pour corriger le rôle de dcuabagh (temporaire pour debug)
-     */
-    @PostMapping("/fix-dcuabagh")
-    @PreAuthorize("permitAll()")
-    public ResponseEntity<?> fixDcuabaghRole() {
-        try {
-            User user = userRepository.findByUsername("dcuabagh")
-                    .orElseThrow(() -> new RuntimeException("User dcuabagh not found"));
-
-            Role chefProjetRole = roleRepository.findByName(ERole.ROLE_CHEF_PROJET)
-                    .orElseThrow(() -> new RuntimeException("Role CHEF_PROJET not found"));
-
-            Set<Role> roles = user.getRoles();
-            boolean hadRole = roles.stream()
-                    .anyMatch(role -> role.getName() == ERole.ROLE_CHEF_PROJET);
-
-            if (!hadRole) {
-                roles.add(chefProjetRole);
-                user.setRoles(roles);
-                userRepository.save(user);
-                return ResponseEntity.ok(new MessageResponse("Role CHEF_PROJET added to dcuabagh successfully!"));
-            } else {
-                return ResponseEntity.ok(new MessageResponse("User dcuabagh already has CHEF_PROJET role"));
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Error: " + e.getMessage()));
-        }
-    }
-
-    /**
      * Lister tous les utilisateurs avec leurs rôles
      */
     @GetMapping("/users-roles")

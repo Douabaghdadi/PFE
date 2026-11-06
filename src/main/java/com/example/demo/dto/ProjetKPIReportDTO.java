@@ -71,6 +71,9 @@ public class ProjetKPIReportDTO {
     private List<ChargeMembreDTO> chargeParMembre = new ArrayList<>();
 
     // Santé, alertes et historique
+    /** Niveau d'un projet sans fiche de suivi : aucune donnée d'exécution ne permet de le noter. */
+    public static final String NON_EVALUE = "NON_EVALUE";
+
     private double scoreSante;
     private String niveauSante;
     private List<ComposanteScoreDTO> detailScore = new ArrayList<>();

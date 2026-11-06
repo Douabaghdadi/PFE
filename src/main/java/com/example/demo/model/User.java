@@ -1,5 +1,6 @@
 package com.example.demo.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -32,6 +33,8 @@ public class User {
     
     private String lastName;
 
+    // Lisible à la réception seulement : l'empreinte ne sort jamais dans une réponse JSON
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank
     @Size(max = 120)
     private String password;

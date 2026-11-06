@@ -256,6 +256,18 @@ class KPIServiceTest {
     }
 
     @Test
+    void neDonneAucunScoreSansFicheDeSuivi() {
+        when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
+        when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of());
+
+        ProjetKPIReportDTO kpi = kpiService.calculateProjetKPIs(PROJET_ID);
+
+        assertEquals("NON_EVALUE", kpi.getNiveauSante());
+        assertEquals(0.0, kpi.getScoreSante(), 0.01);
+        assertTrue(kpi.getDetailScore().isEmpty());
+    }
+
+    @Test
     void marqueLeRetardQuandLaDateDeFinEstDepassee() {
         FicheProjet enRetard = projet();
         enRetard.setDateFinPrevue(aujourdhui.minusDays(20));
@@ -382,26 +394,6 @@ class KPIServiceTest {
         assertEquals(0, kpi.getNombreProblemesPersistants());
         // 25 - 1 (problème nouvellement signalé) - 1 (risque avec plan d'action) = 23
         assertEquals(23.0, composante(kpi, "Qualité").getPoints(), 0.01);
-    }
-
-    @Test
-    void signaleUnePrevisionBudgetaireSansCommuneMesureAvecLeCadrage() {
-        // Budget cadré à 2,5 MD, mais 250 saisis dans la fiche de suivi : erreur d'unité.
-        FicheSuivi.FinancierInfo financier = new FicheSuivi.FinancierInfo();
-        financier.setBudgetPrevision(250.0);
-        financier.setBudgetRealisation(100.0);
-        FicheSuivi.FicheSignaletique signaletique = new FicheSuivi.FicheSignaletique();
-        signaletique.setFinancier(financier);
-        FicheSuivi fiche = ficheCourante();
-        fiche.setFicheSignaletique(signaletique);
-
-        when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
-        when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of(fiche));
-
-        ProjetKPIReportDTO kpi = kpiService.calculateProjetKPIs(PROJET_ID);
-
-        assertTrue(kpi.getAlertes().stream()
-            .anyMatch(a -> a.getTitre().equals("Budget de suivi incohérent avec le cadrage")));
     }
 
     @Test

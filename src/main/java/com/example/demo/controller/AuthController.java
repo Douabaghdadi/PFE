@@ -119,9 +119,12 @@ public class AuthController {
     }
 
     @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request,
+                                            Authentication authentication) {
         try {
-            User user = userRepository.findById(request.getUserId())
+            // L'utilisateur vient du jeton, jamais du corps de la requête.
+            UserDetailsImpl utilisateur = (UserDetailsImpl) authentication.getPrincipal();
+            User user = userRepository.findById(utilisateur.getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             if (!encoder.matches(request.getCurrentPassword(), user.getPassword())) {

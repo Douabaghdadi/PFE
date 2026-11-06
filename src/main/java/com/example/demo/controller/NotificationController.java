@@ -6,11 +6,13 @@ import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.service.EmailService;
 import com.example.demo.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,17 +46,20 @@ public class NotificationController {
     }
 
     /**
-     * Envoie une notification à un chef de projet spécifique
+     * Relance le chef de projet d'un projet (notification interne + email)
      */
     @PostMapping("/send/{projetId}")
-    public ResponseEntity<?> sendNotification(@PathVariable String projetId) {
+    public ResponseEntity<?> sendNotification(@PathVariable String projetId, Authentication authentication) {
         try {
-            NotificationService.NotificationResult result = notificationService.sendReminderForProjet(projetId);
-            if (result.getEmailsSent() == 0) {
+            NotificationService.NotificationResult result =
+                notificationService.sendReminderForProjet(projetId, currentUserId(authentication));
+            if (result.getEmailsSent() == 0 && result.getNotificationsSent() == 0) {
                 return ResponseEntity.badRequest()
-                    .body(new MessageResponse("Erreur: l'email de relance n'a pas pu être envoyé"));
+                    .body(new MessageResponse("Erreur: la relance n'a pas pu être envoyée"));
             }
-            String message = String.format("%d email(s) envoyé(s) avec succès", result.getEmailsSent());
+            String message = result.getEmailsSent() > 0
+                ? "Relance envoyée par email et dans l'application"
+                : "Relance envoyée dans l'application (l'email n'a pas pu être envoyé)";
             return ResponseEntity.ok(new MessageResponse(message));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -120,14 +125,20 @@ public class NotificationController {
      * Envoie des notifications à tous les chefs de projet en retard
      */
     @PostMapping("/send-all")
-    public ResponseEntity<?> sendAllNotifications() {
+    public ResponseEntity<?> sendAllNotifications(Authentication authentication) {
         try {
-            NotificationService.NotificationResult result = notificationService.sendRemindersToAllLateChefs();
+            NotificationService.NotificationResult result =
+                notificationService.sendRemindersToAllLateChefs(currentUserId(authentication));
             String message = String.format("%d email(s) envoyé(s) avec succès", result.getEmailsSent());
             return ResponseEntity.ok(new MessageResponse(message));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(new MessageResponse("Erreur: " + e.getMessage()));
         }
+    }
+
+    private String currentUserId(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetailsImpl)) return null;
+        return ((UserDetailsImpl) authentication.getPrincipal()).getId();
     }
 }

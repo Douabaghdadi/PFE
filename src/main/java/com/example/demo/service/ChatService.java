@@ -2,6 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.dto.ChatRequest;
 import com.example.demo.dto.ChatResponse;
+import com.example.demo.dto.ChatTurn;
 import com.example.demo.dto.ProjetKPIReportDTO;
 import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
@@ -136,6 +137,8 @@ public class ChatService {
                 + "Tu réponds toujours en français, de manière concise et professionnelle. "
                 + "Tu analyses UNIQUEMENT les données réelles fournies ci-dessous. "
                 + "Ne génère JAMAIS de données fictives. Si une information n'est pas disponible, dis-le clairement. "
+                + "Si la question ne porte pas sur les projets, les fiches ou les KPI de Qualinet, réponds uniquement : "
+                + "« Je réponds seulement aux questions sur les projets suivis dans Qualinet. » "
                 + "IMPORTANT : Réponds UNIQUEMENT à ce qui est demandé, sans ajouter d'informations supplémentaires non demandées.\n\n"
                 + buildDataContext() + "\n";
 
@@ -148,23 +151,59 @@ public class ChatService {
     }
 
     private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_HISTORY_TURNS = 10;
+    private static final int MAX_TURN_CHARS = 4000;
+
+    /**
+     * Conversation envoyée à Gemini : les derniers échanges puis la nouvelle question.
+     * L'historique vient du navigateur, il est donc borné en nombre et en taille.
+     */
+    private ArrayNode buildContents(ChatRequest request) {
+        ArrayNode contents = objectMapper.createArrayNode();
+        List<ChatTurn> history = request.getHistory();
+        if (history != null) {
+            int from = Math.max(0, history.size() - MAX_HISTORY_TURNS);
+            for (ChatTurn turn : history.subList(from, history.size())) {
+                if (turn == null || turn.getContent() == null || turn.getContent().isBlank()) continue;
+                String role = "assistant".equals(turn.getRole()) ? "model" : "user";
+                // Gemini attend une conversation qui commence par l'utilisateur
+                if (contents.size() == 0 && "model".equals(role)) continue;
+                String text = turn.getContent();
+                if (text.length() > MAX_TURN_CHARS) text = text.substring(0, MAX_TURN_CHARS);
+                appendTurn(contents, role, text);
+            }
+        }
+        appendTurn(contents, "user", request.getMessage());
+        return contents;
+    }
+
+    /** Ajoute un tour ; deux tours consécutifs du même rôle sont fusionnés pour garder l'alternance. */
+    private void appendTurn(ArrayNode contents, String role, String text) {
+        if (contents.size() > 0) {
+            ObjectNode last = (ObjectNode) contents.get(contents.size() - 1);
+            if (role.equals(last.path("role").asText())) {
+                ObjectNode lastPart = (ObjectNode) last.path("parts").get(0);
+                lastPart.put("text", lastPart.path("text").asText() + "\n\n" + text);
+                return;
+            }
+        }
+        ObjectNode turn = contents.addObject();
+        turn.put("role", role);
+        turn.putArray("parts").addObject().put("text", text);
+    }
 
     public ChatResponse chat(ChatRequest request) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String fullPrompt = getSystemPrompt(request.getContext()) + "\n\nUtilisateur: " + request.getMessage();
-
         ObjectNode body = objectMapper.createObjectNode();
-        ArrayNode contents = objectMapper.createArrayNode();
-        ObjectNode content = objectMapper.createObjectNode();
-        ArrayNode parts = objectMapper.createArrayNode();
-        ObjectNode part = objectMapper.createObjectNode();
-        part.put("text", fullPrompt);
-        parts.add(part);
-        content.set("parts", parts);
-        contents.add(content);
-        body.set("contents", contents);
+
+        // Consignes et données : envoyées à part, une seule fois, hors de la conversation
+        ObjectNode systemInstruction = objectMapper.createObjectNode();
+        systemInstruction.putArray("parts").addObject().put("text", getSystemPrompt(request.getContext()));
+        body.set("systemInstruction", systemInstruction);
+
+        body.set("contents", buildContents(request));
 
         ObjectNode generationConfig = objectMapper.createObjectNode();
         generationConfig.put("maxOutputTokens", 2000);

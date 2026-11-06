@@ -26,30 +26,35 @@ public class NotificationService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UserNotificationService userNotificationService;
+
     /**
-     * Envoie des notifications par email à tous les chefs de projet en retard
+     * Relance tous les chefs de projet en retard (email + notification interne)
      */
-    public NotificationResult sendRemindersToAllLateChefs() {
+    public NotificationResult sendRemindersToAllLateChefs(String piloteQualiteId) {
         List<ProjetSuiviStatusDTO> lateProjects = ficheProjetService.getProjetsSuiviStatus();
         int emailsSent = 0;
+        int notificationsSent = 0;
 
         for (ProjetSuiviStatusDTO status : lateProjects) {
             try {
-                NotificationResult result = sendReminderForProjet(status.getProjetId());
+                NotificationResult result = sendReminderForProjet(status.getProjetId(), piloteQualiteId);
                 emailsSent += result.getEmailsSent();
+                notificationsSent += result.getNotificationsSent();
             } catch (Exception e) {
-                System.err.println("Erreur lors de l'envoi de la notification pour le projet " + 
+                System.err.println("Erreur lors de l'envoi de la notification pour le projet " +
                     status.getProjetId() + ": " + e.getMessage());
             }
         }
 
-        return new NotificationResult(emailsSent);
+        return new NotificationResult(emailsSent, notificationsSent);
     }
 
     /**
-     * Envoie une notification par email pour un projet spécifique
+     * Relance le chef de projet d'un projet : notification interne puis email
      */
-    public NotificationResult sendReminderForProjet(String projetId) {
+    public NotificationResult sendReminderForProjet(String projetId, String piloteQualiteId) {
         FicheProjet projet = ficheProjetRepository.findById(projetId)
             .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
 
@@ -64,10 +69,21 @@ public class NotificationService {
             .orElseThrow(() -> new RuntimeException("Statut du projet non trouvé"));
 
         int emailsSent = 0;
+        int notificationsSent = 0;
 
-        // Vérifier qu'un moyen de contact existe
+        // Notification interne : le chef la voit dans l'application même si l'email échoue
+        try {
+            userNotificationService.createRelanceNotification(projet, status.getJoursRetard(), piloteQualiteId);
+            notificationsSent = 1;
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la création de la notification de relance: " + e.getMessage());
+        }
+
         if (chefProjet.getEmail() == null || chefProjet.getEmail().isEmpty()) {
-            throw new RuntimeException("Le chef de projet n'a pas d'adresse email");
+            if (notificationsSent == 0) {
+                throw new RuntimeException("Le chef de projet n'a pas d'adresse email");
+            }
+            return new NotificationResult(emailsSent, notificationsSent);
         }
 
         // Envoyer l'email
@@ -85,7 +101,7 @@ public class NotificationService {
             // Ne pas lancer d'exception
         }
 
-        return new NotificationResult(emailsSent);
+        return new NotificationResult(emailsSent, notificationsSent);
     }
 
     /**
@@ -158,12 +174,17 @@ public class NotificationService {
 
     public static class NotificationResult {
         private int emailsSent;
+        private int notificationsSent;
 
-        public NotificationResult(int emailsSent) {
+        public NotificationResult(int emailsSent, int notificationsSent) {
             this.emailsSent = emailsSent;
+            this.notificationsSent = notificationsSent;
         }
 
         public int getEmailsSent() { return emailsSent; }
         public void setEmailsSent(int emailsSent) { this.emailsSent = emailsSent; }
+
+        public int getNotificationsSent() { return notificationsSent; }
+        public void setNotificationsSent(int notificationsSent) { this.notificationsSent = notificationsSent; }
     }
 }
