@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 import { pl, statutDef, statutKey, statutStats } from '../shared/projet-stats';
 import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
 import type { ValidationFiche } from '../../services/validation-fiche.service';
-import { validationDef } from '../shared/validation-stats';
+import { suppressionInterdite, validationDef } from '../shared/validation-stats';
 
 interface FicheProjet {
   id: string;
@@ -21,6 +21,7 @@ interface FicheProjet {
   dateCreation?: string;
   chefProjetId: string;
   validation?: ValidationFiche;
+  periodiciteSuiviMois?: number | null;
 }
 
 @Component({
@@ -41,6 +42,7 @@ export class ProjetsListComponent implements OnInit {
   readonly statutKey = statutKey;
   readonly statutDef = statutDef;
   readonly validationDef = validationDef;
+  readonly suppressionInterdite = suppressionInterdite;
 
   projets = signal<FicheProjet[]>([]);
   filteredProjets = signal<FicheProjet[]>([]);
@@ -287,7 +289,7 @@ export class ProjetsListComponent implements OnInit {
       error: (error) => {
         console.error('Error deleting projet:', error);
         this.suppressionEnCours.set(false);
-        this.erreurSuppression.set('Erreur lors de la suppression du projet');
+        this.erreurSuppression.set(error.error?.message || 'Erreur lors de la suppression du projet');
       }
     });
   }

@@ -189,42 +189,24 @@ export class FicheProjetFormComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Seuls les champs dont l'application a besoin sont obligatoires : le nom, le client, le statut et les dates prévues,
+   * qui portent les indicateurs et les retards. Le reste se complète plus tard, et le pilote qualité peut le réclamer.
+   */
   validateTab(): boolean {
     this.errors = {};
     const tab = this.currentTab();
 
     if (tab === 'identification') {
-      if (!this.formData.designationProjet?.trim())
-        this.errors['designationProjet'] = 'La désignation projet est obligatoire.';
       if (!this.formData.designationClient?.trim())
         this.errors['designationClient'] = 'La désignation client est obligatoire.';
       if (!this.formData.nomProjet?.trim())
         this.errors['nomProjet'] = 'Le nom du projet est obligatoire.';
-      if (!this.formData.cadreContractuelProjet?.trim())
-        this.errors['cadreContractuelProjet'] = 'Le cadre contractuel est obligatoire.';
-      if (!this.formData.caractereProjet)
-        this.errors['caractereProjet'] = 'Le caractère du projet est obligatoire.';
-      if (!this.formData.typeProjet)
-        this.errors['typeProjet'] = 'Le type de projet est obligatoire.';
       if (!this.formData.statut)
         this.errors['statut'] = 'Le statut du projet est obligatoire.';
-      if (!this.formData.presentation?.trim())
-        this.errors['presentation'] = 'La présentation est obligatoire.';
-      if (!this.formData.perimetre?.trim())
-        this.errors['perimetre'] = 'Le périmètre est obligatoire.';
-      if (!this.formData.maitreOuvrage?.trim())
-        this.errors['maitreOuvrage'] = "Le maître d'ouvrage est obligatoire.";
-      if (!this.formData.maitreOeuvre?.trim())
-        this.errors['maitreOeuvre'] = "Le maître d'œuvre est obligatoire.";
     }
 
     if (tab === 'estimations') {
-      if (!this.formData.modaliteDeveloppement)
-        this.errors['modaliteDeveloppement'] = 'La modalité de développement est obligatoire.';
-      if (!this.formData.estimationBudget.cp)
-        this.errors['budget_cp'] = 'Le budget CP est obligatoire.';
-      if (!this.formData.estimationBudget.id)
-        this.errors['budget_id'] = 'Le budget ID est obligatoire.';
       if (!this.formData.dateDebutPrevision)
         this.errors['dateDebutPrevision'] = 'La date de début (prévision) est obligatoire.';
       if (!this.formData.dateFinPrevision)
@@ -232,29 +214,16 @@ export class FicheProjetFormComponent implements OnInit {
       if (this.formData.dateDebutPrevision && this.formData.dateFinPrevision &&
           this.formData.dateFinPrevision < this.formData.dateDebutPrevision)
         this.errors['dateFinPrevision'] = 'La date de fin doit être après la date de début.';
-      if (!this.formData.dureeEnMois)
-        this.errors['dureeEnMois'] = 'La durée en mois est obligatoire.';
-      else if (this.formData.dureeEnMois < 0)
+      if ((this.formData.dureeEnMois ?? 0) < 0)
         this.errors['dureeEnMois'] = 'La durée ne peut pas être négative.';
-      if (!this.formData.delaisPrevisionnels?.trim())
-        this.errors['delaisPrevisionnels'] = 'Les délais prévisionnels sont obligatoires.';
       if (this.formData.dateDebutRealisation && this.formData.dateFinRealisation &&
           this.formData.dateFinRealisation < this.formData.dateDebutRealisation)
         this.errors['dateFinRealisation'] = 'La date de fin réalisation doit être après la date de début.';
     }
 
     if (tab === 'risques') {
-      if (!this.formData.risquesPotentiels?.trim())
-        this.errors['risquesPotentiels'] = 'Les risques potentiels sont obligatoires.';
-      if (!this.formData.preRequis?.trim())
-        this.errors['preRequis'] = 'Les pré-requis sont obligatoires.';
-      if (this.formData.planning.length === 0)
-        this.errors['planning'] = 'Le planning est obligatoire. Veuillez ajouter au moins une action.';
-      else {
-        const hasInvalid = this.formData.planning.some(p => !p.action?.trim());
-        if (hasInvalid)
-          this.errors['planning'] = 'Chaque ligne du planning doit avoir une action renseignée.';
-      }
+      if (this.formData.planning.some(p => !p.action?.trim()))
+        this.errors['planning'] = 'Chaque ligne du planning doit avoir une action renseignée.';
     }
 
     return Object.keys(this.errors).length === 0;
@@ -409,13 +378,17 @@ export class FicheProjetFormComponent implements OnInit {
     });
   }
 
-  onSubmit() {
-    if (!this.validateTab()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+  /** On peut sauter une étape d'un clic sur son titre : l'enregistrement les contrôle donc toutes et s'arrête sur la première à corriger. */
+  private validerToutesLesEtapes(): boolean {
+    for (const tab of ['identification', 'estimations', 'risques']) {
+      this.currentTab.set(tab);
+      if (!this.validateTab()) return false;
     }
-    if (!this.formData.nomProjet) {
-      this.errorMessage.set('Le nom du projet est obligatoire');
+    return true;
+  }
+
+  onSubmit() {
+    if (!this.validerToutesLesEtapes()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }

@@ -21,6 +21,11 @@ export function validationDef(validation: ValidationFiche | null | undefined): V
   return VALIDATION_DEFS.find(d => d.statut === statutValidation(validation))!;
 }
 
+/** Une fiche validée une fois ne se supprime plus, même modifiée depuis. Elle reste modifiable et repart alors au pilote qualité. */
+export function suppressionInterdite(validation: ValidationFiche | null | undefined): boolean {
+  return !!validation?.dejaValidee || statutValidation(validation) === 'VALIDEE';
+}
+
 /** Ce que le chef de projet doit savoir en ouvrant le formulaire : tout enregistrement renvoie la fiche au pilote qualité. */
 export function rappelModification(validation: ValidationFiche | null | undefined): string | null {
   switch (statutValidation(validation)) {

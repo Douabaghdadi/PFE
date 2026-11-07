@@ -11,6 +11,8 @@ export interface ValidationFiche {
   motif?: string;
   piloteNom?: string;
   dateDecision?: string;
+  /** Vrai dès la première validation, même si la fiche a été modifiée depuis. */
+  dejaValidee?: boolean;
 }
 
 /** Les deux types de fiches contrôlés par le pilote qualité, tels qu'ils figurent dans les adresses de l'API. */

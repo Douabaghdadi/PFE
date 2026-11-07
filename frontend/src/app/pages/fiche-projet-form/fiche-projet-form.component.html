@@ -105,15 +105,9 @@
 
           <div class="fields cols-2">
             <div class="field">
-              <label class="field-label" for="f-desig-projet">Désignation projet<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-desig-projet">Désignation projet</label>
               <input id="f-desig-projet" type="text" class="control" [(ngModel)]="formData.designationProjet" name="designationProjet"
-                     placeholder="Nom du projet" required
-                     [class.is-invalid]="errors['designationProjet']"
-                     [attr.aria-invalid]="errors['designationProjet'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['designationProjet'] ? 'e-desig-projet' : null">
-              @if (errors['designationProjet']) {
-                <p id="e-desig-projet" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['designationProjet'] }}</p>
-              }
+                     placeholder="Nom du projet">
             </div>
             <div class="field">
               <label class="field-label" for="f-desig-client">Désignation client<span class="req" aria-hidden="true">*</span></label>
@@ -177,20 +171,13 @@
             </div>
 
             <div class="field span-all">
-              <label class="field-label" for="f-cadre">Cadre contractuel du projet<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-cadre">Cadre contractuel du projet</label>
               <input id="f-cadre" type="text" class="control" [(ngModel)]="formData.cadreContractuelProjet" name="cadreContractuelProjet"
-                     placeholder="Ex : convention en cours" required
-                     [class.is-invalid]="errors['cadreContractuelProjet']"
-                     [attr.aria-invalid]="errors['cadreContractuelProjet'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['cadreContractuelProjet'] ? 'e-cadre' : null">
-              @if (errors['cadreContractuelProjet']) {
-                <p id="e-cadre" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['cadreContractuelProjet'] }}</p>
-              }
+                     placeholder="Ex : convention en cours">
             </div>
 
-            <fieldset class="choice-group field" [class.is-invalid]="errors['caractereProjet']"
-                      [attr.aria-describedby]="errors['caractereProjet'] ? 'e-caractere' : null">
-              <legend class="field-label">Caractère du projet<span class="req" aria-hidden="true">*</span></legend>
+            <fieldset class="choice-group field">
+              <legend class="field-label">Caractère du projet</legend>
               <div class="choices">
                 @for (c of caracteres; track c.code) {
                   <label class="choice">
@@ -203,14 +190,10 @@
                   }
                 }
               </div>
-              @if (errors['caractereProjet']) {
-                <p id="e-caractere" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['caractereProjet'] }}</p>
-              }
             </fieldset>
 
-            <fieldset class="choice-group field" [class.is-invalid]="errors['typeProjet']"
-                      [attr.aria-describedby]="errors['typeProjet'] ? 'e-type' : null">
-              <legend class="field-label">Type de projet<span class="req" aria-hidden="true">*</span></legend>
+            <fieldset class="choice-group field">
+              <legend class="field-label">Type de projet</legend>
               <div class="choices">
                 @for (t of types; track t.code) {
                   <label class="choice">
@@ -223,9 +206,6 @@
                   }
                 }
               </div>
-              @if (errors['typeProjet']) {
-                <p id="e-type" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['typeProjet'] }}</p>
-              }
             </fieldset>
           </div>
         </section>
@@ -241,15 +221,9 @@
 
           <div class="fields">
             <div class="field">
-              <label class="field-label" for="f-presentation">Présentation<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-presentation">Présentation</label>
               <textarea id="f-presentation" class="control" rows="5" [(ngModel)]="formData.presentation" name="presentation"
-                        placeholder="Décrivez la présentation du projet…"
-                        [class.is-invalid]="errors['presentation']"
-                        [attr.aria-invalid]="errors['presentation'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['presentation'] ? 'e-presentation' : null"></textarea>
-              @if (errors['presentation']) {
-                <p id="e-presentation" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['presentation'] }}</p>
-              }
+                        placeholder="Décrivez la présentation du projet…"></textarea>
             </div>
 
             <div class="field">
@@ -260,15 +234,9 @@
             </div>
 
             <div class="field">
-              <label class="field-label" for="f-perimetre">Périmètre<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-perimetre">Périmètre</label>
               <textarea id="f-perimetre" class="control" rows="4" [(ngModel)]="formData.perimetre" name="perimetre"
-                        placeholder="Définissez le périmètre du projet…"
-                        [class.is-invalid]="errors['perimetre']"
-                        [attr.aria-invalid]="errors['perimetre'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['perimetre'] ? 'e-perimetre' : null"></textarea>
-              @if (errors['perimetre']) {
-                <p id="e-perimetre" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['perimetre'] }}</p>
-              }
+                        placeholder="Définissez le périmètre du projet…"></textarea>
             </div>
           </div>
         </section>
@@ -284,26 +252,14 @@
 
           <div class="fields cols-2">
             <div class="field">
-              <label class="field-label" for="f-moa">Maître d'ouvrage<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-moa">Maître d'ouvrage</label>
               <input id="f-moa" type="text" class="control" [(ngModel)]="formData.maitreOuvrage" name="maitreOuvrage"
-                     placeholder="Nom du maître d'ouvrage" required
-                     [class.is-invalid]="errors['maitreOuvrage']"
-                     [attr.aria-invalid]="errors['maitreOuvrage'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['maitreOuvrage'] ? 'e-moa' : null">
-              @if (errors['maitreOuvrage']) {
-                <p id="e-moa" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['maitreOuvrage'] }}</p>
-              }
+                     placeholder="Nom du maître d'ouvrage">
             </div>
             <div class="field">
-              <label class="field-label" for="f-moe">Maître d'œuvre<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-moe">Maître d'œuvre</label>
               <input id="f-moe" type="text" class="control" [(ngModel)]="formData.maitreOeuvre" name="maitreOeuvre"
-                     placeholder="Nom du maître d'œuvre" required
-                     [class.is-invalid]="errors['maitreOeuvre']"
-                     [attr.aria-invalid]="errors['maitreOeuvre'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['maitreOeuvre'] ? 'e-moe' : null">
-              @if (errors['maitreOeuvre']) {
-                <p id="e-moe" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['maitreOeuvre'] }}</p>
-              }
+                     placeholder="Nom du maître d'œuvre">
             </div>
           </div>
         </section>
@@ -433,12 +389,9 @@
 
           <div class="fields">
             <div class="field">
-              <label class="field-label" for="f-modalite">Modalité<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-modalite">Modalité</label>
               <div class="select-wrap">
-                <select id="f-modalite" class="control" [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement"
-                        [class.is-invalid]="errors['modaliteDeveloppement']"
-                        [attr.aria-invalid]="errors['modaliteDeveloppement'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['modaliteDeveloppement'] ? 'e-modalite' : null">
+                <select id="f-modalite" class="control" [(ngModel)]="formData.modaliteDeveloppement" name="modaliteDeveloppement">
                   <option value="" disabled>-- Sélectionnez une modalité --</option>
                   @for (m of modalites; track m.code) {
                     <option [value]="m.code">{{ m.libelle }}</option>
@@ -446,9 +399,6 @@
                 </select>
                 <ng-container *ngTemplateOutlet="chevron"/>
               </div>
-              @if (errors['modaliteDeveloppement']) {
-                <p id="e-modalite" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['modaliteDeveloppement'] }}</p>
-              }
               @if (nomenclaturesChargees() && modalites.length === 0) {
                 <p class="field-hint">Aucun choix disponible : l'administrateur doit l'ajouter dans Nomenclature.</p>
               }
@@ -467,26 +417,14 @@
 
           <div class="fields cols-2">
             <div class="field">
-              <label class="field-label" for="f-cp">CP (chef de projet)<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-cp">CP (chef de projet)</label>
               <input id="f-cp" type="number" class="control" [(ngModel)]="formData.estimationBudget.cp" name="budget_cp"
-                     (change)="calculateBudget()" placeholder="Ex : 50000"
-                     [class.is-invalid]="errors['budget_cp']"
-                     [attr.aria-invalid]="errors['budget_cp'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['budget_cp'] ? 'e-cp' : null">
-              @if (errors['budget_cp']) {
-                <p id="e-cp" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['budget_cp'] }}</p>
-              }
+                     (change)="calculateBudget()" placeholder="Ex : 50000">
             </div>
             <div class="field">
-              <label class="field-label" for="f-id">ID (ingénieur développeur)<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-id">ID (ingénieur développeur)</label>
               <input id="f-id" type="number" class="control" [(ngModel)]="formData.estimationBudget.id" name="budget_id"
-                     (change)="calculateBudget()" placeholder="Ex : 120000"
-                     [class.is-invalid]="errors['budget_id']"
-                     [attr.aria-invalid]="errors['budget_id'] ? 'true' : null"
-                     [attr.aria-describedby]="errors['budget_id'] ? 'e-id' : null">
-              @if (errors['budget_id']) {
-                <p id="e-id" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['budget_id'] }}</p>
-              }
+                     (change)="calculateBudget()" placeholder="Ex : 120000">
             </div>
           </div>
 
@@ -533,7 +471,7 @@
               }
             </div>
             <div class="field">
-              <label class="field-label" for="f-duree">Durée (mois)<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-duree">Durée (mois)</label>
               <input id="f-duree" type="number" class="control" [(ngModel)]="formData.dureeEnMois" name="dureeEnMois" min="0"
                      [class.is-invalid]="errors['dureeEnMois']"
                      [attr.aria-invalid]="errors['dureeEnMois'] ? 'true' : null"
@@ -567,15 +505,9 @@
 
           <div class="fields">
             <div class="field">
-              <label class="field-label" for="f-delais-prev">Délais prévisionnels<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-delais-prev">Délais prévisionnels</label>
               <textarea id="f-delais-prev" class="control" rows="3" [(ngModel)]="formData.delaisPrevisionnels" name="delaisPrevisionnels"
-                        placeholder="Ex : le délai prévisionnel du projet est de 6 mois (hors délais de validation)"
-                        [class.is-invalid]="errors['delaisPrevisionnels']"
-                        [attr.aria-invalid]="errors['delaisPrevisionnels'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['delaisPrevisionnels'] ? 'e-delais-prev' : null"></textarea>
-              @if (errors['delaisPrevisionnels']) {
-                <p id="e-delais-prev" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['delaisPrevisionnels'] }}</p>
-              }
+                        placeholder="Ex : le délai prévisionnel du projet est de 6 mois (hors délais de validation)"></textarea>
             </div>
           </div>
         </section>
@@ -595,27 +527,15 @@
 
           <div class="fields">
             <div class="field">
-              <label class="field-label" for="f-risques">Risques potentiels<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-risques">Risques potentiels</label>
               <textarea id="f-risques" class="control" rows="4" [(ngModel)]="formData.risquesPotentiels" name="risquesPotentiels"
-                        placeholder="Ex : convention en cours de discussion avec le MTIC"
-                        [class.is-invalid]="errors['risquesPotentiels']"
-                        [attr.aria-invalid]="errors['risquesPotentiels'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['risquesPotentiels'] ? 'e-risques' : null"></textarea>
-              @if (errors['risquesPotentiels']) {
-                <p id="e-risques" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['risquesPotentiels'] }}</p>
-              }
+                        placeholder="Ex : convention en cours de discussion avec le MTIC"></textarea>
             </div>
 
             <div class="field">
-              <label class="field-label" for="f-prerequis">Pré-requis<span class="req" aria-hidden="true">*</span></label>
+              <label class="field-label" for="f-prerequis">Pré-requis</label>
               <textarea id="f-prerequis" class="control" rows="4" [(ngModel)]="formData.preRequis" name="preRequis"
-                        placeholder="Listez les pré-requis du projet…"
-                        [class.is-invalid]="errors['preRequis']"
-                        [attr.aria-invalid]="errors['preRequis'] ? 'true' : null"
-                        [attr.aria-describedby]="errors['preRequis'] ? 'e-prerequis' : null"></textarea>
-              @if (errors['preRequis']) {
-                <p id="e-prerequis" class="field-error" role="alert"><ng-container *ngTemplateOutlet="errIcon"/>{{ errors['preRequis'] }}</p>
-              }
+                        placeholder="Listez les pré-requis du projet…"></textarea>
             </div>
           </div>
         </section>
@@ -624,7 +544,7 @@
         <section class="panel" aria-labelledby="t-planning">
           <div class="panel-head">
             <div>
-              <h2 id="t-planning" class="panel-title">Planning du projet<span class="req" aria-hidden="true">*</span></h2>
+              <h2 id="t-planning" class="panel-title">Planning du projet</h2>
               <p class="panel-sub">Une ligne par action. Cochez les mois (1 à 12) pendant lesquels elle est menée.</p>
             </div>
             <button type="button" class="btn btn-secondary btn-add" (click)="addPlanning()">

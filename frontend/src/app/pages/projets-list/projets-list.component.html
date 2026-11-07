@@ -177,6 +177,15 @@
                     <span class="pill" [ngClass]="validationDef(projet.validation).pill">{{ validationDef(projet.validation).label }}</span>
                   </div>
 
+                  <div class="pcard-ligne">
+                    <span class="pcard-libelle">Périodicité de suivi</span>
+                    @if (projet.periodiciteSuiviMois) {
+                      <span class="pill pill-en_cours">{{ projet.periodiciteSuiviMois }} mois</span>
+                    } @else {
+                      <span class="pill pill-autre">Non définie</span>
+                    }
+                  </div>
+
                   <dl class="facts">
                     <div>
                       <dt>Client</dt>
@@ -212,12 +221,14 @@
                     </svg>
                   </button>
 
-                  <button type="button" class="icon-btn is-danger" (click)="deleteProjet(projet); $event.stopPropagation()"
-                          title="Supprimer" [attr.aria-label]="'Supprimer ' + (projet.nomProjet || projet.designationProjet)">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
+                  @if (!suppressionInterdite(projet.validation)) {
+                    <button type="button" class="icon-btn is-danger" (click)="deleteProjet(projet); $event.stopPropagation()"
+                            title="Supprimer" [attr.aria-label]="'Supprimer ' + (projet.nomProjet || projet.designationProjet)">
+                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  }
 
                   <button type="button" class="btn btn-primary btn-details" (click)="viewProjet(projet.id); $event.stopPropagation()"
                           [attr.aria-label]="'Voir ' + (projet.nomProjet || projet.designationProjet)">

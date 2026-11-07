@@ -42,7 +42,8 @@ export class FicheValidationComponent {
     const validation = this.validation();
     switch (this.statut()) {
       case 'VALIDEE':
-        return `Validée par ${validation?.piloteNom} le ${this.dateDecision()}.`;
+        return `Validée par ${validation?.piloteNom} le ${this.dateDecision()}.`
+          + (this.lienCorrection() ? ' Elle ne peut plus être supprimée, et toute modification devra être validée de nouveau.' : '');
       case 'A_CORRIGER':
         return `Correction demandée par ${validation?.piloteNom} le ${this.dateDecision()}.`
           + (this.peutDecider() ? ' En attente du chef de projet.' : '');
@@ -52,7 +53,7 @@ export class FicheValidationComponent {
   });
 
   readonly peutValider = computed(() => this.peutDecider() && this.statut() === 'A_VALIDER');
-  /** Une fiche validée peut encore être renvoyée : une erreur se repère parfois après coup. */
+  /** Une fiche validée peut encore être renvoyée : une fois corrigée, le pilote la valide de nouveau. */
   readonly peutDemanderCorrection = computed(() => this.peutDecider() && this.statut() !== 'A_CORRIGER');
   readonly peutCorriger = computed(() => !!this.lienCorrection() && this.statut() === 'A_CORRIGER');
 
