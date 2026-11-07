@@ -30,6 +30,9 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✓ Rôles initialisés avec succès!");
         }
 
+        // La catégorie de projet n'existe plus : ses anciennes valeurs sont retirées de la base
+        nomenclatureRepository.deleteByType("CATEGORIE_PROJET");
+
         // Initialiser les nomenclatures par défaut
         if (nomenclatureRepository.count() == 0) {
             // Statuts
@@ -37,11 +40,6 @@ public class DataInitializer implements CommandLineRunner {
             nomenclatureRepository.save(new Nomenclature("STATUT", "TERMINE", "Terminé"));
             nomenclatureRepository.save(new Nomenclature("STATUT", "EN_ATTENTE", "En Attente"));
             nomenclatureRepository.save(new Nomenclature("STATUT", "ANNULE", "Annulé"));
-
-            // Catégories de projets
-            nomenclatureRepository.save(new Nomenclature("CATEGORIE_PROJET", "QUALITE", "Qualité"));
-            nomenclatureRepository.save(new Nomenclature("CATEGORIE_PROJET", "DEVELOPPEMENT", "Développement"));
-            nomenclatureRepository.save(new Nomenclature("CATEGORIE_PROJET", "INFRASTRUCTURE", "Infrastructure"));
 
             System.out.println("✓ Nomenclatures initialisées avec succès!");
         }

@@ -3,7 +3,9 @@ package com.example.demo.service;
 import com.example.demo.dto.FicheProjetRequest;
 import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
+import com.example.demo.model.User;
 import com.example.demo.repository.FicheProjetRepository;
+import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,12 @@ public class FicheProjetService {
     @Autowired
     private HistoriqueService historiqueService;
 
+    @Autowired
+    private PieceJointeService pieceJointeService;
+
+    @Autowired
+    private UserRepository userRepository;
+
     public List<FicheProjet> getAllFichesProjet() {
         return ficheProjetRepository.findAll();
     }
@@ -29,9 +37,16 @@ public class FicheProjetService {
         return ficheProjetRepository.findByChefProjetId(chefProjetId);
     }
 
+    /** Fiche complète pour les pages de détail, avec le nom d'utilisateur de son chef de projet. */
     public FicheProjet getFicheProjetById(String id) {
-        return ficheProjetRepository.findById(id)
+        FicheProjet ficheProjet = ficheProjetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fiche projet not found"));
+        if (ficheProjet.getChefProjetId() != null) {
+            userRepository.findById(ficheProjet.getChefProjetId())
+                    .map(User::getUsername)
+                    .ifPresent(ficheProjet::setChefProjetNom);
+        }
+        return ficheProjet;
     }
 
     public FicheProjet createFicheProjet(FicheProjetRequest request, String chefProjetId) {
@@ -95,7 +110,6 @@ public class FicheProjetService {
         ficheProjet.setDateDebut(request.getDateDebutPrevision() != null ? request.getDateDebutPrevision() : request.getDateDebut());
         ficheProjet.setDateFinPrevue(request.getDateFinPrevision() != null ? request.getDateFinPrevision() : request.getDateFinPrevue());
         ficheProjet.setStatut(request.getStatut() != null ? request.getStatut() : "EN_COURS");
-        ficheProjet.setCategorie(request.getCategorie());
         ficheProjet.setChefProjetId(chefProjetId);
         
         // Métadonnées
@@ -181,12 +195,14 @@ public class FicheProjetService {
         ficheProjet.setDateDebut(request.getDateDebutPrevision() != null ? request.getDateDebutPrevision() : request.getDateDebut());
         ficheProjet.setDateFinPrevue(request.getDateFinPrevision() != null ? request.getDateFinPrevision() : request.getDateFinPrevue());
         ficheProjet.setStatut(request.getStatut());
-        ficheProjet.setCategorie(request.getCategorie());
         
         // Métadonnées
         ficheProjet.setReference(request.getReference());
         ficheProjet.setDateDocument(request.getDateDocument());
         ficheProjet.setDateModification(LocalDateTime.now());
+
+        // La fiche a changé : elle repart au pilote qualité, qu'elle ait été validée ou à corriger
+        ficheProjet.getValidation().remettreAValider();
 
         FicheProjet updated = ficheProjetRepository.save(ficheProjet);
         
@@ -209,15 +225,12 @@ public class FicheProjetService {
         // Enregistrer dans l'historique avant suppression avec le projetId
         historiqueService.enregistrerSuppression("FICHE_PROJET", id, chefProjetId, id, ficheProjet.getNomProjet());
 
+        pieceJointeService.supprimerDeLaFiche(PieceJointeService.TYPE_FICHE_PROJET, id);
         ficheProjetRepository.deleteById(id);
     }
 
     public List<FicheProjet> getFichesProjetByStatut(String statut) {
         return ficheProjetRepository.findByStatut(statut);
-    }
-
-    public List<FicheProjet> getFichesProjetByCategorie(String categorie) {
-        return ficheProjetRepository.findByCategorie(categorie);
     }
 
     public List<ProjetSuiviStatusDTO> getProjetsSuiviStatus() {

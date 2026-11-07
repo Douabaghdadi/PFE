@@ -10,4 +10,5 @@ public interface NomenclatureRepository extends MongoRepository<Nomenclature, St
     List<Nomenclature> findByActif(Boolean actif);
     Optional<Nomenclature> findByTypeAndCode(String type, String code);
     Boolean existsByTypeAndCode(String type, String code);
+    void deleteByType(String type);
 }

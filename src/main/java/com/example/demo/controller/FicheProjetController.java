@@ -62,12 +62,6 @@ public class FicheProjetController {
         return ResponseEntity.ok(fichesLisibles(ficheProjetService.getFichesProjetByStatut(statut), authentication));
     }
 
-    @GetMapping("/categorie/{categorie}")
-    public ResponseEntity<List<FicheProjet>> getFichesProjetByCategorie(@PathVariable String categorie,
-                                                                        Authentication authentication) {
-        return ResponseEntity.ok(fichesLisibles(ficheProjetService.getFichesProjetByCategorie(categorie), authentication));
-    }
-
     private List<FicheProjet> fichesLisibles(List<FicheProjet> fiches, Authentication authentication) {
         return fiches.stream()
                 .filter(fiche -> controleAcces.peutLire(fiche.getChefProjetId(), authentication))

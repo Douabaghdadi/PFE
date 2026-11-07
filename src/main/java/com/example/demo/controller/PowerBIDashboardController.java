@@ -25,7 +25,7 @@ public class PowerBIDashboardController {
     @Autowired
     private UserRepository userRepository;
 
-    // Projets : id, nom, statut, categorie, typeProjet, dateDebut, dateFinPrevue, dureeEnMois
+    // Projets : id, nom, statut, typeProjet, dateDebut, dateFinPrevue, dureeEnMois
     @GetMapping("/projets")
     public List<Map<String, Object>> getProjets() {
         return ficheProjetRepository.findAll().stream().map(p -> {
@@ -33,7 +33,6 @@ public class PowerBIDashboardController {
             m.put("id", p.getId());
             m.put("nomProjet", p.getNomProjet());
             m.put("statut", p.getStatut());
-            m.put("categorie", p.getCategorie());
             m.put("typeProjet", p.getTypeProjet());
             m.put("dateDebut", p.getDateDebut());
             m.put("dateFinPrevue", p.getDateFinPrevue());
@@ -88,11 +87,6 @@ public class PowerBIDashboardController {
                         p -> p.getStatut() != null ? p.getStatut() : "INCONNU",
                         Collectors.counting()));
         stats.put("projetsParStatut", parStatut);
-
-        Map<String, Long> parCategorie = projets.stream()
-                .filter(p -> p.getCategorie() != null)
-                .collect(Collectors.groupingBy(FicheProjet::getCategorie, Collectors.counting()));
-        stats.put("projetsParCategorie", parCategorie);
 
         Map<String, Long> parType = projets.stream()
                 .filter(p -> p.getTypeProjet() != null)

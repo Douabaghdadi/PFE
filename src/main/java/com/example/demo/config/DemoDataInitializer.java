@@ -9,7 +9,9 @@ import com.example.demo.model.HistoriqueModification;
 import com.example.demo.model.Notification;
 import com.example.demo.model.PlanningAction;
 import com.example.demo.model.Role;
+import com.example.demo.model.StatutValidation;
 import com.example.demo.model.User;
+import com.example.demo.model.ValidationFiche;
 import com.example.demo.repository.FicheProjetRepository;
 import com.example.demo.repository.FicheSuiviRepository;
 import com.example.demo.repository.HistoriqueModificationRepository;
@@ -17,6 +19,7 @@ import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.HistoriqueService;
+import com.example.demo.service.PieceJointeService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +29,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +38,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,6 +58,9 @@ import java.util.Set;
  *
  * Les dates sont écrites pour le 25/10/2026 puis décalées du nombre de jours écoulés depuis : les retards
  * et les échéances affichés sont donc les mêmes quel que soit le jour du chargement.
+ *
+ * Le pilote qualité a tranché les fiches déposées il y a plus d'un mois : les plus récentes attendent sa
+ * décision, et la fiche sans recommandation du projet « Parc Automobile » a été renvoyée à son chef.
  */
 @Component
 @Order(3) // Après DataInitializer (rôles) et AdminUserInitializer
@@ -65,6 +74,14 @@ public class DemoDataInitializer implements CommandLineRunner {
     private static final String EMAIL_SAMI = "sami.trabelsi@qualinet.com";
     private static final String EMAIL_INES = "ines.gharbi@qualinet.com";
     private static final String EMAIL_MEHDI = "mehdi.bouaziz@qualinet.com";
+    private static final String PILOTE_DEMO = "amel.bensalah";
+    private static final String PROJET_SANS_RECOMMANDATION = "Parc Automobile";
+    private static final String MOTIF_SANS_RECOMMANDATION =
+        "Aucune recommandation n'est renseignée : précisez les actions prévues face aux deux risques signalés.";
+    private static final List<String> CHEFS_DEMO = List.of("sami.trabelsi", "ines.gharbi", "mehdi.bouaziz");
+    private static final Set<String> PROJETS_DEMO = Set.of("GED Courrier", "e-Recrutement", "Réclamations Municipales",
+        "Site web Affaires Sociales", "e-Bourse", "SIGS", "Migration Messagerie", "Parc Automobile", "Réseau LAN Siège",
+        "Tableau de Bord RH");
     private static final String EMAIL_AMEL = "amel.bensalah@qualinet.com";
     private static final String EMAIL_KARIM = "karim.jlassi@qualinet.com";
     private static final List<String> EMAILS_DEMO = List.of(EMAIL_SAMI, EMAIL_INES, EMAIL_MEHDI, EMAIL_AMEL, EMAIL_KARIM);
@@ -102,6 +119,9 @@ public class DemoDataInitializer implements CommandLineRunner {
     private HistoriqueService historiqueService;
 
     @Autowired
+    private PieceJointeService pieceJointeService;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -112,12 +132,17 @@ public class DemoDataInitializer implements CommandLineRunner {
     /** Jours écoulés entre REFERENCE et le jour du chargement. */
     private long decalage;
     private List<User> pilotes = List.of();
+    /** Pilote qualité qui a pris les décisions de validation du jeu. */
+    private User piloteDecideur;
     private int nbProjets;
     private int nbFiches;
 
     @Override
     public void run(String... args) {
         String choix = mode == null ? "" : mode.trim().toLowerCase(Locale.ROOT);
+        if (!choix.equals("reset") && userRepository.existsByEmail(EMAIL_SAMI)) {
+            completerFichesDeDemo();
+        }
         if (!choix.equals("true") && !choix.equals("reset")) {
             return;
         }
@@ -131,7 +156,7 @@ public class DemoDataInitializer implements CommandLineRunner {
 
         decalage = ChronoUnit.DAYS.between(REFERENCE, LocalDate.now());
 
-        compte("Amel", "Ben Salah", EMAIL_AMEL, "+216 97 214 580", ERole.ROLE_PILOTE_QUALITE, "2025-01-13 09:00");
+        piloteDecideur = compte("Amel", "Ben Salah", EMAIL_AMEL, "+216 97 214 580", ERole.ROLE_PILOTE_QUALITE, "2025-01-13 09:00");
         compte("Karim", "Jlassi", EMAIL_KARIM, "+216 50 932 116", ERole.ROLE_PILOTE_QUALITE, "2026-03-02 10:30");
         // Comme dans l'application, chaque fiche créée notifie tous les pilotes qualité
         pilotes = userRepository.findAll().stream().filter(u -> aLeRole(u, ERole.ROLE_PILOTE_QUALITE)).toList();
@@ -814,6 +839,7 @@ public class DemoDataInitializer implements CommandLineRunner {
             .risques("Retard du développement à cause de la disponibilité partielle de la développeuse.",
                 "Reprise des données des véhicules plus longue que prévu.")
             .budgetRealise(0.09)
+            .aCorriger(MOTIF_SANS_RECOMMANDATION)
             .enregistrer();
 
         // --- Deux fiches, la prochaine est attendue depuis le 7 octobre ---
@@ -945,6 +971,8 @@ public class DemoDataInitializer implements CommandLineRunner {
         private List<String> experts = List.of();
         private List<String> caracteristiques = List.of();
         private List<Ligne> taches = List.of();
+        /** Fin réelle de chaque tâche finie, par position (toutes n'ont pas de code) : comme dans le formulaire, elle suit la tâche de fiche en fiche. */
+        private final Map<Integer, LocalDate> finsReelles = new HashMap<>();
 
         private Dossier(FicheProjet projet, User chef) {
             this.projet = projet;
@@ -976,6 +1004,7 @@ public class DemoDataInitializer implements CommandLineRunner {
         private List<String> recommandations = List.of();
         private Double budgetPrevision;
         private double budgetRealise;
+        private String motifCorrection;
 
         private Depot(Dossier dossier, LocalDateTime rempliLe) {
             this.dossier = dossier;
@@ -1021,6 +1050,12 @@ public class DemoDataInitializer implements CommandLineRunner {
             return this;
         }
 
+        /** Le pilote qualité renvoie cette fiche à son chef au lieu de la valider. */
+        Depot aCorriger(String motif) {
+            this.motifCorrection = motif;
+            return this;
+        }
+
         FicheSuivi enregistrer() {
             FicheProjet projet = dossier.projet;
             LocalDate dateRapport = rempliLe.toLocalDate();
@@ -1048,8 +1083,12 @@ public class DemoDataInitializer implements CommandLineRunner {
 
             historiqueRepository.save(trace("FICHE_SUIVI", enregistree.getId(), projet.getId(), "CREATION",
                 dossier.chef, rempliLe, enregistree.getNumeroRapport(), "Création de la fiche suivi"));
-            notifierPilotes("FICHE_SUIVI_CREATED", nomComplet(dossier.chef) + " a créé une fiche de suivi pour le projet \""
+            notifierPilotes("FICHE_SUIVI_CREATED", dossier.chef.getUsername() + " a créé une fiche de suivi pour le projet \""
                 + projet.getNomProjet() + "\"", enregistree.getId(), "FICHE_SUIVI", dossier.chef, rempliLe);
+
+            decider(enregistree.getValidation(), "FICHE_SUIVI", enregistree.getId(), projet.getId(),
+                enregistree.getNumeroRapport(), projet.getNomProjet(), dossier.chef, rempliLe, motifCorrection);
+            ficheSuiviRepository.save(enregistree);
 
             // Comme FicheSuiviService : la fiche suivante est attendue une périodicité plus tard
             int periodicite = projet.getPeriodiciteSuiviMois() != null ? projet.getPeriodiciteSuiviMois() : 1;
@@ -1072,7 +1111,6 @@ public class DemoDataInitializer implements CommandLineRunner {
         projet.setChefProjetId(chef.getId());
         projet.setResponsable(nomComplet(chef));
         projet.setStatut("EN_COURS");
-        projet.setCategorie("");
         projet.setHistorique("");
         projet.setDescription("");
         projet.setObjectifs("");
@@ -1093,8 +1131,12 @@ public class DemoDataInitializer implements CommandLineRunner {
 
         historiqueRepository.save(trace("FICHE_PROJET", enregistre.getId(), enregistre.getId(), "CREATION",
             chef, enregistre.getDateCreation(), enregistre.getNomProjet(), "Création de la fiche projet"));
-        notifierPilotes("FICHE_PROJET_CREATED", nomComplet(chef) + " a créé la fiche de projet \""
+        notifierPilotes("FICHE_PROJET_CREATED", chef.getUsername() + " a créé la fiche de projet \""
             + enregistre.getNomProjet() + "\"", enregistre.getId(), "FICHE_PROJET", chef, enregistre.getDateCreation());
+
+        decider(enregistre.getValidation(), "FICHE_PROJET", enregistre.getId(), enregistre.getId(),
+            enregistre.getNomProjet(), enregistre.getNomProjet(), chef, enregistre.getDateCreation(), null);
+        ficheProjetRepository.save(enregistre);
         return new Dossier(enregistre, chef);
     }
 
@@ -1108,6 +1150,7 @@ public class DemoDataInitializer implements CommandLineRunner {
         projet.setDateFinRealisation(d(finRealisation));
         projet.setEcartConventionnel(ecartJours);
         projet.setDateModification(quand);
+        projet.getValidation().remettreAValider();
         ficheProjetRepository.save(projet);
 
         HistoriqueModification modification = trace("FICHE_PROJET", projet.getId(), projet.getId(), "MODIFICATION",
@@ -1115,8 +1158,53 @@ public class DemoDataInitializer implements CommandLineRunner {
         modification.setAnciennesValeurs(avant);
         modification.setNouvellesValeurs(historiqueService.extraireValeursImportantes(projet));
         historiqueRepository.save(modification);
-        notifierPilotes("FICHE_PROJET_UPDATED", nomComplet(dossier.chef) + " a modifié la fiche de projet \""
+        notifierPilotes("FICHE_PROJET_UPDATED", dossier.chef.getUsername() + " a modifié la fiche de projet \""
             + projet.getNomProjet() + "\"", projet.getId(), "FICHE_PROJET", dossier.chef, quand);
+
+        // La fiche modifiée repart au pilote qualité, qui la valide de nouveau
+        decider(projet.getValidation(), "FICHE_PROJET", projet.getId(), projet.getId(),
+            projet.getNomProjet(), projet.getNomProjet(), dossier.chef, quand, null);
+        ficheProjetRepository.save(projet);
+    }
+
+    /**
+     * Décision du pilote qualité deux jours après le dépôt, tracée et notifiée comme le fait ValidationFicheService.
+     * Une fiche du dernier mois attend encore sa décision. Sans motif, la fiche est validée.
+     */
+    private void decider(ValidationFiche validation, String entityType, String entityId, String projetId,
+                         String entityName, String nomProjet, User chef, LocalDateTime deposeLe, String motif) {
+        LocalDateTime le = deposeLe.plusDays(2);
+        if (le.isAfter(LocalDateTime.now().minusDays(30))) {
+            return;
+        }
+
+        String pilote = piloteDecideur.getUsername();
+        if (motif == null) {
+            validation.valider(piloteDecideur.getId(), pilote);
+        } else {
+            validation.demanderCorrection(motif, piloteDecideur.getId(), pilote);
+        }
+        validation.setDateDecision(le);
+
+        boolean validee = validation.getStatut() == StatutValidation.VALIDEE;
+        HistoriqueModification decision = trace(entityType, entityId, projetId, validee ? "VALIDATION" : "DEMANDE_CORRECTION",
+            piloteDecideur, le, entityName, validee ? "Fiche validée" : "Correction demandée : " + motif);
+        decision.setUserRole(ERole.ROLE_PILOTE_QUALITE.name());
+        decision.setAnciennesValeurs(Map.of("statutValidation", StatutValidation.A_VALIDER.getLibelle()));
+        decision.setNouvellesValeurs(validee
+            ? Map.of("statutValidation", validation.getStatut().getLibelle())
+            : Map.of("statutValidation", validation.getStatut().getLibelle(), "motif", motif));
+        historiqueRepository.save(decision);
+
+        String fiche = "FICHE_PROJET".equals(entityType)
+            ? "la fiche de projet \"" + nomProjet + "\""
+            : "la fiche de suivi du projet \"" + nomProjet + "\"";
+        Notification notification = new Notification(chef.getId(), entityType + "_" + validation.getStatut().name(),
+            pilote + (validee ? " a validé " : " demande une correction de ") + fiche,
+            entityId, entityType, piloteDecideur.getId(), pilote);
+        notification.setCreatedAt(le);
+        notification.setRead(le.isBefore(LocalDateTime.now().minusDays(10)));
+        notificationRepository.save(notification);
     }
 
     /** Délais saisis dans le formulaire ; dateDebut et dateFinPrevue, lues par les KPI, reprennent la prévision. */
@@ -1191,20 +1279,157 @@ public class DemoDataInitializer implements CommandLineRunner {
                 tache.setStatut(EN_COURS);
                 tache.setPourcentageRealise(0);
             } else {
-                int pourcentage = avancement[i++];
+                int rang = i++;
+                int pourcentage = avancement[rang];
+                LocalDate debut = d(ligne.debut());
                 LocalDate echeance = d(ligne.echeance());
                 tache.setEstTitre(false);
                 tache.setCode(ligne.code());
                 tache.setLivrable(ligne.livrable());
                 tache.setAssigneA(ligne.assigneA());
-                tache.setDebut(d(ligne.debut()));
+                tache.setDebut(debut);
                 tache.setEcheance(echeance);
                 tache.setPourcentageRealise(pourcentage);
+                if (pourcentage >= 100) {
+                    tache.setDateFinReelle(dossier.finsReelles.computeIfAbsent(rang,
+                        position -> finReelle(position, debut, echeance, dateRapport)));
+                }
                 tache.setStatut(pourcentage >= 100 ? TERMINE : echeance.isBefore(dateRapport) ? EN_RETARD : EN_COURS);
             }
             taches.add(tache);
         }
         return taches;
+    }
+
+    /**
+     * La plupart des tâches finissent à leur échéance ou juste avant, une sur quatre quelques jours après.
+     * La date reste entre le début de la tâche et le dépôt de la fiche qui la déclare finie.
+     */
+    static LocalDate finReelle(int rang, LocalDate debut, LocalDate echeance, LocalDate dateRapport) {
+        LocalDate fin = rang % 4 == 3 ? echeance.plusDays(2 + rang % 5) : echeance.minusDays(rang % 3);
+        if (fin.isAfter(dateRapport)) {
+            fin = dateRapport;
+        }
+        return fin.isBefore(debut) ? debut : fin;
+    }
+
+    /**
+     * Les fiches de démo chargées avant la fin réelle et la validation n'ont ni l'une ni l'autre, et le site en ligne ne
+     * se recharge jamais (DEMO_DATA=reset y est interdit). Le serveur les complète donc lui-même, dans son fuseau horaire.
+     * Seuls les projets de démo sont lus : les fiches de vrais utilisateurs ne sont jamais touchées. Dans une fiche,
+     * seul le champ concerné est écrit : un save() réécrirait le document et perdrait les champs sortis du modèle.
+     */
+    private void completerFichesDeDemo() {
+        piloteDecideur = userRepository.findByUsername(PILOTE_DEMO).orElse(null);
+        int completees = 0;
+        int decisions = 0;
+        for (String username : CHEFS_DEMO) {
+            Optional<User> chef = userRepository.findByUsername(username);
+            if (chef.isEmpty()) {
+                continue;
+            }
+            for (FicheProjet projet : ficheProjetRepository.findByChefProjetId(chef.get().getId())) {
+                if (PROJETS_DEMO.contains(projet.getNomProjet())) {
+                    for (FinAjoutee ajout : completerFinsReelles(ficheSuiviRepository.findByFicheProjetId(projet.getId()))) {
+                        mongoTemplate.updateFirst(Query.query(Criteria.where("id").is(ajout.ficheId())),
+                            new Update().set("tachesSuivi." + ajout.ligne() + ".dateFinReelle", ajout.fin()), FicheSuivi.class);
+                        completees++;
+                    }
+                    if (piloteDecideur != null) {
+                        decisions += completerDecisions(projet, chef.get());
+                    }
+                }
+            }
+        }
+        if (completees > 0) {
+            System.out.println("✓ Fin réelle complétée sur " + completees + " lignes de fiches de suivi de démonstration.");
+        }
+        if (decisions > 0) {
+            System.out.println("✓ Décisions du pilote qualité posées sur " + decisions + " fiches de démonstration.");
+        }
+    }
+
+    /**
+     * Pose, sur les fiches sans décision en base, celle du chargement : une décision déjà prise n'est jamais rejouée.
+     * Une fiche trop récente est enregistrée « À valider » : elle n'est examinée qu'une fois, sinon elle se validerait
+     * toute seule à un redémarrage du serveur un mois plus tard.
+     */
+    private int completerDecisions(FicheProjet projet, User chef) {
+        int decisions = 0;
+        Query projetSansDecision = Query.query(Criteria.where("id").is(projet.getId()).and("validation").exists(false));
+        if (mongoTemplate.exists(projetSansDecision, FicheProjet.class)) {
+            // Un projet clôturé est revenu au pilote qualité avec sa dernière modification
+            LocalDateTime deposeLe = "TERMINE".equals(projet.getStatut()) && projet.getDateModification() != null
+                ? projet.getDateModification() : projet.getDateCreation();
+            decider(projet.getValidation(), "FICHE_PROJET", projet.getId(), projet.getId(),
+                projet.getNomProjet(), projet.getNomProjet(), chef, deposeLe, null);
+            enregistrerValidation(projet.getId(), projet.getValidation(), FicheProjet.class);
+            decisions += decisionPrise(projet.getValidation());
+        }
+
+        Query fichesSansDecision = Query.query(Criteria.where("ficheProjetId").is(projet.getId()).and("validation").exists(false));
+        for (FicheSuivi fiche : mongoTemplate.find(fichesSansDecision, FicheSuivi.class)) {
+            String motif = PROJET_SANS_RECOMMANDATION.equals(projet.getNomProjet()) && sansRecommandation(fiche)
+                ? MOTIF_SANS_RECOMMANDATION : null;
+            LocalDateTime deposeLe = fiche.getDateModification() != null ? fiche.getDateModification() : fiche.getDateCreation();
+            decider(fiche.getValidation(), "FICHE_SUIVI", fiche.getId(), projet.getId(),
+                fiche.getNumeroRapport(), projet.getNomProjet(), chef, deposeLe, motif);
+            enregistrerValidation(fiche.getId(), fiche.getValidation(), FicheSuivi.class);
+            decisions += decisionPrise(fiche.getValidation());
+        }
+        return decisions;
+    }
+
+    private void enregistrerValidation(String id, ValidationFiche validation, Class<?> type) {
+        mongoTemplate.updateFirst(Query.query(Criteria.where("id").is(id)), new Update().set("validation", validation), type);
+    }
+
+    private static int decisionPrise(ValidationFiche validation) {
+        return validation.getStatut() == StatutValidation.A_VALIDER ? 0 : 1;
+    }
+
+    private static boolean sansRecommandation(FicheSuivi fiche) {
+        List<String> recommandations = fiche.getConstatGlobal() == null ? null : fiche.getConstatGlobal().getRecommandations();
+        return recommandations == null || recommandations.isEmpty();
+    }
+
+    /** Une fin réelle à écrire : la fiche, la position de la ligne dans son tableau de tâches et la date. */
+    record FinAjoutee(String ficheId, int ligne, LocalDate fin) {
+    }
+
+    /**
+     * Date les tâches terminées qui n'ont pas de fin réelle, avec la règle du chargement, et renvoie les dates ajoutées.
+     * Une date déjà saisie est gardée et reprise par les fiches suivantes. Relancé, ce complément ne change plus rien.
+     */
+    static List<FinAjoutee> completerFinsReelles(List<FicheSuivi> fichesDuProjet) {
+        List<FicheSuivi> triees = fichesDuProjet.stream()
+            .filter(fiche -> fiche.getDateRapport() != null && fiche.getTachesSuivi() != null)
+            .sorted(Comparator.comparing(FicheSuivi::getDateRapport))
+            .toList();
+
+        Map<String, LocalDate> fins = new HashMap<>();
+        List<FinAjoutee> ajouts = new ArrayList<>();
+        for (FicheSuivi fiche : triees) {
+            int rang = 0;
+            for (int ligne = 0; ligne < fiche.getTachesSuivi().size(); ligne++) {
+                FicheSuivi.TacheSuivi tache = fiche.getTachesSuivi().get(ligne);
+                if (Boolean.TRUE.equals(tache.getEstTitre())) {
+                    continue;
+                }
+                int position = rang++;
+                if (tache.getPourcentageRealise() == null || tache.getPourcentageRealise() < 100) {
+                    continue;
+                }
+                if (tache.getDateFinReelle() != null) {
+                    fins.putIfAbsent(tache.getSujet(), tache.getDateFinReelle());
+                } else if (tache.getDebut() != null && tache.getEcheance() != null) {
+                    tache.setDateFinReelle(fins.computeIfAbsent(tache.getSujet(), sujet ->
+                        finReelle(position, tache.getDebut(), tache.getEcheance(), fiche.getDateRapport())));
+                    ajouts.add(new FinAjoutee(fiche.getId(), ligne, tache.getDateFinReelle()));
+                }
+            }
+        }
+        return ajouts;
     }
 
     /** Fiche signalétique : maîtres d'ouvrage et d'œuvre, délais et budget sont repris de la fiche projet. */
@@ -1256,7 +1481,7 @@ public class DemoDataInitializer implements CommandLineRunner {
         boolean lue = le.isBefore(LocalDateTime.now().minusDays(10));
         for (User pilote : pilotes) {
             Notification notification = new Notification(pilote.getId(), type, message, entityId, entityType,
-                chef.getId(), nomComplet(chef));
+                chef.getId(), chef.getUsername());
             notification.setCreatedAt(le);
             notification.setRead(lue);
             notificationRepository.save(notification);
@@ -1275,13 +1500,14 @@ public class DemoDataInitializer implements CommandLineRunner {
         return userRepository.save(user);
     }
 
-    /** Supprime les comptes du jeu et tout ce qui leur est rattaché (projets, fiches, historique, notifications). */
+    /** Supprime les comptes du jeu et tout ce qui leur est rattaché (projets, fiches, documents, historique, notifications). */
     private void supprimerDonneesDemo() {
         List<String> comptes = EMAILS_DEMO.stream().map(userRepository::findByEmail)
             .flatMap(Optional::stream).map(User::getId).toList();
         List<String> projets = mongoTemplate.find(Query.query(Criteria.where("chefProjetId").in(comptes)), FicheProjet.class)
             .stream().map(FicheProjet::getId).toList();
 
+        pieceJointeService.supprimerDesProjets(projets);
         mongoTemplate.remove(Query.query(Criteria.where("ficheProjetId").in(projets)), FicheSuivi.class);
         mongoTemplate.remove(Query.query(Criteria.where("id").in(projets)), FicheProjet.class);
         mongoTemplate.remove(Query.query(new Criteria().orOperator(

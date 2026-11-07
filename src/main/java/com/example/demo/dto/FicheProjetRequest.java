@@ -67,7 +67,6 @@ public class FicheProjetRequest {
     private LocalDate dateDebut;
     private LocalDate dateFinPrevue;
     private String statut;
-    private String categorie;
 
     // Métadonnées
     private String reference;
@@ -127,14 +126,6 @@ public class FicheProjetRequest {
 
     public void setStatut(String statut) {
         this.statut = statut;
-    }
-
-    public String getCategorie() {
-        return categorie;
-    }
-
-    public void setCategorie(String categorie) {
-        this.categorie = categorie;
     }
 
     public String getDesignationProjet() {

@@ -102,13 +102,11 @@ class ControleAccesFichesTest {
     }
 
     @Test
-    void lesListesParStatutEtCategorieNeRenvoientQueLesFichesDuChef() {
+    void laListeParStatutNeRenvoieQueLesFichesDuChef() {
         List<FicheProjet> fiches = List.of(projetDe(CHEF), projetDe(AUTRE_CHEF));
         when(ficheProjetService.getFichesProjetByStatut("EN_COURS")).thenReturn(fiches);
-        when(ficheProjetService.getFichesProjetByCategorie("INTERNE")).thenReturn(fiches);
 
         assertEquals(1, ficheProjetController.getFichesProjetByStatut("EN_COURS", chef()).getBody().size());
-        assertEquals(1, ficheProjetController.getFichesProjetByCategorie("INTERNE", chef()).getBody().size());
     }
 
     @Test

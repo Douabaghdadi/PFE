@@ -33,6 +33,9 @@ public class FicheSuivi {
     private LocalDateTime dateModification;
     private LocalDateTime dateRemplissage;
 
+    // Décision du pilote qualité sur cette fiche
+    private ValidationFiche validation = new ValidationFiche();
+
     public FicheSuivi() {
         this.dateCreation = LocalDateTime.now();
         this.dateRapport = LocalDate.now();
@@ -73,6 +76,9 @@ public class FicheSuivi {
 
     public LocalDateTime getDateRemplissage() { return dateRemplissage; }
     public void setDateRemplissage(LocalDateTime dateRemplissage) { this.dateRemplissage = dateRemplissage; }
+
+    public ValidationFiche getValidation() { return validation; }
+    public void setValidation(ValidationFiche validation) { this.validation = validation; }
 
     // Classes internes pour les sections
 

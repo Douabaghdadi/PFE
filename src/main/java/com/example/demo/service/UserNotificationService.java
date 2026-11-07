@@ -5,7 +5,9 @@ import com.example.demo.dto.NotificationEvent;
 import com.example.demo.model.ERole;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.Notification;
+import com.example.demo.model.StatutValidation;
 import com.example.demo.model.User;
+import com.example.demo.model.ValidationFiche;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.FicheProjetRepository;
 import com.example.demo.repository.UserRepository;
@@ -99,9 +101,7 @@ public class UserNotificationService {
         User actor = userRepository.findById(actorId).orElse(null);
         if (actor == null) return;
 
-        String actorName = actor.getFirstName() != null && actor.getLastName() != null 
-            ? actor.getFirstName() + " " + actor.getLastName() 
-            : actor.getUsername();
+        String actorName = actor.getUsername();
 
         String message = buildFicheProjetMessage(action, actorName, ficheProjet.getNomProjet());
         String notificationType = "FICHE_PROJET_" + action.toUpperCase();
@@ -131,9 +131,7 @@ public class UserNotificationService {
         User actor = userRepository.findById(actorId).orElse(null);
         if (actor == null) return;
 
-        String actorName = actor.getFirstName() != null && actor.getLastName() != null 
-            ? actor.getFirstName() + " " + actor.getLastName() 
-            : actor.getUsername();
+        String actorName = actor.getUsername();
 
         String message = buildFicheSuiviMessage(action, actorName, projetName);
         String notificationType = "FICHE_SUIVI_" + action.toUpperCase();
@@ -153,6 +151,25 @@ public class UserNotificationService {
                 );
                 saveAndPush(notification);
             }
+        }
+    }
+
+    /**
+     * Notifier les pilotes qualité d'un document ajouté ou retiré : pour eux, c'est une modification de la fiche.
+     */
+    public void createPieceJointeNotification(String entityId, String entityType, String nomProjet, String nomFichier,
+                                              boolean ajout, String actorId) {
+        User actor = userRepository.findById(actorId).orElse(null);
+        if (actor == null) return;
+
+        String actorName = actor.getUsername();
+
+        String message = actorName + (ajout ? " a ajouté le document \"" : " a retiré le document \"") + nomFichier
+            + "\" " + (ajout ? "à" : "de") + " la fiche "
+            + ("FICHE_PROJET".equals(entityType) ? "de projet" : "de suivi du projet") + " \"" + nomProjet + "\"";
+
+        for (User pilote : getPilotesQualite()) {
+            saveAndPush(new Notification(pilote.getId(), entityType + "_UPDATED", message, entityId, entityType, actorId, actorName));
         }
     }
 
@@ -179,9 +196,7 @@ public class UserNotificationService {
             return;
         }
 
-        String piloteName = pilote.getFirstName() != null && pilote.getLastName() != null 
-            ? pilote.getFirstName() + " " + pilote.getLastName() 
-            : pilote.getUsername();
+        String piloteName = pilote.getUsername();
 
         String message = piloteName + " a consulté ";
         if ("FICHE_PROJET".equals(entityType)) {
@@ -220,10 +235,7 @@ public class UserNotificationService {
         if (projet.getChefProjetId() == null) return;
 
         User pilote = piloteQualiteId != null ? userRepository.findById(piloteQualiteId).orElse(null) : null;
-        String piloteName = pilote == null ? "Le pilote qualité"
-            : pilote.getFirstName() != null && pilote.getLastName() != null
-                ? pilote.getFirstName() + " " + pilote.getLastName()
-                : pilote.getUsername();
+        String piloteName = pilote == null ? "Le pilote qualité" : pilote.getUsername();
 
         String message = piloteName + " vous a relancé : la fiche de suivi du projet \""
             + projet.getNomProjet() + "\" est en retard";
@@ -239,6 +251,33 @@ public class UserNotificationService {
             "FICHE_PROJET",
             piloteQualiteId,
             piloteName
+        );
+        saveAndPush(notification);
+    }
+
+    /**
+     * Notifier le chef de projet de la décision du pilote qualité sur sa fiche.
+     * Le motif d'une demande de correction n'est pas repris ici : il s'affiche sur la fiche.
+     */
+    public void createValidationNotification(String chefProjetId, String entityId, String entityType,
+                                             String nomProjet, ValidationFiche validation) {
+        if (chefProjetId == null) return;
+
+        String fiche = "FICHE_PROJET".equals(entityType)
+            ? "la fiche de projet \"" + nomProjet + "\""
+            : "la fiche de suivi du projet \"" + nomProjet + "\"";
+        String message = validation.getStatut() == StatutValidation.VALIDEE
+            ? validation.getPiloteNom() + " a validé " + fiche
+            : validation.getPiloteNom() + " demande une correction de " + fiche;
+
+        Notification notification = new Notification(
+            chefProjetId,
+            entityType + "_" + validation.getStatut().name(),
+            message,
+            entityId,
+            entityType,
+            validation.getPiloteId(),
+            validation.getPiloteNom()
         );
         saveAndPush(notification);
     }

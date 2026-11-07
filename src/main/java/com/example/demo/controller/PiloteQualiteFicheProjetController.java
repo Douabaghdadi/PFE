@@ -74,14 +74,6 @@ public class PiloteQualiteFicheProjetController {
     }
 
     /**
-     * Récupère les fiches projet par catégorie (lecture seule)
-     */
-    @GetMapping("/categorie/{categorie}")
-    public ResponseEntity<List<FicheProjet>> getFichesProjetByCategorie(@PathVariable String categorie) {
-        return ResponseEntity.ok(ficheProjetService.getFichesProjetByCategorie(categorie));
-    }
-
-    /**
      * Récupère les fiches projet d'un chef de projet spécifique (lecture seule)
      */
     @GetMapping("/chef-projet/{chefProjetId}")

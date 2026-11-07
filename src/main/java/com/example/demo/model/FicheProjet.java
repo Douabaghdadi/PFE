@@ -1,6 +1,7 @@
 package com.example.demo.model;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
@@ -72,7 +73,6 @@ public class FicheProjet {
     private LocalDate dateDebut;
     private LocalDate dateFinPrevue;
     private String statut; // Code nomenclature STATUT
-    private String categorie; // Code nomenclature CATEGORIE_PROJET
     private LocalDateTime dateCreation;
     private LocalDateTime dateModification;
     private LocalDate dateDerniereFicheSuivi; // Date de la dernière fiche de suivi remplie
@@ -83,11 +83,34 @@ public class FicheProjet {
     private String reference; // Réf proj
     private LocalDate dateDocument;
 
+    // Décision du pilote qualité sur cette fiche
+    private ValidationFiche validation = new ValidationFiche();
+
+    // Nom d'utilisateur du chef de projet : renseigné à la lecture du détail, jamais enregistré en base
+    @Transient
+    private String chefProjetNom;
+
     public FicheProjet() {
         this.dateCreation = LocalDateTime.now();
     }
 
     // Getters and Setters
+    public String getChefProjetNom() {
+        return chefProjetNom;
+    }
+
+    public void setChefProjetNom(String chefProjetNom) {
+        this.chefProjetNom = chefProjetNom;
+    }
+
+    public ValidationFiche getValidation() {
+        return validation;
+    }
+
+    public void setValidation(ValidationFiche validation) {
+        this.validation = validation;
+    }
+
     public String getId() {
         return id;
     }
@@ -158,14 +181,6 @@ public class FicheProjet {
 
     public void setStatut(String statut) {
         this.statut = statut;
-    }
-
-    public String getCategorie() {
-        return categorie;
-    }
-
-    public void setCategorie(String categorie) {
-        this.categorie = categorie;
     }
 
     public LocalDateTime getDateCreation() {

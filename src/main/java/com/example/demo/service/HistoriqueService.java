@@ -121,6 +121,34 @@ public class HistoriqueService {
         historiqueRepository.save(historique);
     }
 
+    /** Trace une action nommée sur une fiche (décision du pilote qualité, document joint), avec les valeurs avant et après. */
+    public void enregistrerAction(String entityType, String entityId, String userId, String action, String description,
+                                              Map<String, Object> anciennesValeurs, Map<String, Object> nouvellesValeurs,
+                                              String projetId, String entityName) {
+        HistoriqueModification historique = new HistoriqueModification();
+        historique.setEntityType(entityType);
+        historique.setEntityId(entityId);
+        historique.setProjetId(projetId);
+        historique.setAction(action);
+        historique.setUserId(userId);
+
+        userRepository.findById(userId).ifPresent(user -> {
+            historique.setUsername(user.getUsername());
+            historique.setUserRole(user.getRoles().stream()
+                .findFirst()
+                .map(role -> role.getName().name())
+                .orElse("UNKNOWN"));
+        });
+
+        historique.setAnciennesValeurs(anciennesValeurs);
+        historique.setNouvellesValeurs(nouvellesValeurs);
+        historique.setDescription(description);
+        historique.setEntityName(entityName);
+        historique.setDateModification(LocalDateTime.now());
+
+        historiqueRepository.save(historique);
+    }
+
     public List<HistoriqueModification> getHistoriqueByEntity(String entityType, String entityId) {
         return historiqueRepository.findByEntityTypeAndEntityIdOrderByDateModificationDesc(entityType, entityId);
     }
@@ -189,8 +217,10 @@ public class HistoriqueService {
         fieldNames.put("numeroRapport", "Numéro de rapport");
         fieldNames.put("dateRapport", "Date du rapport");
         fieldNames.put("etatAvancement", "État d'avancement");
-        
-        return fieldNames.getOrDefault(fieldName, 
+        fieldNames.put("statutValidation", "Statut de validation");
+        fieldNames.put("suppleant", "Suppléant");
+
+        return fieldNames.getOrDefault(fieldName,
             fieldName.replaceAll("([A-Z])", " $1").toLowerCase().trim());
     }
 
@@ -211,6 +241,7 @@ public class HistoriqueService {
             valeurs.put("maitreOuvrage", fiche.getMaitreOuvrage());
             valeurs.put("maitreOeuvre", fiche.getMaitreOeuvre());
             valeurs.put("modaliteDeveloppement", fiche.getModaliteDeveloppement());
+            valeurs.put("statutValidation", fiche.getValidation().getStatut().getLibelle());
         } else if (entity instanceof com.example.demo.model.FicheSuivi) {
             com.example.demo.model.FicheSuivi fiche = (com.example.demo.model.FicheSuivi) entity;
             valeurs.put("numeroRapport", fiche.getNumeroRapport());

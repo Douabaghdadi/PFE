@@ -352,6 +352,22 @@ class KPIServiceTest {
     }
 
     @Test
+    void uneTacheFinieApresSonEcheanceBaisseLeRespectSansResterHorsDelai() {
+        when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
+        when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of(
+            suivi(aujourdhui.minusDays(2), Arrays.asList(
+                tache("Cadrage", "Alice", 10, 9, 100, aujourdhui.minusDays(50), aujourdhui.minusDays(52)),
+                tache("Développement", "Bob", 30, 20, 100, aujourdhui.minusDays(10), aujourdhui.minusDays(4))),
+                List.of(), List.of())));
+
+        ProjetKPIReportDTO kpi = kpiService.calculateProjetKPIs(PROJET_ID);
+
+        // Une échéance tenue sur deux ; la tâche finie en retard n'est plus à rattraper.
+        assertEquals(50.0, kpi.getTauxRespectEcheances(), 0.01);
+        assertEquals(0, kpi.getTachesEnRetard());
+    }
+
+    @Test
     void renvoieUnRespectDesEcheancesNonCalculableFauteDeDonnees() {
         when(ficheProjetRepository.findById(PROJET_ID)).thenReturn(Optional.of(projet()));
         when(ficheSuiviRepository.findByFicheProjetId(PROJET_ID)).thenReturn(List.of(

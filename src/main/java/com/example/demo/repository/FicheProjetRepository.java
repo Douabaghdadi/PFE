@@ -7,5 +7,4 @@ import java.util.List;
 public interface FicheProjetRepository extends MongoRepository<FicheProjet, String> {
     List<FicheProjet> findByChefProjetId(String chefProjetId);
     List<FicheProjet> findByStatut(String statut);
-    List<FicheProjet> findByCategorie(String categorie);
 }

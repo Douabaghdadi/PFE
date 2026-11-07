@@ -23,6 +23,9 @@ public class FicheSuiviService {
     @Autowired
     private HistoriqueService historiqueService;
 
+    @Autowired
+    private PieceJointeService pieceJointeService;
+
     public List<FicheSuivi> getAllFichesSuivi() {
         return ficheSuiviRepository.findAll();
     }
@@ -173,11 +176,13 @@ public class FicheSuiviService {
         java.util.Map<String, Object> anciennesValeurs = new java.util.HashMap<>();
         anciennesValeurs.put("numeroRapport", ficheSuivi.getNumeroRapport());
         anciennesValeurs.put("dateRapport", ficheSuivi.getDateRapport());
-        
+        anciennesValeurs.put("statutValidation", ficheSuivi.getValidation().getStatut().getLibelle());
+
         // Fiche Signalétique
         if (ficheSuivi.getFicheSignaletique() != null) {
             if (ficheSuivi.getFicheSignaletique().getChefProjet() != null) {
                 anciennesValeurs.put("chefProjet", ficheSuivi.getFicheSignaletique().getChefProjet().getNom());
+                anciennesValeurs.put("suppleant", ficheSuivi.getFicheSignaletique().getChefProjet().getSuppleant());
             }
             anciennesValeurs.put("descriptionProjet", ficheSuivi.getFicheSignaletique().getDescriptionProjet());
             anciennesValeurs.put("experts", ficheSuivi.getFicheSignaletique().getExperts());
@@ -230,17 +235,22 @@ public class FicheSuiviService {
         ficheSuivi.setTachesSuivi(request.getTachesSuivi());
         ficheSuivi.setDateModification(LocalDateTime.now());
 
+        // La fiche a changé : elle repart au pilote qualité, qu'elle ait été validée ou à corriger
+        ficheSuivi.getValidation().remettreAValider();
+
         FicheSuivi updated = ficheSuiviRepository.save(ficheSuivi);
-        
+
         // Capturer les nouvelles valeurs APRÈS modification
         java.util.Map<String, Object> nouvellesValeurs = new java.util.HashMap<>();
         nouvellesValeurs.put("numeroRapport", updated.getNumeroRapport());
         nouvellesValeurs.put("dateRapport", updated.getDateRapport());
-        
+        nouvellesValeurs.put("statutValidation", updated.getValidation().getStatut().getLibelle());
+
         // Fiche Signalétique
         if (updated.getFicheSignaletique() != null) {
             if (updated.getFicheSignaletique().getChefProjet() != null) {
                 nouvellesValeurs.put("chefProjet", updated.getFicheSignaletique().getChefProjet().getNom());
+                nouvellesValeurs.put("suppleant", updated.getFicheSignaletique().getChefProjet().getSuppleant());
             }
             nouvellesValeurs.put("descriptionProjet", updated.getFicheSignaletique().getDescriptionProjet());
             nouvellesValeurs.put("experts", updated.getFicheSignaletique().getExperts());
@@ -282,6 +292,7 @@ public class FicheSuiviService {
         // Enregistrer dans l'historique avant suppression avec le projetId
         historiqueService.enregistrerSuppression("FICHE_SUIVI", id, chefProjetId, ficheSuivi.getFicheProjetId(), ficheSuivi.getNumeroRapport());
 
+        pieceJointeService.supprimerDeLaFiche(PieceJointeService.TYPE_FICHE_SUIVI, id);
         ficheSuiviRepository.deleteById(id);
     }
 

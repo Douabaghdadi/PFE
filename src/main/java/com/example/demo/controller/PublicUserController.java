@@ -15,15 +15,8 @@ public class PublicUserController {
 
     @GetMapping("/{id}/name")
     public ResponseEntity<String> getUserNameById(@PathVariable String id) {
-        return userRepository.findById(id).map(user -> {
-            String firstName = user.getFirstName();
-            String lastName = user.getLastName();
-            if (firstName != null && !firstName.isBlank() && lastName != null && !lastName.isBlank()) {
-                return ResponseEntity.ok(firstName + " " + lastName);
-            } else if (firstName != null && !firstName.isBlank()) {
-                return ResponseEntity.ok(firstName);
-            }
-            return ResponseEntity.ok(user.getUsername());
-        }).orElse(ResponseEntity.ok("Utilisateur inconnu"));
+        return userRepository.findById(id)
+                .map(user -> ResponseEntity.ok(user.getUsername()))
+                .orElse(ResponseEntity.ok("Utilisateur inconnu"));
     }
 }
