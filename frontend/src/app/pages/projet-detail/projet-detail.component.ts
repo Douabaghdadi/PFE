@@ -4,6 +4,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { MembreEquipe, ProjetFicheComponent } from '../../components/projet-fiche/projet-fiche.component';
+import { FicheValidationComponent } from '../../components/fiche-validation/fiche-validation.component';
+import { PiecesJointesComponent } from '../../components/pieces-jointes/pieces-jointes.component';
+import type { ValidationFiche } from '../../services/validation-fiche.service';
 import { statutDef, statutKey } from '../shared/projet-stats';
 
 interface FicheProjet {
@@ -17,12 +20,19 @@ interface FicheProjet {
   presentation: string;
   historique: string;
   perimetre: string;
+  chefProjetNom?: string;
   maitreOuvrage: string;
   maitreOeuvre: string;
   equipeProjet: MembreEquipe[] | string;
   estimationsCharges: any[];
   modaliteDeveloppement: string;
   estimationBudget: any;
+  dateDebutPrevision?: string;
+  dateFinPrevision?: string;
+  dureeEnMois?: number;
+  dateDebutRealisation?: string;
+  dateFinRealisation?: string;
+  ecartConventionnel?: number;
   delaisPrevisionnels: string;
   risquesPotentiels: string;
   preRequis: string;
@@ -30,12 +40,13 @@ interface FicheProjet {
   statut: string;
   reference?: string;
   dateCreation?: string;
+  validation?: ValidationFiche;
 }
 
 @Component({
   selector: 'app-projet-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ProjetFicheComponent],
+  imports: [CommonModule, RouterLink, ProjetFicheComponent, FicheValidationComponent, PiecesJointesComponent],
   templateUrl: './projet-detail.component.html',
   styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/detail-ui.css']
 })
@@ -86,6 +97,10 @@ export class ProjetDetailComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
+  }
+
+  onValidationChangee(validation: ValidationFiche) {
+    this.projet.update(projet => projet ? { ...projet, validation } : projet);
   }
 
   editProjet() {

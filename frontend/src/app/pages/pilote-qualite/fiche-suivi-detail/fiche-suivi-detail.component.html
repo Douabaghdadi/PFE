@@ -46,7 +46,12 @@
           </div>
         </header>
 
-        <app-fiche-suivi-corps [fiche]="f" [ganttLink]="['/pilote-qualite/fiches-suivi', f.id, 'gantt']" [showIdentification]="true" />
+        <app-fiche-validation type="fiches-suivi" [ficheId]="f.id!" [validation]="f.validation"
+                              [peutDecider]="peutDecider" (decidee)="f.validation = $event" />
+
+        <app-pieces-jointes type="fiches-suivi" [ficheId]="f.id!" />
+
+        <app-fiche-suivi-corps [fiche]="f" [ganttLink]="['/pilote-qualite/fiches-suivi', f.id, 'gantt']" />
       }
     }
   </div>

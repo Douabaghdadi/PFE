@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { PiloteQualiteFicheProjetService, FicheProjet } from '../../../services/pilote-qualite-fiche-projet.service';
 import { UserService } from '../../../services/user.service';
+import { VALIDATION_DEFS, statutValidation, validationDef } from '../../shared/validation-stats';
 import {
   STATUT_DEFS, StatutDef, StatutStat,
   initiales, pl, statutDef, statutKey, statutStats
@@ -26,6 +27,8 @@ export class PiloteFichesProjetListComponent implements OnInit {
   readonly pl = pl;
   readonly statutKey = statutKey;
   readonly statutDef = statutDef;
+  readonly validationDef = validationDef;
+  readonly validationOptions = VALIDATION_DEFS;
 
   fichesProjet: FicheProjet[] = [];
   filteredFiches: FicheProjet[] = [];
@@ -48,6 +51,7 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   // Filtres
   selectedStatut = '';
+  selectedValidation = '';
   searchTerm = '';
   sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
 
@@ -107,13 +111,14 @@ export class PiloteFichesProjetListComponent implements OnInit {
     const terme = this.searchTerm.trim().toLowerCase();
     this.filteredFiches = this.fichesProjet.filter(fiche => {
       const matchesStatut = !this.selectedStatut || statutKey(fiche.statut) === this.selectedStatut;
+      const matchesValidation = !this.selectedValidation || statutValidation(fiche.validation) === this.selectedValidation;
       const matchesSearch = !terme ||
         fiche.nomProjet?.toLowerCase().includes(terme) ||
         fiche.reference?.toLowerCase().includes(terme) ||
         fiche.designationClient?.toLowerCase().includes(terme) ||
         (fiche.chefProjetId && this.chefProjetNames[fiche.chefProjetId]?.toLowerCase().includes(terme));
 
-      return matchesStatut && matchesSearch;
+      return matchesStatut && matchesValidation && matchesSearch;
     });
 
     // Tri par date
@@ -177,13 +182,14 @@ export class PiloteFichesProjetListComponent implements OnInit {
 
   resetFilters() {
     this.selectedStatut = '';
+    this.selectedValidation = '';
     this.searchTerm = '';
     this.sortOrder = 'desc';
     this.applyFilters();
   }
 
   get filtresActifs(): boolean {
-    return !!this.selectedStatut || !!this.searchTerm.trim();
+    return !!this.selectedStatut || !!this.selectedValidation || !!this.searchTerm.trim();
   }
 
   viewDetails(id: string | undefined) {

@@ -41,7 +41,6 @@ const LISTES: ListeDef[] = [
   { value: 'CARACTERE_PROJET', label: 'Caractère du projet', usage: 'Fiche projet : champ « Caractère du projet ».' },
   { value: 'TYPE_PROJET', label: 'Type de projet', usage: 'Fiche projet : champ « Type de projet », repris dans le filtre de la liste des projets.' },
   { value: 'MODALITE_DEVELOPPEMENT', label: 'Modalité de développement', usage: 'Fiche projet : champ « Modalité ».' },
-  { value: 'CATEGORIE_PROJET', label: 'Catégorie de projet', usage: 'Liste de référence : aucun formulaire ne la propose pour l\'instant.' },
   { value: 'STATUT_TACHE', label: 'Statut de tâche', usage: 'Fiche de suivi : statut de chaque tâche.' },
 ];
 

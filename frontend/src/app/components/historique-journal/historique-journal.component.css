@@ -42,6 +42,7 @@
 }
 .tl-dot.is-modification { background: #3b6cc4; }
 .tl-dot.is-suppression { background: #ef4444; }
+.tl-dot.is-demande_correction { background: #f59e0b; }
 
 .entry { margin: 0; padding: 1.1rem 1.25rem; }
 .entry-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.65rem; }

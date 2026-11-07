@@ -77,6 +77,17 @@
           </svg>
         </div>
 
+        <div class="field-select">
+          <label for="validation" class="visually-hidden">Filtrer par état de validation</label>
+          <select id="validation" class="control" [(ngModel)]="selectedValidation" (ngModelChange)="applyFilters()">
+            <option value="">État de validation</option>
+            <option *ngFor="let v of validationOptions" [value]="v.statut">{{ v.label }}</option>
+          </select>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+          </svg>
+        </div>
+
         <button type="button" class="btn btn-secondary" (click)="toggleSortOrder()"
                 [attr.aria-label]="sortOrder === 'desc' ? 'Tri : plus récent d\'abord. Inverser le tri' : 'Tri : plus ancien d\'abord. Inverser le tri'">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"
@@ -138,6 +149,7 @@
                     <span class="pcard-ref">{{ fiche.dateRapport | date:'dd/MM/yyyy' }}</span>
                   </div>
                 </div>
+                <span class="pill" [ngClass]="validationDef(fiche.validation).pill">{{ validationDef(fiche.validation).label }}</span>
               </div>
 
               <ul class="context">

@@ -52,7 +52,7 @@ export class AdminDashboardService {
     return this.http.get<FicheSuivi[]>(`${this.apiUrl}/api/chef-projet/fiches-suivi/all`);
   }
 
-  /** Référentiel : statuts, catégories et types de fiche. */
+  /** Référentiel : les listes de choix de la page Nomenclature. */
   getNomenclatures(): Observable<Nomenclature[]> {
     return this.http.get<Nomenclature[]>(`${this.apiUrl}/api/admin/nomenclatures`);
   }

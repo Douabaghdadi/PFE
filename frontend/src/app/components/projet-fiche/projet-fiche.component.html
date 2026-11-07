@@ -115,10 +115,14 @@
   <div class="panel-head">
     <div>
       <h2 id="d-organisation" class="panel-title">Organisation et conduite de projet</h2>
-      <p class="panel-sub">Maîtres d'ouvrage et d'œuvre, équipe du projet.</p>
+      <p class="panel-sub">Chef de projet, maîtres d'ouvrage et d'œuvre, équipe du projet.</p>
     </div>
   </div>
-  <dl class="info cols-2">
+  <dl class="info cols-3">
+    <div>
+      <dt>Chef de projet</dt>
+      <dd [class.is-empty]="!p.chefProjetNom">{{ p.chefProjetNom || 'Non renseigné' }}</dd>
+    </div>
     <div>
       <dt>Maître d'ouvrage</dt>
       <dd [class.is-empty]="!p.maitreOuvrage">{{ p.maitreOuvrage || 'Non renseigné' }}</dd>
@@ -237,17 +241,48 @@
   </section>
 }
 
-<!-- ============ Délais prévisionnels ============ -->
-@if (p.delaisPrevisionnels) {
-  <section class="panel" aria-labelledby="d-delais">
-    <div class="panel-head">
-      <div>
-        <h2 id="d-delais" class="panel-title">Délais prévisionnels</h2>
-      </div>
+<!-- ============ Délais ============ -->
+<section class="panel" aria-labelledby="d-delais">
+  <div class="panel-head">
+    <div>
+      <h2 id="d-delais" class="panel-title">Délais</h2>
+      <p class="panel-sub">Dates prévues et dates réelles du projet.</p>
     </div>
-    <div class="prose"><p>{{ p.delaisPrevisionnels }}</p></div>
-  </section>
-}
+  </div>
+  <dl class="info cols-3">
+    <div>
+      <dt>Début (prévision)</dt>
+      <dd [class.is-empty]="!p.dateDebutPrevision">{{ dateCourte(p.dateDebutPrevision) || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Fin (prévision)</dt>
+      <dd [class.is-empty]="!p.dateFinPrevision">{{ dateCourte(p.dateFinPrevision) || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Durée (mois)</dt>
+      <dd [class.is-empty]="!p.dureeEnMois">{{ p.dureeEnMois || 'Non renseignée' }}</dd>
+    </div>
+    <div>
+      <dt>Début (réalisation)</dt>
+      <dd [class.is-empty]="!p.dateDebutRealisation">{{ dateCourte(p.dateDebutRealisation) || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Fin (réalisation)</dt>
+      <dd [class.is-empty]="!p.dateFinRealisation">{{ dateCourte(p.dateFinRealisation) || 'Non renseigné' }}</dd>
+    </div>
+    <div>
+      <dt>Écart conventionnel (jours)</dt>
+      <dd [class.is-empty]="p.ecartConventionnel === null || p.ecartConventionnel === undefined">{{ p.ecartConventionnel ?? 'Non renseigné' }}</dd>
+    </div>
+  </dl>
+
+  @if (p.delaisPrevisionnels) {
+    <div class="prose subsection">
+      <h3>Délais prévisionnels</h3>
+      <p>{{ p.delaisPrevisionnels }}</p>
+    </div>
+  }
+</section>
 
 <!-- ============ Risques et pré-requis ============ -->
 @if (p.risquesPotentiels || p.preRequis) {

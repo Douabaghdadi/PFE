@@ -298,6 +298,8 @@
 .item-jamais .item-tag { color: var(--muted); }
 .item-incomplete .dot { background: var(--amber); }
 .item-incomplete .item-tag { color: #b45309; }
+.item-validation .dot { background: var(--amber); }
+.item-validation .item-tag { color: #b45309; }
 .item-warn { color: #b45309; }
 .item-ok { color: var(--brand-text); }
 

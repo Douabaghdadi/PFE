@@ -9,6 +9,7 @@ import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite
 import { PiloteQualiteNotificationService } from '../../../services/pilote-qualite-notification.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
+import { statutValidation } from '../../shared/validation-stats';
 
 /**
  * Tableau de bord du PROCESSUS qualité.
@@ -48,9 +49,12 @@ interface ProjetRow {
   derniereFicheId?: string;
   /** Rubriques absentes de la dernière fiche déposée. */
   manquantes: string[];
+  /** Fiches de suivi qui attendent la décision du pilote, de la plus récente à la plus ancienne. */
+  fichesAValider: string[];
+  ficheProjetAValider: boolean;
 }
 
-type Probleme = 'retard' | 'jamais' | 'incomplete';
+type Probleme = 'retard' | 'jamais' | 'incomplete' | 'validation';
 
 /** Un projet à traiter : son problème le plus urgent, dit en une phrase, et l'action qui va avec. */
 interface ProjetATraiter {
@@ -340,6 +344,8 @@ export class PiloteDashboardComponent implements OnInit {
         completude,
         derniereFicheId: liste[0]?.id,
         manquantes: liste[0] ? this.rubriquesManquantes(liste[0]) : [],
+        fichesAValider: liste.filter(f => statutValidation(f.validation) === 'A_VALIDER').map(f => f.id!),
+        ficheProjetAValider: statutValidation(p.validation) === 'A_VALIDER',
       };
     });
   }
@@ -531,7 +537,7 @@ export class PiloteDashboardComponent implements OnInit {
       .sort((a, b) => a.conformite - b.conformite || b.retards - a.retards);
   }
 
-  /** Chaque projet n'apparaît qu'une fois, avec son problème le plus urgent : retard, puis aucune fiche, puis fiche incomplète. */
+  /** Chaque projet n'apparaît qu'une fois, avec son problème le plus urgent : retard, aucune fiche, fiche incomplète, puis fiche à valider. */
   private construireProjetsATraiter(rows: ProjetRow[]): ProjetATraiter[] {
     const retards = rows
       .filter(r => r.conformite === 'EN_RETARD')
@@ -562,7 +568,25 @@ export class PiloteDashboardComponent implements OnInit {
         ficheId: r.derniereFicheId,
       }));
 
-    return [...retards, ...jamaisSuivis, ...incompletes];
+    const aValider = rows
+      .filter(r => r.conformite === 'A_JOUR' && r.manquantes.length === 0)
+      .filter(r => r.fichesAValider.length > 0 || r.ficheProjetAValider)
+      .map(r => ({
+        id: r.id, nom: r.nom, chefProjet: r.chefProjet, probleme: 'validation' as const,
+        badge: 'À valider',
+        detail: this.phraseAValider(r),
+        ficheId: r.fichesAValider[0],
+      }));
+
+    return [...retards, ...jamaisSuivis, ...incompletes, ...aValider];
+  }
+
+  private phraseAValider(r: ProjetRow): string {
+    const nb = r.fichesAValider.length;
+    const suivi = this.pl(nb, 'fiche de suivi', 'fiches de suivi');
+    if (nb === 0) return 'La fiche projet attend votre décision.';
+    if (r.ficheProjetAValider) return `La fiche projet et ${suivi} attendent votre décision.`;
+    return `${suivi} ${nb > 1 ? 'attendent' : 'attend'} votre décision.`;
   }
 
   private buildKpis() {

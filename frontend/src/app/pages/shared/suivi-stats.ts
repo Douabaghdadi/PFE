@@ -81,6 +81,11 @@ export function isTitre(t: TacheSuivi): boolean {
   return !!t.estTitre || (!t.code && !t.livrable && !t.assigneA && !t.debut && !t.echeance);
 }
 
+/** Même règle que le calcul des KPI : le pourcentage saisi prime, le statut sert de repli. */
+export function tacheTerminee(t: TacheSuivi): boolean {
+  return t.pourcentageRealise != null ? t.pourcentageRealise >= 100 : statutTache(t.statut) === 'termine';
+}
+
 export type StatutTache = 'termine' | 'cours' | 'retard' | 'bloque' | 'autre';
 
 /** « Terminé », « terminé » et « Termine » donnent tous 'termine'. */

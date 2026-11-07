@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
 import { pl } from '../shared/projet-stats';
 import { dateDerniereFiche, resumeFiche, totauxSuivi } from '../shared/suivi-stats';
+import { validationDef } from '../shared/validation-stats';
 
 @Component({
   selector: 'app-fiches-suivi-list',
@@ -22,6 +23,7 @@ export class FichesSuiviListComponent implements OnInit {
 
   readonly pl = pl;
   readonly resume = resumeFiche;
+  readonly validationDef = validationDef;
 
   fichesSuivi = signal<FicheSuivi[]>([]);
   filteredFiches = signal<FicheSuivi[]>([]);

@@ -81,17 +81,25 @@ export class HistoriqueJournalComponent implements OnInit {
     const labels: { [key: string]: string } = {
       'CREATION': 'Création',
       'MODIFICATION': 'Modification',
-      'SUPPRESSION': 'Suppression'
+      'SUPPRESSION': 'Suppression',
+      'VALIDATION': 'Validation',
+      'DEMANDE_CORRECTION': 'Demande de correction',
+      'AJOUT_DOCUMENT': 'Ajout de document',
+      'RETRAIT_DOCUMENT': 'Retrait de document'
     };
     return labels[action] || action;
   }
 
-  /** Pastille d'action : vert pour une création, bleu pour une modification, rouge pour une suppression. */
+  /** Pastille d'action : vert pour une création ou une validation, bleu pour une modification ou un document, ambre pour une demande de correction, rouge pour une suppression. */
   actionPill(action: string): string {
     const classes: { [key: string]: string } = {
       'CREATION': 'pill-termine',
       'MODIFICATION': 'pill-en_cours',
-      'SUPPRESSION': 'pill-annule'
+      'SUPPRESSION': 'pill-annule',
+      'VALIDATION': 'pill-termine',
+      'DEMANDE_CORRECTION': 'pill-en_attente',
+      'AJOUT_DOCUMENT': 'pill-en_cours',
+      'RETRAIT_DOCUMENT': 'pill-en_cours'
     };
     return classes[action] || 'pill-autre';
   }

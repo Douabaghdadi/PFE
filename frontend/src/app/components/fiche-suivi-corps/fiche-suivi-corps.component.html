@@ -17,26 +17,32 @@
 <!-- ============ Fiche signalétique ============ -->
 @if (onglet() === 'signaletique') {
 
-  @if (showIdentification()) {
-    <section class="panel" aria-labelledby="s-identification">
-      <div class="panel-head">
-        <div>
-          <h2 id="s-identification" class="panel-title">Identification du projet</h2>
-          <p class="panel-sub">Responsable de la fiche de suivi.</p>
-        </div>
+  <section class="panel" aria-labelledby="s-identification">
+    <div class="panel-head">
+      <div>
+        <h2 id="s-identification" class="panel-title">Identification du projet</h2>
+        <p class="panel-sub">Responsables de la fiche de suivi, maîtres d'ouvrage et d'œuvre du projet.</p>
       </div>
-      <dl class="info cols-2">
-        <div>
-          <dt>Chef de projet</dt>
-          <dd [class.is-empty]="!sig?.chefProjet?.nom">{{ sig?.chefProjet?.nom || 'Non renseigné' }}</dd>
-        </div>
-        <div>
-          <dt>Suppléant</dt>
-          <dd [class.is-empty]="!sig?.chefProjet?.suppleant">{{ sig?.chefProjet?.suppleant || 'Non renseigné' }}</dd>
-        </div>
-      </dl>
-    </section>
-  }
+    </div>
+    <dl class="info cols-2">
+      <div>
+        <dt>Chef de projet</dt>
+        <dd [class.is-empty]="!sig?.chefProjet?.nom">{{ sig?.chefProjet?.nom || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Suppléant</dt>
+        <dd [class.is-empty]="!sig?.chefProjet?.suppleant">{{ sig?.chefProjet?.suppleant || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Maître d'ouvrage</dt>
+        <dd [class.is-empty]="!sig?.maitreOuvrage">{{ sig?.maitreOuvrage || 'Non renseigné' }}</dd>
+      </div>
+      <div>
+        <dt>Maître d'œuvre</dt>
+        <dd [class.is-empty]="!sig?.maitreOeuvre">{{ sig?.maitreOeuvre || 'Non renseigné' }}</dd>
+      </div>
+    </dl>
+  </section>
 
   @if (sig?.descriptionProjet) {
     <section class="panel" aria-labelledby="s-description">
@@ -233,6 +239,7 @@
               <th scope="col" class="col-assigne">Assigné à</th>
               <th scope="col" class="col-date">Début</th>
               <th scope="col" class="col-date">Échéance</th>
+              <th scope="col" class="col-date">Fin réelle</th>
               <th scope="col" class="col-pct">% réalisé</th>
               <th scope="col" class="col-statut">Statut</th>
             </tr>
@@ -241,7 +248,7 @@
             @for (t of taches(); track $index) {
               @if (isTitre(t)) {
                 <tr class="is-title">
-                  <th scope="rowgroup" colspan="8" class="cell-titre">{{ t.sujet }}</th>
+                  <th scope="rowgroup" colspan="9" class="cell-titre">{{ t.sujet }}</th>
                 </tr>
               } @else {
                 <tr>
@@ -251,6 +258,7 @@
                   <td class="cell-assigne" data-label="Assigné à">{{ t.assigneA || '-' }}</td>
                   <td class="cell-debut" data-label="Début">{{ formatShortDate(t.debut) }}</td>
                   <td class="cell-echeance" data-label="Échéance">{{ formatShortDate(t.echeance) }}</td>
+                  <td class="cell-fin-reelle" data-label="Fin réelle">{{ formatShortDate(t.dateFinReelle) }}</td>
                   <td class="cell-pct" data-label="% réalisé">
                     <div class="pct">
                       <span class="track" aria-hidden="true"><i [style.width.%]="t.pourcentageRealise || 0"></i></span>

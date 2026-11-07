@@ -205,6 +205,18 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                                   <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                                 </svg>
                               </div>
+                            } @else if (notification.type.endsWith('_VALIDEE')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #dcfce7;">
+                                <svg style="width: 16px; height: 16px; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                              </div>
+                            } @else if (notification.type.endsWith('_A_CORRIGER')) {
+                              <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #fef3c7;">
+                                <svg style="width: 16px; height: 16px; color: #d97706;" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+                                </svg>
+                              </div>
                             } @else if (notification.type.includes('CREATED')) {
                               <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: #dcfce7;">
                                 <svg style="width: 16px; height: 16px; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
@@ -461,7 +473,7 @@ export class NavbarComponent implements OnInit {
       if (this.authService.hasRole('ROLE_PILOTE_QUALITE')) {
         return `/pilote-qualite/fiches-projet/${notification.entityId}`;
       } else {
-        return `/projet/${notification.entityId}`;
+        return `/projets/${notification.entityId}`;
       }
     } else if (notification.entityType === 'FICHE_SUIVI') {
       if (this.authService.hasRole('ROLE_PILOTE_QUALITE')) {

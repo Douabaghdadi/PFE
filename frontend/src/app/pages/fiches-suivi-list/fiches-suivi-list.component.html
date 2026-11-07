@@ -163,6 +163,7 @@
                         <span class="pcard-ref">{{ fiche.dateRapport | date:'dd/MM/yyyy' }}</span>
                       </div>
                     </div>
+                    <span class="pill" [ngClass]="validationDef(fiche.validation).pill">{{ validationDef(fiche.validation).label }}</span>
                   </div>
 
                   <ul class="context">

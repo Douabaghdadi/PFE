@@ -7,6 +7,8 @@ import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { environment } from '../../../environments/environment';
 import { pl, statutDef, statutKey, statutStats } from '../shared/projet-stats';
 import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
+import type { ValidationFiche } from '../../services/validation-fiche.service';
+import { validationDef } from '../shared/validation-stats';
 
 interface FicheProjet {
   id: string;
@@ -18,6 +20,7 @@ interface FicheProjet {
   statut: string;
   dateCreation?: string;
   chefProjetId: string;
+  validation?: ValidationFiche;
 }
 
 @Component({
@@ -37,6 +40,7 @@ export class ProjetsListComponent implements OnInit {
   readonly pl = pl;
   readonly statutKey = statutKey;
   readonly statutDef = statutDef;
+  readonly validationDef = validationDef;
 
   projets = signal<FicheProjet[]>([]);
   filteredProjets = signal<FicheProjet[]>([]);

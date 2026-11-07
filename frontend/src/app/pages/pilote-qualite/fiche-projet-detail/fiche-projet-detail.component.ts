@@ -7,13 +7,16 @@ import {
   FicheProjet
 } from '../../../services/pilote-qualite-fiche-projet.service';
 import { ProjetFicheComponent } from '../../../components/projet-fiche/projet-fiche.component';
+import { FicheValidationComponent } from '../../../components/fiche-validation/fiche-validation.component';
+import { PiecesJointesComponent } from '../../../components/pieces-jointes/pieces-jointes.component';
+import { AuthService } from '../../../services/auth.service';
 import { statutDef, statutKey } from '../../shared/projet-stats';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-pilote-fiche-projet-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, ProjetFicheComponent],
+  imports: [CommonModule, RouterModule, ProjetFicheComponent, FicheValidationComponent, PiecesJointesComponent],
   templateUrl: './fiche-projet-detail.component.html',
   styleUrls: ['../pilote-ui.css', '../../shared/detail-ui.css']
 })
@@ -22,6 +25,10 @@ export class PiloteFicheProjetDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  /** L'administrateur peut ouvrir cette page, mais la décision revient au pilote qualité. */
+  readonly peutDecider = this.authService.hasRole('ROLE_PILOTE_QUALITE');
 
   readonly statutKey = statutKey;
   readonly statutDef = statutDef;

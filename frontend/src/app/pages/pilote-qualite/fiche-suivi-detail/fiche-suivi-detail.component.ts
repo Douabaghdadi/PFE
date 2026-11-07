@@ -5,11 +5,14 @@ import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite
 import { PiloteQualiteFicheProjetService } from '../../../services/pilote-qualite-fiche-projet.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 import { FicheSuiviCorpsComponent } from '../../../components/fiche-suivi-corps/fiche-suivi-corps.component';
+import { FicheValidationComponent } from '../../../components/fiche-validation/fiche-validation.component';
+import { PiecesJointesComponent } from '../../../components/pieces-jointes/pieces-jointes.component';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-pilote-fiche-suivi-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FicheSuiviCorpsComponent],
+  imports: [CommonModule, RouterModule, FicheSuiviCorpsComponent, FicheValidationComponent, PiecesJointesComponent],
   templateUrl: './fiche-suivi-detail.component.html',
   styleUrls: ['../pilote-ui.css', '../../shared/detail-ui.css']
 })
@@ -18,6 +21,10 @@ export class PiloteFicheSuiviDetailComponent implements OnInit {
   private ficheProjetService = inject(PiloteQualiteFicheProjetService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private authService = inject(AuthService);
+
+  /** L'administrateur peut ouvrir cette page, mais la décision revient au pilote qualité. */
+  readonly peutDecider = this.authService.hasRole('ROLE_PILOTE_QUALITE');
 
   ficheSuivi: FicheSuivi | null = null;
   loading = true;

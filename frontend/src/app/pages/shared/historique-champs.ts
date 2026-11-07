@@ -14,11 +14,15 @@ const LIBELLES: { [cle: string]: string } = {
   maitreOeuvre: "Maître d'œuvre",
   modaliteDeveloppement: 'Modalité de développement',
   periodiciteSuiviMois: 'Périodicité de suivi (mois)',
+  statutValidation: 'Statut de validation',
+  motif: 'Motif de la correction',
+  document: 'Document',
 
   // Fiche de suivi
   numeroRapport: 'Numéro de rapport',
   dateRapport: 'Date du rapport',
   chefProjet: 'Chef de projet',
+  suppleant: 'Suppléant',
   descriptionProjet: 'Description du projet',
   experts: 'Experts',
   caracteristiquesTechniques: 'Caractéristiques techniques',

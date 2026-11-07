@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import type { ValidationFiche } from './validation-fiche.service';
 
 export interface EstimationCharge {
   prestations?: string;
@@ -50,12 +51,16 @@ export interface FicheProjet {
   objectifs?: string;
   responsable?: string;
   chefProjetId?: string;
+  chefProjetNom?: string;
   dateDebut?: string;
   dateFinPrevue?: string;
   dateDebutPrevision?: string;
   dateFinPrevision?: string;
+  dureeEnMois?: number;
+  dateDebutRealisation?: string;
+  dateFinRealisation?: string;
+  ecartConventionnel?: number;
   statut?: string;
-  categorie?: string;
   dateCreation?: string;
   dateModification?: string;
   reference?: string;
@@ -63,6 +68,7 @@ export interface FicheProjet {
   dateDerniereFicheSuivi?: string;
   dateProchaineFicheSuivi?: string;
   periodiciteSuiviMois?: number;
+  validation?: ValidationFiche;
 }
 
 export interface ProjetSuiviStatus {
@@ -101,13 +107,6 @@ export class PiloteQualiteFicheProjetService {
    */
   getFichesProjetByStatut(statut: string): Observable<FicheProjet[]> {
     return this.http.get<FicheProjet[]>(`${this.apiUrl}/statut/${statut}`);
-  }
-
-  /**
-   * Récupère les fiches projet par catégorie (lecture seule)
-   */
-  getFichesProjetByCategorie(categorie: string): Observable<FicheProjet[]> {
-    return this.http.get<FicheProjet[]>(`${this.apiUrl}/categorie/${categorie}`);
   }
 
   /**

@@ -172,6 +172,11 @@
                     <span class="pill" [ngClass]="'pill-' + statutKey(projet.statut)">{{ statutDef(projet.statut).label }}</span>
                   </div>
 
+                  <div class="pcard-ligne">
+                    <span class="pcard-libelle">Validation de la fiche</span>
+                    <span class="pill" [ngClass]="validationDef(projet.validation).pill">{{ validationDef(projet.validation).label }}</span>
+                  </div>
+
                   <dl class="facts">
                     <div>
                       <dt>Client</dt>

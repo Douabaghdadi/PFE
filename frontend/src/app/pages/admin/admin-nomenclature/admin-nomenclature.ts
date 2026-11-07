@@ -140,7 +140,6 @@ export class AdminNomenclature implements OnInit {
   nomenclatureTypes = [
     { value: 'TYPE_FICHE', label: 'Type de Fiche' },
     { value: 'STATUT', label: 'Statut' },
-    { value: 'CATEGORIE_PROJET', label: 'Catégorie de Projet' }
   ];
 
   ngOnInit() {
@@ -200,7 +199,6 @@ export class AdminNomenclature implements OnInit {
     switch (type) {
       case 'TYPE_FICHE': return 'bg-blue-100 text-blue-800';
       case 'STATUT': return 'bg-green-100 text-green-800';
-      case 'CATEGORIE_PROJET': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   }

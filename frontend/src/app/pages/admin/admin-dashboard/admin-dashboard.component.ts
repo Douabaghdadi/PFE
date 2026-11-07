@@ -44,7 +44,6 @@ const NOMENCLATURE_DEFS: { key: string; label: string }[] = [
   { key: 'CARACTERE_PROJET', label: 'Caractère du projet' },
   { key: 'TYPE_PROJET', label: 'Type de projet' },
   { key: 'MODALITE_DEVELOPPEMENT', label: 'Modalité de développement' },
-  { key: 'CATEGORIE_PROJET', label: 'Catégorie de projet' },
   { key: 'STATUT_TACHE', label: 'Statut de tâche' },
 ];
 

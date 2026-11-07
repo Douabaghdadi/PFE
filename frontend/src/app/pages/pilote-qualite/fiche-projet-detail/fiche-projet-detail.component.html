@@ -44,14 +44,19 @@
               </svg>
               Retour
             </button>
-            <button type="button" class="btn btn-primary" (click)="viewHistorique()">
+            <button type="button" class="btn btn-secondary" (click)="viewHistorique()">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
-              Historique complet
+              Historique
             </button>
           </div>
         </header>
+
+        <app-fiche-validation type="fiches-projet" [ficheId]="p.id!" [validation]="p.validation"
+                              [peutDecider]="peutDecider" (decidee)="p.validation = $event" />
+
+        <app-pieces-jointes type="fiches-projet" [ficheId]="p.id!" />
 
         <app-projet-fiche [projet]="p" />
       }

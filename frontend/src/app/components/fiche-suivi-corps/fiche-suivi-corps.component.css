@@ -89,7 +89,7 @@
 .pill-autre { background: #f1f5f4; color: #475569; box-shadow: inset 0 0 0 1px #dbe3df; }
 
 /* ============ Tableau des tâches ============ */
-.tbl-taches { min-width: 980px; }
+.tbl-taches { min-width: 1060px; }
 .tbl .col-code { width: 80px; }
 .tbl .col-sujet { min-width: 220px; }
 .tbl .col-livrable { width: 150px; }
@@ -137,7 +137,8 @@
   .tbl-taches .cell-assigne { order: 5; }
   .tbl-taches .cell-debut { order: 6; }
   .tbl-taches .cell-echeance { order: 7; }
-  .tbl-taches .cell-pct { order: 8; grid-column: 1 / -1; }
+  .tbl-taches .cell-fin-reelle { order: 8; grid-column: 1 / -1; }
+  .tbl-taches .cell-pct { order: 9; grid-column: 1 / -1; }
   .tbl-taches tr.is-title { display: block; padding: 0.65rem 1rem; border-color: #c9e4d6; background: #eef6f1; }
   .tbl-taches tr.is-title .cell-titre { display: block; padding: 0; border: 0; background: transparent; }
 }

@@ -23,8 +23,6 @@ export class FicheSuiviCorpsComponent {
   readonly fiche = input.required<FicheSuivi>();
   /** Destination du diagramme de Gantt : elle diffère entre l'espace du chef de projet et celui du pilote. */
   readonly ganttLink = input.required<any[]>();
-  /** Le pilote voit aussi le chef de projet et son suppléant, que le chef de projet connaît déjà. */
-  readonly showIdentification = input(false);
 
   readonly onglet = signal<OngletFicheSuivi>('signaletique');
 

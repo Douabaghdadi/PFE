@@ -75,6 +75,17 @@
             </svg>
           </div>
 
+          <div class="field-select">
+            <label for="validation" class="visually-hidden">Filtrer par état de validation</label>
+            <select id="validation" class="control" [(ngModel)]="selectedValidation" (change)="applyFilters()">
+              <option value="">État de validation</option>
+              <option *ngFor="let v of validationOptions" [value]="v.statut">{{ v.label }}</option>
+            </select>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+
           <button type="button" class="btn btn-secondary" (click)="toggleSortOrder()"
                   [attr.aria-label]="sortOrder === 'desc' ? 'Tri : plus récent d\'abord. Inverser le tri' : 'Tri : plus ancien d\'abord. Inverser le tri'">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true"
@@ -135,9 +146,12 @@
                 <span class="pill" [ngClass]="'pill-' + statutKey(fiche.statut)">{{ statutDef(fiche.statut).label }}</span>
               </div>
 
-              <div class="person">
-                <span class="avatar" aria-hidden="true">{{ getInitials(fiche.chefProjetId) }}</span>
-                <span><span class="visually-hidden">Chef de projet : </span>{{ getChefProjetName(fiche.chefProjetId) }}</span>
+              <div class="pcard-ligne">
+                <div class="person">
+                  <span class="avatar" aria-hidden="true">{{ getInitials(fiche.chefProjetId) }}</span>
+                  <span><span class="visually-hidden">Chef de projet : </span>{{ getChefProjetName(fiche.chefProjetId) }}</span>
+                </div>
+                <span class="pill" [ngClass]="validationDef(fiche.validation).pill"><span class="visually-hidden">Fiche </span>{{ validationDef(fiche.validation).label }}</span>
               </div>
 
               <dl class="facts" [class.is-single]="!fiche.designationClient">

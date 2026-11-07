@@ -7,6 +7,7 @@ import { PiloteQualiteFicheProjetService } from '../../../services/pilote-qualit
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 import { initiales, pl } from '../../shared/projet-stats';
 import { SuiviTotaux, dateDerniereFiche, resumeFiche, totauxSuivi } from '../../shared/suivi-stats';
+import { VALIDATION_DEFS, statutValidation, validationDef } from '../../shared/validation-stats';
 
 @Component({
   selector: 'app-pilote-fiches-suivi-list',
@@ -24,6 +25,8 @@ export class PiloteFichesSuiviListComponent implements OnInit {
   readonly pl = pl;
   readonly initiales = initiales;
   readonly resume = resumeFiche;
+  readonly validationDef = validationDef;
+  readonly validationOptions = VALIDATION_DEFS;
 
   fichesSuivi: FicheSuivi[] = [];
   /** Fiches du projet choisi (toutes si aucun projet) : c'est le périmètre des indicateurs. */
@@ -40,6 +43,7 @@ export class PiloteFichesSuiviListComponent implements OnInit {
   // Filtres
   searchTerm = '';
   selectedProjetId = '';
+  selectedValidation = '';
   sortOrder: 'asc' | 'desc' = 'desc'; // desc = plus récent d'abord
 
   // Cache pour les noms des projets et liste déroulante des projets
@@ -134,11 +138,16 @@ export class PiloteFichesSuiviListComponent implements OnInit {
     this.derniereFiche = dateDerniereFiche(this.portee);
     this.updateProjetOptions();
 
-    this.filteredFiches = this.portee.filter(fiche => !terme ||
-      fiche.numeroRapport?.toLowerCase().includes(terme) ||
-      fiche.ficheSignaletique?.chefProjet?.nom?.toLowerCase().includes(terme) ||
-      fiche.constatGlobal?.etatAvancement?.toLowerCase().includes(terme) ||
-      this.getProjetName(fiche.ficheProjetId).toLowerCase().includes(terme));
+    this.filteredFiches = this.portee.filter(fiche => {
+      const matchesValidation = !this.selectedValidation || statutValidation(fiche.validation) === this.selectedValidation;
+      const matchesSearch = !terme ||
+        fiche.numeroRapport?.toLowerCase().includes(terme) ||
+        fiche.ficheSignaletique?.chefProjet?.nom?.toLowerCase().includes(terme) ||
+        fiche.constatGlobal?.etatAvancement?.toLowerCase().includes(terme) ||
+        this.getProjetName(fiche.ficheProjetId).toLowerCase().includes(terme);
+
+      return matchesValidation && matchesSearch;
+    });
 
     // Tri par date
     this.filteredFiches.sort((a, b) => {
@@ -210,12 +219,13 @@ export class PiloteFichesSuiviListComponent implements OnInit {
   }
 
   get filtresActifs(): boolean {
-    return !!this.searchTerm.trim() || !!this.selectedProjetId;
+    return !!this.searchTerm.trim() || !!this.selectedProjetId || !!this.selectedValidation;
   }
 
   resetFilters() {
     this.searchTerm = '';
     this.selectedProjetId = '';
+    this.selectedValidation = '';
     this.sortOrder = 'desc';
     this.applyFilters();
     this.router.navigate([], { queryParams: { projetId: null }, queryParamsHandling: 'merge', replaceUrl: true });

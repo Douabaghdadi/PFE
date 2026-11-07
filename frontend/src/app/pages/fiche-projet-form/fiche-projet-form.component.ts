@@ -7,6 +7,7 @@ import { UserService, UserResponse } from '../../services/user.service';
 import { AuthService } from '../../services/auth.service';
 import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
 import { environment } from '../../../environments/environment';
+import { rappelModification } from '../shared/validation-stats';
 
 interface EstimationCharge {
   prestations: string;
@@ -69,6 +70,8 @@ export class FicheProjetFormComponent implements OnInit {
   readonly moisPlanning = Array.from({ length: 12 }, (_, i) => String(i + 1));
 
   isEditMode = signal(false);
+  /** Prévient le chef de projet, avant qu'il enregistre, de ce que devient la décision du pilote qualité. */
+  rappelValidation = signal<string | null>(null);
   projetId: string | null = null;
   
   // Informations du chef de projet connecté
@@ -77,7 +80,6 @@ export class FicheProjetFormComponent implements OnInit {
 
   // Choix proposés : valeurs actives de la page Nomenclature (gérée par l'administrateur)
   statuts: Nomenclature[] = [];
-  categories: Nomenclature[] = [];
   caracteres: Nomenclature[] = [];
   types: Nomenclature[] = [];
   modalites: Nomenclature[] = [];
@@ -122,7 +124,6 @@ export class FicheProjetFormComponent implements OnInit {
     dateDebut: null,
     dateFinPrevue: null,
     statut: 'EN_COURS',
-    categorie: '',
     reference: '',
     dateDocument: null
   };
@@ -151,6 +152,7 @@ export class FicheProjetFormComponent implements OnInit {
       }
     }).subscribe({
       next: (data) => {
+        this.rappelValidation.set(rappelModification(data.validation));
         // Charger les données dans le formulaire
         this.formData = {
           ...this.formData,
@@ -390,12 +392,11 @@ export class FicheProjetFormComponent implements OnInit {
   }
 
   /**
-   * Charge les listes de choix (statut, catégorie, caractère, type, modalité) depuis la nomenclature
+   * Charge les listes de choix (statut, caractère, type, modalité) depuis la nomenclature
    */
   loadNomenclatures() {
     this.nomenclatureService.charger().subscribe(() => {
       this.statuts = this.nomenclatureService.actives('STATUT');
-      this.categories = this.nomenclatureService.actives('CATEGORIE_PROJET');
       this.caracteres = this.nomenclatureService.actives('CARACTERE_PROJET');
       this.types = this.nomenclatureService.actives('TYPE_PROJET');
       this.modalites = this.nomenclatureService.actives('MODALITE_DEVELOPPEMENT');

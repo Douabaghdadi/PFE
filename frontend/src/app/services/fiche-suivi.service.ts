@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import type { ValidationFiche } from './validation-fiche.service';
 
 export interface FicheSuivi {
   id?: string;
@@ -14,6 +15,7 @@ export interface FicheSuivi {
   chefProjetId?: string;
   dateCreation?: string;
   dateModification?: string;
+  validation?: ValidationFiche;
 }
 
 export interface FicheSignaletique {

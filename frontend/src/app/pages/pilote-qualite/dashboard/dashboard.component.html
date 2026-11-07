@@ -299,6 +299,8 @@
               </button>
               <button *ngIf="p.probleme === 'jamais'" type="button" class="btn btn-small" (click)="viewProjet(p.id)">Voir le projet</button>
               <button *ngIf="p.probleme === 'incomplete'" type="button" class="btn btn-small" (click)="viewFicheSuivi(p.ficheId || '')">Voir la fiche</button>
+              <button *ngIf="p.probleme === 'validation' && p.ficheId" type="button" class="btn btn-small" (click)="viewFicheSuivi(p.ficheId)">Voir la fiche</button>
+              <button *ngIf="p.probleme === 'validation' && !p.ficheId" type="button" class="btn btn-small" (click)="viewProjet(p.id)">Voir le projet</button>
             </li>
           </ul>
 

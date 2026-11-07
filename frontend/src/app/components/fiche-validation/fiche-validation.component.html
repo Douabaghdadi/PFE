@@ -1,0 +1,82 @@
+<section class="panel validation" aria-label="Validation de la fiche">
+  <div class="validation-ligne">
+    <div class="validation-etat">
+      <span class="pill" [ngClass]="def().pill">{{ def().label }}</span>
+      <p #etat class="validation-texte" tabindex="-1" role="status">{{ phrase() }}</p>
+    </div>
+
+    @if (peutValider() || peutDemanderCorrection() || peutCorriger()) {
+      <div class="validation-actions">
+        @if (peutDemanderCorrection()) {
+          <button type="button" class="btn btn-secondary" (click)="ouvrirDialogue()" [disabled]="enCours()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l5-5m-5 5l5 5"/>
+            </svg>
+            Demander une correction
+          </button>
+        }
+        @if (peutValider()) {
+          <button type="button" class="btn btn-primary" (click)="valider()" [disabled]="enCours()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            {{ enCours() ? 'Validation…' : 'Valider la fiche' }}
+          </button>
+        }
+        @if (peutCorriger()) {
+          <a class="btn btn-primary" [routerLink]="lienCorrection()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Corriger la fiche
+          </a>
+        }
+      </div>
+    }
+  </div>
+
+  @if (motifAffiche(); as motifDemande) {
+    <p class="validation-motif"><strong>Motif :</strong> {{ motifDemande }}</p>
+  }
+
+  @if (erreur() && !dialogueOuvert()) {
+    <div class="notice notice-error" role="alert">{{ erreur() }}</div>
+  }
+</section>
+
+<!-- ============ Demande de correction ============ -->
+<dialog #dialogue class="dlg" aria-labelledby="correction-titre" (click)="onDialogueClick($event)" (close)="fermerDialogue()">
+  <div class="dlg-inner">
+    <button type="button" class="icon-btn dlg-close" (click)="fermerDialogue()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a5 5 0 015 5v2M3 10l5-5m-5 5l5 5"/>
+        </svg>
+      </span>
+      <h2 id="correction-titre" class="dlg-title">Demander une correction</h2>
+    </div>
+
+    <label class="dlg-label" for="motif-correction">Motif de la demande</label>
+    <textarea id="motif-correction" class="control champ-motif" rows="4" maxlength="500" autofocus
+              [value]="motif()" (input)="motif.set($any($event.target).value)"
+              aria-describedby="motif-aide"></textarea>
+    <p id="motif-aide" class="champ-aide">Le chef de projet lira ce motif sur sa fiche.</p>
+
+    @if (erreur() && dialogueOuvert()) {
+      <div class="notice notice-error" role="alert">{{ erreur() }}</div>
+    }
+
+    <div class="dlg-actions">
+      <button type="button" class="btn btn-secondary" (click)="fermerDialogue()">Annuler</button>
+      <button type="button" class="btn btn-primary" (click)="envoyerCorrection()" [disabled]="!motif().trim() || enCours()">
+        {{ enCours() ? 'Envoi…' : 'Envoyer la demande' }}
+      </button>
+    </div>
+  </div>
+</dialog>

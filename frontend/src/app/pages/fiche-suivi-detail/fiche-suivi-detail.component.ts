@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FicheSuiviService, FicheSuivi } from '../../services/fiche-suivi.service';
 import { FicheSuiviCorpsComponent } from '../../components/fiche-suivi-corps/fiche-suivi-corps.component';
+import { FicheValidationComponent } from '../../components/fiche-validation/fiche-validation.component';
+import { PiecesJointesComponent } from '../../components/pieces-jointes/pieces-jointes.component';
 
 @Component({
   selector: 'app-fiche-suivi-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FicheSuiviCorpsComponent],
+  imports: [CommonModule, RouterModule, FicheSuiviCorpsComponent, FicheValidationComponent, PiecesJointesComponent],
   templateUrl: './fiche-suivi-detail.component.html',
   styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/detail-ui.css']
 })

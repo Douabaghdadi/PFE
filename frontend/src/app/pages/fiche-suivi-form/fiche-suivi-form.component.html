@@ -37,6 +37,15 @@
       </div>
     }
 
+    @if (rappelValidation(); as rappel) {
+      <div class="notice notice-warn is-banner" role="status">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>{{ rappel }}</span>
+      </div>
+    }
+
     <!-- ============ Étapes ============ -->
     <nav class="panel steps" aria-label="Étapes de la fiche de suivi">
       <ol>
@@ -141,6 +150,28 @@
                   }
                 </p>
               }
+            </div>
+          </div>
+        </section>
+
+        <!-- Responsables -->
+        <section class="panel" aria-labelledby="t-responsables">
+          <div class="panel-head">
+            <div>
+              <h2 id="t-responsables" class="panel-title">Responsables</h2>
+              <p class="panel-sub">Le chef de projet qui dépose la fiche et son suppléant.</p>
+            </div>
+          </div>
+
+          <div class="fields cols-2">
+            <div class="field">
+              <label class="field-label" for="f-chef">Chef de projet</label>
+              <input id="f-chef" type="text" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.chefProjet.nom" name="chefProjetNom" readonly>
+            </div>
+            <div class="field">
+              <label class="field-label" for="f-suppleant">Suppléant</label>
+              <input id="f-suppleant" type="text" class="control" [(ngModel)]="ficheSuivi.ficheSignaletique.chefProjet.suppleant" name="chefProjetSuppleant"
+                     placeholder="Nom du suppléant">
             </div>
           </div>
         </section>
@@ -455,7 +486,7 @@
           <div class="panel-head">
             <div>
               <h2 id="t-taches" class="panel-title">État d'avancement global du projet</h2>
-              <p class="panel-sub">Une ligne par tâche. Les titres viennent du planning de la fiche projet ; le + d'un titre ajoute une sous-tâche.</p>
+              <p class="panel-sub">Une ligne par tâche. Les titres viennent du planning de la fiche projet ; le + d'un titre ajoute une sous-tâche. À 100 %, la fin réelle prend la date du jour, à corriger au besoin.</p>
             </div>
             <button type="button" class="btn btn-secondary btn-add" (click)="addTache()">
               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
@@ -479,6 +510,7 @@
                     <th scope="col" class="col-assigne">Assigné à</th>
                     <th scope="col" class="col-date">Début</th>
                     <th scope="col" class="col-date">Échéance</th>
+                    <th scope="col" class="col-date">Fin réelle</th>
                     <th scope="col" class="col-pct">% réalisé</th>
                     <th scope="col" class="col-statut">Statut</th>
                     <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
@@ -488,7 +520,7 @@
                   @for (tache of ficheSuivi.tachesSuivi; track $index) {
                     @if (tache.estTitre) {
                       <tr class="is-title">
-                        <td colspan="8" class="cell-sujet">
+                        <td colspan="9" class="cell-sujet">
                           <input type="text" class="title-input" [(ngModel)]="tache.sujet" [name]="'tacheSujet' + $index"
                                  [class.is-invalid]="hasError('tacheSujet_' + $index)"
                                  [attr.aria-label]="'Titre de l\'action ' + ($index + 1)"
@@ -552,8 +584,21 @@
                             <p [id]="'e-echeance-' + $index" class="field-error" role="alert">{{ getError('tacheEcheance_' + $index) }}</p>
                           }
                         </td>
+                        <td class="cell-fin-reelle" data-label="Fin réelle">
+                          <input type="date" class="control" [(ngModel)]="tache.dateFinReelle" [name]="'tacheFinReelle' + $index"
+                                 [disabled]="!tacheTerminee(tache)" [max]="aujourdhui"
+                                 [title]="tacheTerminee(tache) ? '' : 'Disponible quand la tâche est terminée'"
+                                 [class.is-invalid]="hasError('tacheFinReelle_' + $index)"
+                                 [attr.aria-label]="'Date de fin réelle de la tâche ' + ($index + 1)"
+                                 [attr.aria-invalid]="hasError('tacheFinReelle_' + $index) ? 'true' : null"
+                                 [attr.aria-describedby]="hasError('tacheFinReelle_' + $index) ? 'e-fin-reelle-' + $index : null">
+                          @if (hasError('tacheFinReelle_' + $index)) {
+                            <p [id]="'e-fin-reelle-' + $index" class="field-error" role="alert">{{ getError('tacheFinReelle_' + $index) }}</p>
+                          }
+                        </td>
                         <td class="cell-pct" data-label="% réalisé">
                           <input type="number" class="control" [(ngModel)]="tache.pourcentageRealise" [name]="'tachePourcent' + $index"
+                                 (change)="onPourcentageChange(tache)"
                                  min="0" max="100"
                                  [class.is-invalid]="hasError('tachePourcent_' + $index)"
                                  [attr.aria-label]="'Pourcentage réalisé de la tâche ' + ($index + 1)"
@@ -565,7 +610,7 @@
                         </td>
                         <td class="cell-statut" data-label="Statut">
                           <div class="select-wrap">
-                            <select class="control" [(ngModel)]="tache.statut" [name]="'tacheStatut' + $index"
+                            <select class="control" [ngModel]="tache.statut" (ngModelChange)="onStatutChange(tache, $event)" [name]="'tacheStatut' + $index"
                                     [attr.aria-label]="'Statut de la tâche ' + ($index + 1)">
                               @for (s of statutsTache; track s.code) {
                                 <option [value]="s.libelle">{{ s.libelle }}</option>

@@ -7,6 +7,16 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
 import { environment } from '../../../environments/environment';
+import { rappelModification } from '../shared/validation-stats';
+import { StatutTache, statutTache, tacheTerminee } from '../shared/suivi-stats';
+
+/** Date du jour à l'heure locale : toISOString() donnerait la veille entre minuit et 1 h à Tunis. */
+function dateDuJour(): string {
+  const d = new Date();
+  const mois = String(d.getMonth() + 1).padStart(2, '0');
+  const jour = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mois}-${jour}`;
+}
 
 interface PlanningAction {
   action: string;
@@ -48,6 +58,8 @@ export class FicheSuiviFormComponent implements OnInit {
   nomenclatureService = inject(NomenclatureService);
 
   isEditMode = signal(false);
+  /** Prévient le chef de projet, avant qu'il enregistre, de ce que devient la décision du pilote qualité. */
+  rappelValidation = signal<string | null>(null);
   ficheSuiviId = signal<string | null>(null);
   currentTab = signal('signaletique');
   isLoading = signal(false);
@@ -61,6 +73,10 @@ export class FicheSuiviFormComponent implements OnInit {
   // Statuts de tâche de la nomenclature. Le libellé est enregistré, pas le code : les indicateurs
   // et le Gantt reconnaissent le statut à son texte (« En cours », « En retard », « Bloqué »…).
   statutsTache: Nomenclature[] = [];
+
+  readonly tacheTerminee = tacheTerminee;
+  /** Une fin réelle ne peut pas dépasser ce jour : au-delà, ce serait une prévision. */
+  readonly aujourdhui = dateDuJour();
 
   ficheSuivi: FicheSuivi = {
     ficheProjetId: '',
@@ -327,6 +343,7 @@ export class FicheSuiviFormComponent implements OnInit {
     this.ficheSuiviService.getFicheSuiviById(id).subscribe({
       next: (data) => {
         this.ficheSuivi = data;
+        this.rappelValidation.set(rappelModification(data.validation));
         
         // S'assurer que experts est un tableau
         if (!this.ficheSuivi.ficheSignaletique.experts) {
@@ -388,6 +405,10 @@ export class FicheSuiviFormComponent implements OnInit {
           errors[`tachePourcent_${i}`] = 'Le pourcentage doit être entre 0 et 100.';
         if (t.debut && t.echeance && t.echeance < t.debut)
           errors[`tacheEcheance_${i}`] = "L'échéance doit être après la date de début.";
+        if (t.dateFinReelle && t.dateFinReelle > this.aujourdhui)
+          errors[`tacheFinReelle_${i}`] = 'La fin réelle ne peut pas être dans le futur.';
+        else if (t.dateFinReelle && t.debut && t.dateFinReelle < t.debut)
+          errors[`tacheFinReelle_${i}`] = 'La fin réelle ne peut pas précéder le début.';
       });
     }
 
@@ -463,6 +484,36 @@ export class FicheSuiviFormComponent implements OnInit {
 
   removeRecommandation(index: number) {
     this.ficheSuivi.constatGlobal.recommandations.splice(index, 1);
+  }
+
+  /** Libellé du statut tel que l'administrateur l'a nommé dans la nomenclature. */
+  private libelleStatut(statut: StatutTache): string | undefined {
+    return this.statutsTache.find(s => statutTache(s.libelle) === statut)?.libelle;
+  }
+
+  /**
+   * À 100 %, la tâche passe à « Terminé » et reçoit la date du jour, que le chef de projet corrige au besoin.
+   * En dessous, une tâche marquée « Terminé » repart « En cours » et n'a plus de fin réelle.
+   */
+  onPourcentageChange(tache: TacheSuivi) {
+    if ((tache.pourcentageRealise ?? 0) >= 100) {
+      tache.statut = this.libelleStatut('termine') ?? tache.statut;
+      tache.dateFinReelle ||= this.aujourdhui;
+    } else {
+      if (statutTache(tache.statut) === 'termine') {
+        tache.statut = this.libelleStatut('cours') ?? tache.statut;
+      }
+      tache.dateFinReelle = undefined;
+    }
+  }
+
+  /** Choisir « Terminé » déclare la tâche finie : sans 100 %, les KPI la verraient encore en cours. */
+  onStatutChange(tache: TacheSuivi, statut: string) {
+    tache.statut = statut;
+    if (statutTache(statut) === 'termine') {
+      tache.pourcentageRealise = 100;
+      this.onPourcentageChange(tache);
+    }
   }
 
   addTache() {

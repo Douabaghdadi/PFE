@@ -20,12 +20,19 @@ export interface ProjetFicheData {
   presentation?: string;
   historique?: string;
   perimetre?: string;
+  chefProjetNom?: string;
   maitreOuvrage?: string;
   maitreOeuvre?: string;
   equipeProjet?: any;
   estimationsCharges?: any[];
   modaliteDeveloppement?: string;
   estimationBudget?: any;
+  dateDebutPrevision?: string;
+  dateFinPrevision?: string;
+  dureeEnMois?: number;
+  dateDebutRealisation?: string;
+  dateFinRealisation?: string;
+  ecartConventionnel?: number;
   delaisPrevisionnels?: string;
   risquesPotentiels?: string;
   preRequis?: string;
@@ -76,6 +83,11 @@ export class ProjetFicheComponent {
     if (valeur === null || valeur === undefined || valeur === '') return '';
     const n = Number(valeur);
     return isFinite(n) ? n.toLocaleString('fr-FR') : String(valeur);
+  }
+
+  /** Date au format jj/mm/aaaa, comme sur la fiche de suivi ; vide si elle n'est pas renseignée. */
+  dateCourte(date: string | undefined): string {
+    return date ? new Date(date).toLocaleDateString('fr-FR', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
   }
 
   // Libellés de la nomenclature ; un code absent de la nomenclature s'affiche tel quel

@@ -43,8 +43,22 @@
               </svg>
               Retour aux fiches de suivi
             </button>
+            <!-- Une fiche à corriger a déjà son bouton dans le bandeau de validation -->
+            @if (f.validation?.statut !== 'A_CORRIGER') {
+              <a class="btn btn-primary" [routerLink]="['/fiche-suivi/edit', f.id]">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Modifier la fiche
+              </a>
+            }
           </div>
         </header>
+
+        <app-fiche-validation type="fiches-suivi" [ficheId]="f.id!" [validation]="f.validation"
+                              [lienCorrection]="['/fiche-suivi/edit', f.id]" />
+
+        <app-pieces-jointes type="fiches-suivi" [ficheId]="f.id!" (validationChangee)="f.validation = $event" />
 
         <app-fiche-suivi-corps [fiche]="f" [ganttLink]="['/fiche-suivi', f.id, 'gantt']" />
       }
