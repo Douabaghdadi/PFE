@@ -171,7 +171,7 @@ public class FicheSuiviService {
         if (!ficheSuivi.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only update your own follow-up files");
         }
-        
+
         // IMPORTANT: Sauvegarder les anciennes valeurs AVANT toute modification
         java.util.Map<String, Object> anciennesValeurs = new java.util.HashMap<>();
         anciennesValeurs.put("numeroRapport", ficheSuivi.getNumeroRapport());
@@ -280,7 +280,8 @@ public class FicheSuiviService {
         return updated;
     }
 
-    public void deleteFicheSuivi(String id, String chefProjetId) {
+    /** Séparé de la suppression pour que le contrôleur l'appelle avant de notifier : un refus ne doit rien annoncer. */
+    public FicheSuivi verifierSuppression(String id, String chefProjetId) {
         FicheSuivi ficheSuivi = ficheSuiviRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fiche suivi not found"));
 
@@ -288,7 +289,13 @@ public class FicheSuiviService {
         if (!ficheSuivi.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only delete your own follow-up files");
         }
-        
+        ficheSuivi.getValidation().verifierSupprimable();
+        return ficheSuivi;
+    }
+
+    public void deleteFicheSuivi(String id, String chefProjetId) {
+        FicheSuivi ficheSuivi = verifierSuppression(id, chefProjetId);
+
         // Enregistrer dans l'historique avant suppression avec le projetId
         historiqueService.enregistrerSuppression("FICHE_SUIVI", id, chefProjetId, ficheSuivi.getFicheProjetId(), ficheSuivi.getNumeroRapport());
 

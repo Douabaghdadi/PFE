@@ -5,6 +5,7 @@ import com.example.demo.dto.ProjetSuiviStatusDTO;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.User;
 import com.example.demo.repository.FicheProjetRepository;
+import com.example.demo.repository.FicheSuiviRepository;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,10 @@ import java.util.List;
 public class FicheProjetService {
     @Autowired
     private FicheProjetRepository ficheProjetRepository;
-    
+
+    @Autowired
+    private FicheSuiviRepository ficheSuiviRepository;
+
     @Autowired
     private HistoriqueService historiqueService;
 
@@ -133,7 +137,7 @@ public class FicheProjetService {
         if (!ficheProjet.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only update your own project files");
         }
-        
+
         // Sauvegarder les anciennes valeurs
         java.util.Map<String, Object> anciennesValeurs = historiqueService.extraireValeursImportantes(ficheProjet);
 
@@ -213,7 +217,11 @@ public class FicheProjetService {
         return updated;
     }
 
-    public void deleteFicheProjet(String id, String chefProjetId) {
+    /**
+     * Séparé de la suppression pour que le contrôleur l'appelle avant de notifier : un refus ne doit rien annoncer.
+     * Un projet dont une fiche de suivi est validée reste aussi en place : la fiche perdrait son projet.
+     */
+    public FicheProjet verifierSuppression(String id, String chefProjetId) {
         FicheProjet ficheProjet = ficheProjetRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Fiche projet not found"));
 
@@ -221,7 +229,18 @@ public class FicheProjetService {
         if (!ficheProjet.getChefProjetId().equals(chefProjetId)) {
             throw new RuntimeException("Unauthorized: You can only delete your own project files");
         }
-        
+        ficheProjet.getValidation().verifierSupprimable();
+        boolean suiviValide = ficheSuiviRepository.findByFicheProjetId(id).stream()
+                .anyMatch(suivi -> suivi.getValidation().isDejaValidee());
+        if (suiviValide) {
+            throw new IllegalStateException("Ce projet a des fiches de suivi validées : il ne peut plus être supprimé.");
+        }
+        return ficheProjet;
+    }
+
+    public void deleteFicheProjet(String id, String chefProjetId) {
+        FicheProjet ficheProjet = verifierSuppression(id, chefProjetId);
+
         // Enregistrer dans l'historique avant suppression avec le projetId
         historiqueService.enregistrerSuppression("FICHE_PROJET", id, chefProjetId, id, ficheProjet.getNomProjet());
 

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.FicheSuivi;
 import com.example.demo.model.HistoriqueModification;
@@ -80,6 +81,25 @@ class ControleAccesFichesTest {
         FicheSuivi suivi = new FicheSuivi();
         suivi.setChefProjetId(chefProjetId);
         return suivi;
+    }
+
+    private static final String FICHE_VALIDEE = "Cette fiche a été validée par le pilote qualité : elle ne peut plus être supprimée.";
+
+    @Test
+    void uneSuppressionRefuseeRepond409SansRienAnnoncerAuxPilotes() {
+        when(ficheProjetService.verifierSuppression("p1", CHEF)).thenThrow(new IllegalStateException(FICHE_VALIDEE));
+        when(ficheSuiviService.verifierSuppression("s1", CHEF)).thenThrow(new IllegalStateException(FICHE_VALIDEE));
+
+        ResponseEntity<?> projet = ficheProjetController.deleteFicheProjet("p1", chef());
+        ResponseEntity<?> suivi = ficheSuiviController.deleteFicheSuivi("s1", chef());
+
+        assertEquals(HttpStatus.CONFLICT, projet.getStatusCode());
+        assertEquals(HttpStatus.CONFLICT, suivi.getStatusCode());
+        assertEquals(FICHE_VALIDEE, ((MessageResponse) projet.getBody()).getMessage());
+        verify(ficheProjetService, never()).deleteFicheProjet(anyString(), anyString());
+        verify(ficheSuiviService, never()).deleteFicheSuivi(anyString(), anyString());
+        verify(userNotificationService, never()).createFicheProjetNotification(anyString(), anyString(), anyString());
+        verify(userNotificationService, never()).createFicheSuiviNotification(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test

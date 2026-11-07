@@ -13,24 +13,36 @@ public class ValidationFiche {
     private String piloteId;
     private String piloteNom;
     private LocalDateTime dateDecision;
+    /** Reste vrai après une modification : sinon, une simple retouche lèverait l'interdiction de supprimer. */
+    private boolean dejaValidee;
 
     public void valider(String piloteId, String piloteNom) {
         if (statut != StatutValidation.A_VALIDER) {
             throw new IllegalStateException("Cette fiche n'est plus à valider : rechargez la page pour voir son état.");
         }
+        dejaValidee = true;
         enregistrerDecision(StatutValidation.VALIDEE, null, piloteId, piloteNom);
     }
 
-    /** Reste possible sur une fiche validée, pour reprendre une erreur repérée après coup. */
+    /** Reste possible sur une fiche validée : une fois corrigée, elle devra être validée de nouveau. */
     public void demanderCorrection(String motif, String piloteId, String piloteNom) {
         if (statut == StatutValidation.A_CORRIGER) {
             throw new IllegalStateException("Une correction est déjà demandée sur cette fiche.");
         }
+        dejaValidee = isDejaValidee();
         enregistrerDecision(StatutValidation.A_CORRIGER, motif, piloteId, piloteNom);
+    }
+
+    /** Une fiche validée une fois ne se supprime plus, même si son chef l'a modifiée depuis. */
+    public void verifierSupprimable() {
+        if (isDejaValidee()) {
+            throw new IllegalStateException("Cette fiche a été validée par le pilote qualité : elle ne peut plus être supprimée.");
+        }
     }
 
     /** Une décision porte sur un contenu : dès que le chef de projet le change, elle ne vaut plus. */
     public void remettreAValider() {
+        dejaValidee = isDejaValidee();
         statut = StatutValidation.A_VALIDER;
         motif = null;
         piloteId = null;
@@ -45,6 +57,10 @@ public class ValidationFiche {
         this.piloteNom = piloteNom;
         this.dateDecision = LocalDateTime.now();
     }
+
+    /** Une fiche validée avant l'ajout de ce champ ne l'a pas en base : son statut suffit. */
+    public boolean isDejaValidee() { return dejaValidee || statut == StatutValidation.VALIDEE; }
+    public void setDejaValidee(boolean dejaValidee) { this.dejaValidee = dejaValidee; }
 
     public StatutValidation getStatut() { return statut; }
     public void setStatut(StatutValidation statut) { this.statut = statut; }

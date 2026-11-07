@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.bson.Document;
@@ -79,12 +80,49 @@ class ValidationFicheTest {
     }
 
     @Test
+    void uneFicheValideeRenvoyeeAuChefNeSeSupprimeToujoursPas() {
+        // Validée avant l'ajout du champ dejaValidee, comme les fiches déjà en base
+        ValidationFiche validation = new ValidationFiche();
+        validation.setStatut(StatutValidation.VALIDEE);
+
+        validation.demanderCorrection("Erreur vue après coup", "p1", "Amel Ben Salah");
+
+        assertThrows(IllegalStateException.class, validation::verifierSupprimable);
+    }
+
+    @Test
     void uneCorrectionNeSeDemandePasDeuxFois() {
         ValidationFiche validation = aCorriger();
 
         assertThrows(IllegalStateException.class,
                 () -> validation.demanderCorrection("Autre motif", "p2", "Karim Jlassi"));
         assertEquals("Budget manquant", validation.getMotif());
+    }
+
+    @Test
+    void uneFicheValideeUneFoisNeSeSupprimePlusMemeModifieeDepuis() {
+        new ValidationFiche().verifierSupprimable();
+        aCorriger().verifierSupprimable();
+
+        ValidationFiche validation = new ValidationFiche();
+        validation.valider("p1", "amel.bensalah");
+        assertThrows(IllegalStateException.class, validation::verifierSupprimable);
+
+        validation.remettreAValider();
+        assertEquals(StatutValidation.A_VALIDER, validation.getStatut());
+        assertThrows(IllegalStateException.class, validation::verifierSupprimable);
+    }
+
+    @Test
+    void uneFicheValideeAvantCetteRegleResteProtegeeApresUneModification() {
+        // En base, ces fiches ont le statut « Validée » sans le champ dejaValidee
+        ValidationFiche validation = new ValidationFiche();
+        validation.setStatut(StatutValidation.VALIDEE);
+        assertTrue(validation.isDejaValidee());
+
+        validation.remettreAValider();
+
+        assertTrue(validation.isDejaValidee());
     }
 
     @Test

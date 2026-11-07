@@ -116,16 +116,19 @@ public class FicheProjetController {
                                                Authentication authentication) {
         try {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-            
+            ficheProjetService.verifierSuppression(id, userDetails.getId());
+
             // Créer une notification avant de supprimer
             userNotificationService.createFicheProjetNotification(
-                id, 
-                "DELETED", 
+                id,
+                "DELETED",
                 userDetails.getId()
             );
-            
+
             ficheProjetService.deleteFicheProjet(id, userDetails.getId());
             return ResponseEntity.ok(new MessageResponse("Fiche projet deleted successfully"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse(e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));

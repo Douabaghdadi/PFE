@@ -22,6 +22,7 @@ import com.example.demo.repository.FicheSuiviRepository;
 import com.example.demo.repository.UserRepository;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -148,9 +149,82 @@ class ValidationFicheServiceTest {
                 eq("projet-1"), any());
     }
 
+    private FicheSuiviRequest modificationDuSuivi() {
+        FicheSuiviRequest modification = new FicheSuiviRequest();
+        modification.setFicheProjetId("projet-1");
+        return modification;
+    }
+
     @Test
     void modifierUneFicheProjetValideeDemandeUneNouvelleValidation() {
         validationFicheService.validerFicheProjet("projet-1", PILOTE);
+
+        FicheProjet resultat = ficheProjetService.updateFicheProjet("projet-1", new FicheProjetRequest(), CHEF);
+
+        assertEquals(StatutValidation.A_VALIDER, resultat.getValidation().getStatut());
+    }
+
+    @Test
+    void modifierUneFicheDeSuiviValideeDemandeUneNouvelleValidation() {
+        validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+
+        FicheSuivi resultat = ficheSuiviService.updateFicheSuivi("suivi-1", modificationDuSuivi(), CHEF);
+
+        assertEquals(StatutValidation.A_VALIDER, resultat.getValidation().getStatut());
+    }
+
+    @Test
+    void unChefNePeutPlusSupprimerUneFicheValidee() {
+        validationFicheService.validerFicheProjet("projet-1", PILOTE);
+        validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+
+        assertThrows(IllegalStateException.class, () -> ficheProjetService.deleteFicheProjet("projet-1", CHEF));
+        assertThrows(IllegalStateException.class, () -> ficheSuiviService.deleteFicheSuivi("suivi-1", CHEF));
+
+        verify(ficheProjetRepository, never()).deleteById(anyString());
+        verify(ficheSuiviRepository, never()).deleteById(anyString());
+    }
+
+    @Test
+    void uneRetoucheNeLevePasLInterdictionDeSupprimer() {
+        validationFicheService.validerFicheProjet("projet-1", PILOTE);
+        validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+        ficheProjetService.updateFicheProjet("projet-1", new FicheProjetRequest(), CHEF);
+        ficheSuiviService.updateFicheSuivi("suivi-1", modificationDuSuivi(), CHEF);
+
+        assertEquals(StatutValidation.A_VALIDER, projet.getValidation().getStatut());
+        assertThrows(IllegalStateException.class, () -> ficheProjetService.deleteFicheProjet("projet-1", CHEF));
+        assertThrows(IllegalStateException.class, () -> ficheSuiviService.deleteFicheSuivi("suivi-1", CHEF));
+    }
+
+    @Test
+    void unProjetDontUneFicheDeSuiviEstValideeNePeutPasEtreSupprime() {
+        validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+        when(ficheSuiviRepository.findByFicheProjetId("projet-1")).thenReturn(List.of(suivi));
+
+        assertThrows(IllegalStateException.class, () -> ficheProjetService.deleteFicheProjet("projet-1", CHEF));
+
+        verify(ficheProjetRepository, never()).deleteById(anyString());
+    }
+
+    @Test
+    void uneFicheValideeRenvoyeeEtCorrigeeDoitEtreValideeDeNouveau() {
+        validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+
+        FicheSuivi renvoyee = validationFicheService.demanderCorrectionFicheSuivi("suivi-1", "Budget à revoir", PILOTE);
+        assertEquals(StatutValidation.A_CORRIGER, renvoyee.getValidation().getStatut());
+        assertThrows(IllegalStateException.class, () -> ficheSuiviService.deleteFicheSuivi("suivi-1", CHEF));
+
+        FicheSuivi corrigee = ficheSuiviService.updateFicheSuivi("suivi-1", modificationDuSuivi(), CHEF);
+        assertEquals(StatutValidation.A_VALIDER, corrigee.getValidation().getStatut());
+
+        FicheSuivi revalidee = validationFicheService.validerFicheSuivi("suivi-1", PILOTE);
+        assertEquals(StatutValidation.VALIDEE, revalidee.getValidation().getStatut());
+    }
+
+    @Test
+    void uneFicheACorrigerRepasseAValiderQuandSonChefLEnregistre() {
+        validationFicheService.demanderCorrectionFicheProjet("projet-1", "Budget à revoir", PILOTE);
 
         FicheProjet resultat = ficheProjetService.updateFicheProjet("projet-1", new FicheProjetRequest(), CHEF);
 

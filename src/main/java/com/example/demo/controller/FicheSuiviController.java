@@ -135,7 +135,7 @@ public class FicheSuiviController {
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             
             // Récupérer le nom du projet avant de supprimer
-            FicheSuivi ficheSuivi = ficheSuiviService.getFicheSuiviById(id);
+            FicheSuivi ficheSuivi = ficheSuiviService.verifierSuppression(id, userDetails.getId());
             String projetName = ficheSuiviService.getProjetName(ficheSuivi.getFicheProjetId());
             
             // Créer une notification avant de supprimer
@@ -148,6 +148,8 @@ public class FicheSuiviController {
             
             ficheSuiviService.deleteFicheSuivi(id, userDetails.getId());
             return ResponseEntity.ok(new MessageResponse("Fiche suivi deleted successfully"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse(e.getMessage()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponse("Error: " + e.getMessage()));
