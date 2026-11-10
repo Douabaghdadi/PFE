@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -1240,7 +1241,7 @@ public class DemoDataInitializer implements CommandLineRunner {
             Map<String, String> membre = new LinkedHashMap<>();
             membre.put("nom", nomsEtRoles[i]);
             membre.put("role", nomsEtRoles[i + 1]);
-            membre.put("email", "");
+            membre.put("email", emailMembre(nomsEtRoles[i], nomsEtRoles[i + 1]));
             membres.add(membre);
         }
         try {
@@ -1248,6 +1249,13 @@ public class DemoDataInitializer implements CommandLineRunner {
         } catch (JsonProcessingException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /** prénom.nom : sur le domaine Qualinet pour le chef, qui a un compte, sur example.com pour les autres membres. */
+    static String emailMembre(String nom, String role) {
+        String adresse = Normalizer.normalize(nom, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", ".");
+        return adresse + ("Chef de projet".equals(role) ? "@qualinet.com" : "@example.com");
     }
 
     /** Action du planning projet, cochée du mois de début au mois de fin (mois 1 à 12 du projet). */

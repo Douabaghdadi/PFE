@@ -88,6 +88,12 @@ class DemoDataInitializerTest {
     }
 
     @Test
+    void chaqueMembreDeLEquipeAUnEmailPourEtreInviteEnReunion() {
+        assertEquals("sami.trabelsi@qualinet.com", DemoDataInitializer.emailMembre("Sami Trabelsi", "Chef de projet"));
+        assertEquals("olfa.ayari@example.com", DemoDataInitializer.emailMembre("Olfa Ayari", "Testeuse QA"));
+    }
+
+    @Test
     void uneTacheSurQuatreFinitApresSonEcheanceEtLesAutresATemps() {
         assertTrue(DemoDataInitializer.finReelle(3, DEBUT, ECHEANCE, DEPOT).isAfter(ECHEANCE));
         assertFalse(DemoDataInitializer.finReelle(0, DEBUT, ECHEANCE, DEPOT).isAfter(ECHEANCE));
