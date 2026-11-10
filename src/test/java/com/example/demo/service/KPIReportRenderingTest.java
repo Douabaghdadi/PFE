@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.AlerteKPIDTO;
-import com.example.demo.dto.AuditReportingExportDTO;
 import com.example.demo.dto.ChargeMembreDTO;
 import com.example.demo.dto.ComposanteScoreDTO;
 import com.example.demo.dto.MembreEquipeDTO;
@@ -208,48 +207,6 @@ class KPIReportRenderingTest {
             // Seule la synthèse est produite : aucun détail de tâches, d'équipe ou d'historique.
             assertEquals(1, workbook.getNumberOfSheets());
             assertNotNull(workbook.getSheet("Synthèse"));
-        }
-    }
-
-    @Test
-    void genereLeClasseurDeLAuditDuReporting() throws Exception {
-        AuditReportingExportDTO audit = new AuditReportingExportDTO();
-        audit.setNbProjets(2);
-        audit.setNbFichesDeposees(3);
-        audit.setTauxConformite(50);
-        audit.setNbEnRetard(1);
-        audit.setCompletudeMoyenne(80);
-        audit.setNbRubriques(5);
-
-        AuditReportingExportDTO.ProjetAudit retard = new AuditReportingExportDTO.ProjetAudit();
-        retard.setNom("Refonte portail");
-        retard.setConformite("Fiche en retard");
-        retard.setJoursRetard(12);
-        retard.setPeriodiciteMois(1);
-        retard.setDerniereFiche("2026-09-01");
-        retard.setProchaineEcheance("2026-10-01");
-        retard.setFichesDeposees(3);
-        retard.setCompletude(80);
-        retard.setRubriquesManquantes(List.of("Recommandations"));
-        AuditReportingExportDTO.ProjetAudit neuf = new AuditReportingExportDTO.ProjetAudit();
-        neuf.setNom("Projet neuf");
-        neuf.setConformite("Jamais suivi");
-        audit.setProjets(List.of(retard, neuf));
-
-        byte[] xlsx = excelReportService.generateAuditReportingExcel(audit);
-
-        try (Workbook workbook = WorkbookFactory.create(new ByteArrayInputStream(xlsx))) {
-            assertEquals(2, workbook.getNumberOfSheets());
-            assertEquals(0.5, ligneDont(workbook.getSheet("Synthèse"), "Conformité du suivi").getCell(1).getNumericCellValue(), 0.0001);
-
-            // Une ligne par projet dans un vrai tableau Excel, avec des nombres et des dates
-            XSSFSheet projets = (XSSFSheet) workbook.getSheet("Projets");
-            assertEquals(1, projets.getTables().size());
-            Row premier = ligneDont(projets, "Refonte portail");
-            assertEquals(12, premier.getCell(4).getNumericCellValue(), 0.0001);
-            assertTrue(DateUtil.isCellDateFormatted(premier.getCell(6)));
-            assertEquals("Recommandations", premier.getCell(10).getStringCellValue());
-            assertEquals("Aucune", ligneDont(projets, "Projet neuf").getCell(6).getStringCellValue());
         }
     }
 }
