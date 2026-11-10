@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -24,11 +25,16 @@ import com.example.demo.repository.FicheSuiviRepository;
 import com.example.demo.repository.PieceJointeRepository;
 import com.example.demo.security.ControleAcces;
 import com.example.demo.security.services.UserDetailsImpl;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import org.bson.BsonObjectId;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +45,10 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.gridfs.GridFsResource;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
@@ -65,6 +74,10 @@ class PieceJointeServiceTest {
     private FicheSuiviRepository ficheSuiviRepository;
     @Mock
     private GridFsTemplate gridFsTemplate;
+    @Mock
+    private MongoTemplate mongoTemplate;
+    @Mock
+    private ResumeDocumentService resumeDocumentService;
     @Mock
     private HistoriqueService historiqueService;
     @Mock
@@ -311,6 +324,99 @@ class PieceJointeServiceTest {
 
         verify(pieceJointeRepository).delete(piece);
         verify(gridFsTemplate).delete(any(Query.class));
+    }
+
+    private PieceJointe pieceAvecContenu() throws Exception {
+        PieceJointe piece = pieceDuProjet();
+        piece.setTypeMime("application/pdf");
+        GridFSFile fichierStocke = new GridFSFile(new BsonObjectId(new ObjectId(CONTENU_ID)), "compte-rendu.pdf", 3L, 261120,
+                new Date(), new Document());
+        GridFsResource ressource = mock(GridFsResource.class);
+        when(gridFsTemplate.findOne(any(Query.class))).thenReturn(fichierStocke);
+        when(gridFsTemplate.getResource(fichierStocke)).thenReturn(ressource);
+        when(ressource.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[] {1, 2, 3}));
+        return piece;
+    }
+
+    @Test
+    void leResumeDUnDocumentEstRedigeEtGarde() throws Exception {
+        pieceAvecContenu();
+        when(resumeDocumentService.resumer(anyString(), anyString(), any(byte[].class))).thenReturn("Un compte rendu.");
+
+        PieceJointe resultat = pieceJointeService.resumer("piece-1", pilote());
+
+        assertEquals("Un compte rendu.", resultat.getResume());
+        verify(mongoTemplate).updateFirst(any(Query.class), any(Update.class), eq(PieceJointe.class));
+        // Un save recréerait la description d'un document retiré pendant l'appel à l'IA
+        verify(pieceJointeRepository, never()).save(any(PieceJointe.class));
+    }
+
+    @Test
+    void unResumeDejaRedigeNeRappellePasLIA() throws Exception {
+        pieceAvecContenu().setResume("Déjà rédigé.");
+
+        assertEquals("Déjà rédigé.", pieceJointeService.resumer("piece-1", pilote()).getResume());
+
+        verifyNoInteractions(resumeDocumentService, mongoTemplate);
+    }
+
+    @Test
+    void resumerUnDocumentNeChangeRienALaFiche() throws Exception {
+        pieceAvecContenu();
+        projet.getValidation().valider("pilote-1", "amel.bensalah");
+        when(resumeDocumentService.resumer(anyString(), anyString(), any(byte[].class))).thenReturn("Un compte rendu.");
+
+        pieceJointeService.resumer("piece-1", pilote());
+
+        assertEquals(StatutValidation.VALIDEE, projet.getValidation().getStatut());
+        verify(ficheProjetRepository, never()).save(any(FicheProjet.class));
+        verifyNoInteractions(historiqueService, userNotificationService);
+    }
+
+    @Test
+    void unAutreChefNeResumePasLesDocumentsDUneFiche() throws Exception {
+        pieceAvecContenu();
+
+        assertThrows(AccessDeniedException.class, () -> pieceJointeService.resumer("piece-1", autreChef()));
+
+        verifyNoInteractions(resumeDocumentService);
+    }
+
+    @Test
+    void leChefDeLaFicheNeResumePasSesDocuments() throws Exception {
+        pieceAvecContenu();
+
+        AccessDeniedException refus = assertThrows(AccessDeniedException.class, () -> pieceJointeService.resumer("piece-1", chef()));
+
+        assertTrue(refus.getMessage().contains("pilote qualité"));
+        verifyNoInteractions(resumeDocumentService, mongoTemplate);
+    }
+
+    @Test
+    void lAdministrateurNeResumePasNonPlus() throws Exception {
+        pieceAvecContenu();
+
+        assertThrows(AccessDeniedException.class, () -> pieceJointeService.resumer("piece-1", connecte("admin-1", "ROLE_ADMIN")));
+
+        verifyNoInteractions(resumeDocumentService);
+    }
+
+    @Test
+    void seulLePiloteQualiteRecoitLeDroitDeResumer() {
+        assertTrue(pieceJointeService.lister(FICHES_PROJET, "projet-1", pilote()).peutResumer());
+        assertFalse(pieceJointeService.lister(FICHES_PROJET, "projet-1", chef()).peutResumer());
+        assertFalse(pieceJointeService.lister(FICHES_PROJET, "projet-1", connecte("admin-1", "ROLE_ADMIN")).peutResumer());
+    }
+
+    @Test
+    void unEchecDeLIANeGardeAucunResume() throws Exception {
+        pieceAvecContenu();
+        when(resumeDocumentService.resumer(anyString(), anyString(), any(byte[].class)))
+                .thenThrow(new ResumeDocumentService.ResumeImpossibleException("Quota atteint"));
+
+        assertThrows(ResumeDocumentService.ResumeImpossibleException.class, () -> pieceJointeService.resumer("piece-1", pilote()));
+
+        verifyNoInteractions(mongoTemplate);
     }
 
     @Test

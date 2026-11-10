@@ -30,6 +30,8 @@ public class PieceJointe {
     private String deposeParNom;
     private LocalDateTime dateDepot;
 
+    private String resume; // Résumé rédigé par l'IA : gardé, car un document joint ne change jamais
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
@@ -62,4 +64,7 @@ public class PieceJointe {
 
     public LocalDateTime getDateDepot() { return dateDepot; }
     public void setDateDepot(LocalDateTime dateDepot) { this.dateDepot = dateDepot; }
+
+    public String getResume() { return resume; }
+    public void setResume(String resume) { this.resume = resume; }
 }

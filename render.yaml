@@ -21,6 +21,13 @@ services:
         sync: false
       - key: BREVO_SENDER_EMAIL
         sync: false
+      # Réunions Google Meet : compte Google unique, jeton de longue durée obtenu une seule fois
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
       # Généré automatiquement par Render (valeur aléatoire en base64)
       - key: JWT_SECRET
         generateValue: true

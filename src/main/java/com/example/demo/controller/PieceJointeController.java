@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.model.PieceJointe;
 import com.example.demo.service.PieceJointeService;
+import com.example.demo.service.ResumeDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ContentDisposition;
@@ -46,6 +47,12 @@ public class PieceJointeController {
         return repondre(() -> ResponseEntity.ok(pieceJointeService.retirer(id, authentication)));
     }
 
+    /** POST : le résumé est rédigé par l'IA et enregistré au premier appel. */
+    @PostMapping("/pieces-jointes/{id}/resume")
+    public ResponseEntity<?> resumer(@PathVariable String id, Authentication authentication) {
+        return repondre(() -> ResponseEntity.ok(pieceJointeService.resumer(id, authentication)));
+    }
+
     /** Toujours servi en téléchargement : un fichier déposé ne doit jamais s'exécuter dans la page d'un lecteur. */
     @GetMapping("/pieces-jointes/{id}")
     public ResponseEntity<?> telecharger(@PathVariable String id, Authentication authentication) {
@@ -61,7 +68,7 @@ public class PieceJointeController {
         });
     }
 
-    /** 404 si la fiche ou le document n'existe plus, 403 hors droits, 400 ou 409 avec la raison à afficher. */
+    /** 404 si la fiche ou le document n'existe plus, 403 hors droits, 400, 409 ou 503 avec la raison à afficher. */
     private ResponseEntity<?> repondre(Supplier<ResponseEntity<?>> action) {
         try {
             return action.get();
@@ -73,6 +80,8 @@ public class PieceJointeController {
             return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse(e.getMessage()));
+        } catch (ResumeDocumentService.ResumeImpossibleException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new MessageResponse(e.getMessage()));
         }
     }
 }

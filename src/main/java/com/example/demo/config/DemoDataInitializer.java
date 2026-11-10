@@ -20,6 +20,7 @@ import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.HistoriqueService;
 import com.example.demo.service.PieceJointeService;
+import com.example.demo.service.ReunionService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,6 +121,9 @@ public class DemoDataInitializer implements CommandLineRunner {
 
     @Autowired
     private PieceJointeService pieceJointeService;
+
+    @Autowired
+    private ReunionService reunionService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -1500,7 +1504,7 @@ public class DemoDataInitializer implements CommandLineRunner {
         return userRepository.save(user);
     }
 
-    /** Supprime les comptes du jeu et tout ce qui leur est rattaché (projets, fiches, documents, historique, notifications). */
+    /** Supprime les comptes du jeu et tout ce qui leur est rattaché (projets, fiches, documents, réunions, historique, notifications). */
     private void supprimerDonneesDemo() {
         List<String> comptes = EMAILS_DEMO.stream().map(userRepository::findByEmail)
             .flatMap(Optional::stream).map(User::getId).toList();
@@ -1508,6 +1512,7 @@ public class DemoDataInitializer implements CommandLineRunner {
             .stream().map(FicheProjet::getId).toList();
 
         pieceJointeService.supprimerDesProjets(projets);
+        reunionService.supprimerDesProjets(projets);
         mongoTemplate.remove(Query.query(Criteria.where("ficheProjetId").in(projets)), FicheSuivi.class);
         mongoTemplate.remove(Query.query(Criteria.where("id").in(projets)), FicheProjet.class);
         mongoTemplate.remove(Query.query(new Criteria().orOperator(

@@ -31,6 +31,9 @@ public class FicheProjetService {
     private PieceJointeService pieceJointeService;
 
     @Autowired
+    private ReunionService reunionService;
+
+    @Autowired
     private UserRepository userRepository;
 
     public List<FicheProjet> getAllFichesProjet() {
@@ -245,6 +248,7 @@ public class FicheProjetService {
         historiqueService.enregistrerSuppression("FICHE_PROJET", id, chefProjetId, id, ficheProjet.getNomProjet());
 
         pieceJointeService.supprimerDeLaFiche(PieceJointeService.TYPE_FICHE_PROJET, id);
+        reunionService.supprimerDuProjet(id);
         ficheProjetRepository.deleteById(id);
     }
 

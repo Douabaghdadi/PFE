@@ -14,8 +14,10 @@ import com.example.demo.security.services.UserDetailsImpl;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -73,6 +75,12 @@ public class PieceJointeService {
 
     @Autowired
     private GridFsTemplate gridFsTemplate;
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Autowired
+    private ResumeDocumentService resumeDocumentService;
 
     @Autowired
     private ControleAcces controleAcces;
@@ -149,6 +157,31 @@ public class PieceJointeService {
         }
     }
 
+    /**
+     * Réservé au pilote qualité : le résumé l'aide à contrôler une fiche qu'il n'a pas rédigée.
+     * Un document n'est résumé qu'une fois : il ne change jamais, et chaque appel à l'IA consomme du quota.
+     * Résumer revient à lire : la fiche, sa validation et son historique ne changent pas.
+     * Synchronisé : un fichier encodé pèse plusieurs dizaines de Mo, sur un serveur limité à 512 Mo.
+     */
+    public synchronized PieceJointe resumer(String id, Authentication authentication) {
+        if (!controleAcces.estPiloteQualite(authentication)) {
+            throw new AccessDeniedException("Le résumé d'un document est réservé au pilote qualité.");
+        }
+        Fichier fichier = ouvrir(id, authentication);
+        PieceJointe piece = fichier.piece();
+        try (InputStream contenu = fichier.contenu()) {
+            if (piece.getResume() == null) {
+                piece.setResume(resumeDocumentService.resumer(piece.getNomFichier(), piece.getTypeMime(), contenu.readAllBytes()));
+                // updateFirst : un save recréerait la description d'un document retiré pendant l'appel à l'IA
+                mongoTemplate.updateFirst(Query.query(Criteria.where("id").is(id)),
+                        Update.update("resume", piece.getResume()), PieceJointe.class);
+            }
+            return piece;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     public PiecesJointesFicheDTO retirer(String id, Authentication authentication) {
         PieceJointe piece = pieceJointeRepository.findById(id).orElseThrow();
         Fiche fiche = ficheDe(piece.getEntityType(), piece.getEntityId());
@@ -197,7 +230,8 @@ public class PieceJointeService {
     private PiecesJointesFicheDTO etat(Fiche fiche, ValidationFiche validation, Authentication authentication) {
         List<PieceJointe> pieces = pieceJointeRepository
                 .findByEntityTypeAndEntityIdOrderByDateDepotDesc(fiche.entityType(), fiche.entityId());
-        return new PiecesJointesFicheDTO(pieces, controleAcces.estUtilisateur(fiche.chefProjetId(), authentication), validation);
+        return new PiecesJointesFicheDTO(pieces, controleAcces.estUtilisateur(fiche.chefProjetId(), authentication),
+                controleAcces.estPiloteQualite(authentication), validation);
     }
 
     private void verifierLecture(Fiche fiche, Authentication authentication) {

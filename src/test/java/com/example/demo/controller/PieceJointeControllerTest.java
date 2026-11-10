@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -23,6 +24,7 @@ import com.example.demo.security.jwt.JwtUtils;
 import com.example.demo.security.services.UserDetailsImpl;
 import com.example.demo.security.services.UserDetailsServiceImpl;
 import com.example.demo.service.PieceJointeService;
+import com.example.demo.service.ResumeDocumentService;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -85,7 +87,7 @@ class PieceJointeControllerTest {
         piece.setNomFichier("compte-rendu.pdf");
         piece.setFichierId("identifiant-interne");
         when(pieceJointeService.lister(eq("fiches-projet"), eq("p1"), any()))
-                .thenReturn(new PiecesJointesFicheDTO(List.of(piece), false, new ValidationFiche()));
+                .thenReturn(new PiecesJointesFicheDTO(List.of(piece), false, true, new ValidationFiche()));
 
         mockMvc.perform(get(LISTE).with(user(pilote())))
                 .andExpect(status().isOk())
@@ -93,13 +95,14 @@ class PieceJointeControllerTest {
                 // L'identifiant GridFS reste côté serveur : tout passe par le contrôle des droits
                 .andExpect(jsonPath("$.pieces[0].fichierId").doesNotExist())
                 .andExpect(jsonPath("$.peutGerer").value(false))
+                .andExpect(jsonPath("$.peutResumer").value(true))
                 .andExpect(jsonPath("$.validation.statut").value("A_VALIDER"));
     }
 
     @Test
     void ajouterUnDocumentPasseParLeFormulaireMultipart() throws Exception {
         when(pieceJointeService.ajouter(eq("fiches-projet"), eq("p1"), any(), any()))
-                .thenReturn(new PiecesJointesFicheDTO(List.of(), true, new ValidationFiche()));
+                .thenReturn(new PiecesJointesFicheDTO(List.of(), true, false, new ValidationFiche()));
 
         mockMvc.perform(multipart(LISTE).file(compteRendu()).with(user(chef())))
                 .andExpect(status().isOk())
@@ -122,6 +125,42 @@ class PieceJointeControllerTest {
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("attachment")))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, containsString("UTF-8''")))
                 .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+    }
+
+    @Test
+    void leResumeEstReserveAuxComptesConnectes() throws Exception {
+        mockMvc.perform(post(DOCUMENT + "/resume")).andExpect(status().isUnauthorized());
+        verifyNoInteractions(pieceJointeService);
+    }
+
+    @Test
+    void leResumeRevientAvecLeDocument() throws Exception {
+        PieceJointe piece = new PieceJointe();
+        piece.setResume("Un compte rendu de réunion.");
+        when(pieceJointeService.resumer(eq("d1"), any())).thenReturn(piece);
+
+        mockMvc.perform(post(DOCUMENT + "/resume").with(user(pilote())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resume").value("Un compte rendu de réunion."));
+    }
+
+    @Test
+    void chaqueEchecDuResumeDonneSonCodeEtSaRaison() throws Exception {
+        when(pieceJointeService.resumer(eq("d1"), any()))
+                .thenThrow(new ResumeDocumentService.ResumeImpossibleException("Quota atteint"));
+        mockMvc.perform(post(DOCUMENT + "/resume").with(user(pilote())))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("Quota atteint"));
+
+        when(pieceJointeService.resumer(eq("d3"), any())).thenThrow(new AccessDeniedException("Réservé au pilote qualité"));
+        mockMvc.perform(post("/api/pieces-jointes/d3/resume").with(user(chef())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Réservé au pilote qualité"));
+
+        when(pieceJointeService.resumer(eq("d2"), any())).thenThrow(new IllegalArgumentException("Format ancien"));
+        mockMvc.perform(post("/api/pieces-jointes/d2/resume").with(user(pilote())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Format ancien"));
     }
 
     @Test

@@ -19,6 +19,13 @@ public class ControleAcces {
                 .anyMatch(role -> role.equals("ROLE_ADMIN") || role.equals("ROLE_PILOTE_QUALITE"));
     }
 
+    /** Certains contrôles sont propres au pilote qualité : l'administrateur gère la plateforme, il ne contrôle pas les fiches. */
+    public boolean estPiloteQualite(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch("ROLE_PILOTE_QUALITE"::equals);
+    }
+
     public boolean estUtilisateur(String userId, Authentication authentication) {
         UserDetailsImpl utilisateur = (UserDetailsImpl) authentication.getPrincipal();
         return utilisateur.getId().equals(userId);

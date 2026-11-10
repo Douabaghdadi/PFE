@@ -9,11 +9,13 @@ import com.example.demo.controller.PublicUserController;
 import com.example.demo.model.ERole;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.Notification;
+import com.example.demo.model.Reunion;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.FicheProjetRepository;
 import com.example.demo.repository.NotificationRepository;
 import com.example.demo.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -106,6 +108,47 @@ class NomUtilisateurAfficheTest {
         Notification notification = notificationEnregistree();
         assertEquals("sami.trabelsi a créé une fiche de suivi pour le projet \"e-Bourse\"", notification.getMessage());
         assertEquals("sami.trabelsi", notification.getActorName());
+    }
+
+    @Test
+    void uneReunionNommeLeChefParSonNomDUtilisateurEtPrevientChaqueParticipant() {
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(appel -> appel.getArgument(0));
+        Reunion reunion = new Reunion();
+        reunion.setProjetId("projet-1");
+        reunion.setTitre("Revue");
+        reunion.setDebut(LocalDateTime.of(2026, 11, 12, 10, 0));
+        reunion.setParticipantIds(List.of("pilote-1"));
+        reunion.setOrganisateurId("chef-1");
+        reunion.setOrganisateurNom("sami.trabelsi");
+
+        userNotificationService.createReunionNotification(reunion, "Atlas", true);
+
+        Notification notification = notificationEnregistree();
+        assertEquals("pilote-1", notification.getUserId());
+        assertEquals("REUNION_CREATED", notification.getType());
+        assertEquals("REUNION", notification.getEntityType());
+        assertEquals("projet-1", notification.getEntityId());
+        assertEquals("sami.trabelsi vous invite à la réunion \"Revue\" du projet \"Atlas\", le 12/11/2026 à 10:00",
+            notification.getMessage());
+    }
+
+    @Test
+    void uneReunionSansProjetNeCitePasDeProjet() {
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(appel -> appel.getArgument(0));
+        Reunion reunion = new Reunion();
+        reunion.setId("r1");
+        reunion.setTitre("Revue");
+        reunion.setDebut(LocalDateTime.of(2026, 11, 12, 10, 0));
+        reunion.setParticipantIds(List.of("chef-1"));
+        reunion.setOrganisateurId("pilote-1");
+        reunion.setOrganisateurNom("amel.bensalah");
+
+        userNotificationService.createReunionNotification(reunion, null, true);
+
+        Notification notification = notificationEnregistree();
+        assertEquals("chef-1", notification.getUserId());
+        assertEquals("r1", notification.getEntityId());
+        assertEquals("amel.bensalah vous invite à la réunion \"Revue\", le 12/11/2026 à 10:00", notification.getMessage());
     }
 
     @Test

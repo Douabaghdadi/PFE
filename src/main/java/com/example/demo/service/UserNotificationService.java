@@ -5,6 +5,7 @@ import com.example.demo.dto.NotificationEvent;
 import com.example.demo.model.ERole;
 import com.example.demo.model.FicheProjet;
 import com.example.demo.model.Notification;
+import com.example.demo.model.Reunion;
 import com.example.demo.model.StatutValidation;
 import com.example.demo.model.User;
 import com.example.demo.model.ValidationFiche;
@@ -16,10 +17,13 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 public class UserNotificationService {
+
+    private static final DateTimeFormatter DATE_REUNION = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
     @Autowired
     private NotificationRepository notificationRepository;
@@ -280,6 +284,23 @@ public class UserNotificationService {
             validation.getPiloteNom()
         );
         saveAndPush(notification);
+    }
+
+    /**
+     * Prévenir les participants d'une réunion planifiée ou annulée ; un clic les conduit à la page « Réunions ».
+     */
+    public void createReunionNotification(Reunion reunion, String nomProjet, boolean planifiee) {
+        String quand = reunion.getDebut().format(DATE_REUNION);
+        String quelle = "la réunion \"" + reunion.getTitre() + "\"" + (nomProjet == null ? "" : " du projet \"" + nomProjet + "\"");
+        String message = planifiee
+            ? reunion.getOrganisateurNom() + " vous invite à " + quelle + ", le " + quand
+            : reunion.getOrganisateurNom() + " a annulé " + quelle + ", prévue le " + quand;
+
+        for (String participantId : reunion.getParticipantIds()) {
+            saveAndPush(new Notification(participantId, planifiee ? "REUNION_CREATED" : "REUNION_DELETED", message,
+                reunion.getProjetId() != null ? reunion.getProjetId() : reunion.getId(), "REUNION",
+                reunion.getOrganisateurId(), reunion.getOrganisateurNom()));
+        }
     }
 
     /**

@@ -39,6 +39,8 @@ class FicheProjetServiceTest {
     private FicheSuiviRepository ficheSuiviRepository;
     @Mock
     private PieceJointeService pieceJointeService;
+    @Mock
+    private ReunionService reunionService;
 
     @InjectMocks
     private FicheProjetService ficheProjetService;
@@ -72,12 +74,13 @@ class FicheProjetServiceTest {
     }
 
     @Test
-    void supprimerUneFicheProjetSupprimeSesDocuments() {
+    void supprimerUneFicheProjetSupprimeSesDocumentsEtSesReunions() {
         ficheDe("chef-1");
 
         ficheProjetService.deleteFicheProjet("p1", "chef-1");
 
         verify(pieceJointeService).supprimerDeLaFiche("FICHE_PROJET", "p1");
+        verify(reunionService).supprimerDuProjet("p1");
         verify(ficheProjetRepository).deleteById("p1");
     }
 
