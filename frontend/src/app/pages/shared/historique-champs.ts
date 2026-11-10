@@ -17,6 +17,9 @@ const LIBELLES: { [cle: string]: string } = {
   statutValidation: 'Statut de validation',
   motif: 'Motif de la correction',
   document: 'Document',
+  reunion: 'Réunion',
+  date: 'Date',
+  participants: 'Participants',
 
   // Fiche de suivi
   numeroRapport: 'Numéro de rapport',

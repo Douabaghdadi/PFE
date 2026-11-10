@@ -10,6 +10,7 @@ import { PiloteQualiteNotificationService } from '../../../services/pilote-quali
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
 import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
 import { statutValidation } from '../../shared/validation-stats';
+import type { StatutValidation } from '../../../services/validation-fiche.service';
 
 /**
  * Tableau de bord du PROCESSUS qualité.
@@ -65,6 +66,15 @@ interface ProjetATraiter {
   badge: string;
   detail: string;
   ficheId?: string;
+}
+
+/** Une fiche qui attend la décision du pilote : une ligne, une action. */
+interface FicheAValider {
+  id: string;
+  type: 'projet' | 'suivi';
+  projetNom: string;
+  chefProjet: string;
+  date?: string;
 }
 
 /** Dépôts d'un mois, classés selon l'échéance de chaque fiche (périodicité du projet). */
@@ -184,6 +194,7 @@ export class PiloteDashboardComponent implements OnInit {
   /** Les alertes s'ouvrent repliées : les plus en retard d'abord, les autres sur demande. */
   alertesOuvertes = false;
   toutesLesLignes = false;
+  fichesAValiderOuvertes = false;
   /** Pendant l'impression, les listes raccourcies à l'écran sont imprimées en entier. */
   impression = false;
 
@@ -202,6 +213,8 @@ export class PiloteDashboardComponent implements OnInit {
   chefStats: ChefStat[] = [];
   derniersDepots: Depot[] = [];
   projetsATraiter: ProjetATraiter[] = [];
+  fichesAValider: FicheAValider[] = [];
+  bilanValidation = { total: 0, nbProjets: 0, nbSuivis: 0, validees: 0, aValider: 0, aCorriger: 0 };
 
   tauxConformite = 0;
   completudeMoyenne = 0;
@@ -215,6 +228,8 @@ export class PiloteDashboardComponent implements OnInit {
 
   readonly donutCircumference = DONUT_CIRCUMFERENCE;
   readonly rubriqueDefs = RUBRIQUES;
+  /** Lignes d'une seule ligne de haut : cinq tiennent dans la hauteur des trois alertes de retard. */
+  readonly nbFichesAValiderVisibles = 5;
 
   ngOnInit() {
     this.loadData();
@@ -465,6 +480,9 @@ export class PiloteDashboardComponent implements OnInit {
     const scores = fichesVisibles.map(f => this.auditDe(f)?.score).filter((s): s is number => s != null);
     this.completudeMoyenne = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
 
+    // --- Validation des fiches ---
+    this.construireValidation(rows, fichesVisibles);
+
     // --- Échéancier ---
     this.construireEcheancier(rows);
 
@@ -589,6 +607,39 @@ export class PiloteDashboardComponent implements OnInit {
     return `${suivi} ${nb > 1 ? 'attendent' : 'attend'} votre décision.`;
   }
 
+  /** Fiches projet et fiches de suivi ensemble. Même périmètre que la complétude : seules comptent les fiches dont le projet existe encore. */
+  private construireValidation(rows: ProjetRow[], suivis: FicheSuivi[]) {
+    const projets = this.fichesProjet.filter(p => !!p.id);
+    const statuts = [...projets, ...suivis].map(f => statutValidation(f.validation));
+    const compter = (statut: StatutValidation) => statuts.filter(s => s === statut).length;
+
+    this.bilanValidation = {
+      total: statuts.length,
+      nbProjets: projets.length,
+      nbSuivis: suivis.length,
+      validees: compter('VALIDEE'),
+      aValider: compter('A_VALIDER'),
+      aCorriger: compter('A_CORRIGER'),
+    };
+
+    const parProjet = new Map(rows.map(r => [r.id, r]));
+    const ligne = (id: string, type: FicheAValider['type'], projetId: string, date?: string): FicheAValider => ({
+      id,
+      type,
+      date,
+      projetNom: parProjet.get(projetId)?.nom || 'Projet inconnu',
+      chefProjet: parProjet.get(projetId)?.chefProjet || 'Non attribué',
+    });
+
+    // Une fiche à corriger attend son chef de projet, pas le pilote : elle n'est pas dans cette liste.
+    this.fichesAValider = [
+      ...projets.filter(p => statutValidation(p.validation) === 'A_VALIDER')
+        .map(p => ligne(p.id!, 'projet', p.id!, p.dateCreation)),
+      ...suivis.filter(f => f.id && statutValidation(f.validation) === 'A_VALIDER')
+        .map(f => ligne(f.id!, 'suivi', f.ficheProjetId, f.dateRapport)),
+    ].sort((a, b) => this.tsOf(a.date) - this.tsOf(b.date));
+  }
+
   private buildKpis() {
     // Espace fine insécable avant « % » (typographie française)
     this.kpis = [
@@ -634,6 +685,20 @@ export class PiloteDashboardComponent implements OnInit {
 
   get projetsATraiterVisibles(): ProjetATraiter[] {
     return this.toutesLesLignes || this.impression ? this.projetsATraiter : this.projetsATraiter.slice(0, 6);
+  }
+
+  get fichesAValiderVisibles(): FicheAValider[] {
+    return this.fichesAValiderOuvertes || this.impression
+      ? this.fichesAValider
+      : this.fichesAValider.slice(0, this.nbFichesAValiderVisibles);
+  }
+
+  get nbNonValidees(): number {
+    return this.bilanValidation.aValider + this.bilanValidation.aCorriger;
+  }
+
+  get pourcentValidees(): number {
+    return this.bilanValidation.total ? Math.round((this.bilanValidation.validees / this.bilanValidation.total) * 100) : 0;
   }
 
   get alertes(): ProjetRow[] {
@@ -854,6 +919,14 @@ export class PiloteDashboardComponent implements OnInit {
 
   viewProjet(id: string) {
     this.router.navigate(['/pilote-qualite/fiches-projet', id]);
+  }
+
+  voirFiche(fiche: FicheAValider) {
+    if (fiche.type === 'projet') {
+      this.viewProjet(fiche.id);
+    } else {
+      this.viewFicheSuivi(fiche.id);
+    }
   }
 
   viewFicheSuivi(id: string) {

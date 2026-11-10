@@ -1,0 +1,41 @@
+/* Page « Calendrier des dépôts » : même disposition que « Réunions », dont elle reprend les styles.
+   Ce fichier n'ajoute que les couleurs propres aux fiches attendues, en retard ou déposées. */
+[data-statut='EN_RETARD'] { --fond: #fee2e2; --texte: #991b1b; --point: #dc2626; }
+[data-statut='A_DEPOSER'] { --fond: #fef3c7; --texte: #92400e; --point: #d97706; }
+[data-statut='DEPOSEE'] { --fond: #dcf4e7; --texte: #065f46; --point: #059669; }
+[data-statut='PREVUE'] { --fond: #f1f5f9; --texte: #475569; --point: #94a3b8; }
+
+.cal-reunion[data-statut] { background: var(--fond); color: var(--texte); }
+
+/* ============ Fiche en retard ============ */
+.bandeau.est-en-retard {
+  border-color: #f5c6c6;
+  background: linear-gradient(100deg, #fde8e8 0%, #fef6f6 58%, var(--surface) 100%);
+}
+.est-en-retard .bandeau-date { background: #b91c1c; }
+.est-en-retard .bandeau-quand { color: #7f1d1d; }
+.est-en-retard .bandeau-echeance { border-color: #f5b5b5; color: #b91c1c; }
+.tuile.est-en-retard { background: #fee2e2; color: #b91c1c; }
+.meta-retard { font-weight: 600; color: #b91c1c; }
+
+/* Une seule action par ligne, à droite : la colonne reste moins haute que le calendrier */
+.rail-action { flex-shrink: 0; align-self: center; }
+
+/* ============ Légende ============ */
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.1rem;
+  margin: 0.85rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.legende li { display: flex; align-items: center; gap: 0.4rem; }
+.legende-point { width: 10px; height: 10px; border-radius: 50%; background: var(--point); }
+
+@media (max-width: 640px) {
+  /* Sur téléphone, un point de couleur par fiche : le détail est dans la liste */
+  .cal-reunion[data-statut] { background: var(--point); }
+}

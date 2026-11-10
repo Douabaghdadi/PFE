@@ -85,12 +85,14 @@ export class HistoriqueJournalComponent implements OnInit {
       'VALIDATION': 'Validation',
       'DEMANDE_CORRECTION': 'Demande de correction',
       'AJOUT_DOCUMENT': 'Ajout de document',
-      'RETRAIT_DOCUMENT': 'Retrait de document'
+      'RETRAIT_DOCUMENT': 'Retrait de document',
+      'PLANIFICATION_REUNION': 'Réunion planifiée',
+      'ANNULATION_REUNION': 'Réunion annulée'
     };
     return labels[action] || action;
   }
 
-  /** Pastille d'action : vert pour une création ou une validation, bleu pour une modification ou un document, ambre pour une demande de correction, rouge pour une suppression. */
+  /** Pastille d'action : vert pour une création ou une validation, bleu pour une modification, un document ou une réunion, ambre pour une demande de correction, rouge pour une suppression. */
   actionPill(action: string): string {
     const classes: { [key: string]: string } = {
       'CREATION': 'pill-termine',
@@ -99,7 +101,9 @@ export class HistoriqueJournalComponent implements OnInit {
       'VALIDATION': 'pill-termine',
       'DEMANDE_CORRECTION': 'pill-en_attente',
       'AJOUT_DOCUMENT': 'pill-en_cours',
-      'RETRAIT_DOCUMENT': 'pill-en_cours'
+      'RETRAIT_DOCUMENT': 'pill-en_cours',
+      'PLANIFICATION_REUNION': 'pill-en_cours',
+      'ANNULATION_REUNION': 'pill-en_cours'
     };
     return classes[action] || 'pill-autre';
   }

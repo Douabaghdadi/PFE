@@ -1,0 +1,381 @@
+/* Page « Réunions » : la prochaine réunion en tête, les suivantes en colonne, le calendrier du mois à côté.
+   En-tête, boutons, panneaux et fenêtres viennent des styles communs. */
+.page-container { max-width: 1240px; }
+
+.reu-avis {
+  margin: 0 0 1.25rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+.error-banner { margin-bottom: 1.25rem; }
+.reu-squelette-bandeau { height: 132px; margin-bottom: 1.25rem; }
+.reu-squelette-calendrier { height: 480px; }
+
+/* ============ Prochaine réunion ============ */
+.bandeau {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid #c9e4d6;
+  border-radius: var(--radius);
+  background: linear-gradient(100deg, #e4f6ec 0%, #f4fbf7 58%, var(--surface) 100%);
+  box-shadow: var(--shadow);
+}
+.bandeau-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 84px;
+  height: 84px;
+  border-radius: 14px;
+  background: #047857;
+  color: #fff;
+  line-height: 1.05;
+}
+.bandeau-date strong { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.bandeau-date span { font-size: 0.85rem; font-weight: 600; }
+.bandeau-icone {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: #fff;
+  color: #047857;
+  box-shadow: 0 1px 2px rgba(10, 50, 40, 0.08);
+}
+.bandeau-icone svg { width: 30px; height: 30px; }
+
+.bandeau-corps { display: flex; flex-direction: column; flex: 1; gap: 0.35rem; min-width: 0; }
+.bandeau-titre {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.bandeau-quand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  font-size: 0.92rem;
+  color: #2f5a45;
+  font-variant-numeric: tabular-nums;
+}
+.bandeau-echeance {
+  padding: 0.12rem 0.6rem;
+  border: 1px solid #a7dcc0;
+  border-radius: 999px;
+  background: #fff;
+  color: #047857;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.bandeau-personnes {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.87rem;
+  color: #2f5a45;
+  overflow-wrap: anywhere;
+}
+.bandeau-description {
+  display: -webkit-box;
+  margin: 0.1rem 0 0;
+  overflow: hidden;
+  font-size: 0.87rem;
+  line-height: 1.45;
+  color: var(--ink-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.bandeau-texte { margin: 0; font-size: 0.92rem; color: #2f5a45; }
+.bandeau-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+.bandeau-rejoindre {
+  height: 44px;
+  padding: 0 1.25rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(6, 95, 70, 0.2), 0 8px 18px -10px rgba(5, 150, 105, 0.75);
+}
+
+.avatars { display: inline-flex; flex-shrink: 0; }
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #f4fbf7;
+  border-radius: 50%;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+.avatar + .avatar { margin-left: -7px; }
+.avatar-plus { background: #fff; color: var(--ink-2); }
+
+/* Sans réunion à venir : ce que fait la planification, en trois mots */
+.etapes {
+  display: flex;
+  flex-shrink: 0;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.etapes li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 128px;
+  font-size: 0.8rem;
+  line-height: 1.3;
+  text-align: center;
+  color: #2f5a45;
+}
+.etapes svg { width: 22px; height: 22px; color: #047857; }
+
+/* ============ Colonne des réunions et calendrier ============ */
+.reu-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 350px) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.reu-grille.sans-rail { grid-template-columns: minmax(0, 1fr); }
+
+.rail { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+.rail-section { margin: 0; padding: 1.05rem 1.25rem; }
+.rail-section .panel-title { margin: 0; }
+.rail-liste { margin: 0.75rem 0 0; padding: 0; list-style: none; }
+.rail-ligne {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--line-soft);
+}
+.rail-ligne:last-child { padding-bottom: 0; }
+
+.tuile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #e4f6ec;
+  color: #047857;
+  line-height: 1.1;
+}
+.tuile strong { font-size: 1.02rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tuile span { font-size: 0.68rem; font-weight: 600; }
+.is-terminee .tuile { background: var(--line-soft); color: var(--ink-2); }
+
+.rail-info { display: flex; flex-direction: column; flex: 1; gap: 0.12rem; min-width: 0; }
+.rail-titre { font-size: 0.93rem; font-weight: 500; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+.rail-meta { font-size: 0.8rem; line-height: 1.4; color: var(--muted); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.rail-description {
+  display: -webkit-box;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--ink-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.rail-actions { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.45rem; }
+.rail-rejoindre { border-color: #a7dcc0; color: #047857; font-weight: 600; text-decoration: none; }
+.rail-rejoindre:hover:not(:disabled) { border-color: #6fc39a; background: #ecfdf5; color: #047857; }
+.rail-annuler { width: 32px; height: 32px; }
+
+/* ============ Calendrier du mois ============ */
+.cal { margin: 0; padding: 1.05rem 1.25rem 1.25rem; min-width: 0; }
+.cal-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.cal-titre { margin: 0; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; color: var(--ink); }
+.cal-nav { display: flex; gap: 0.35rem; }
+.cal-nav .icon-btn:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
+
+.cal-grille { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.cal-grille th {
+  padding: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: left;
+  color: var(--muted);
+}
+.cal-grille td {
+  height: 88px;
+  padding: 0.3rem;
+  border: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+.cal-grille td.hors-mois { background: #f8faf9; }
+
+.cal-numero {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0.15rem;
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.hors-mois .cal-numero { color: #64748b; font-weight: 400; }
+.aujourdhui .cal-numero { background: #047857; color: #fff; font-weight: 600; }
+
+.cal-reunion {
+  display: block;
+  margin-top: 2px;
+  padding: 2px 5px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #dcf4e7;
+  color: #065f46;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cal-reunion.est-terminee { background: #eef1f4; color: #475569; }
+.cal-heure { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal-plus { display: block; margin-top: 2px; padding-left: 5px; font-size: 0.72rem; font-weight: 500; color: var(--muted); }
+
+/* ============ Fenêtres ============ */
+.dlg { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+
+/* Planification : la réunion à gauche, les participants à droite ; seul le corps défile, les boutons restent visibles */
+.dlg-large { width: min(820px, calc(100vw - 2rem)); overflow: hidden; }
+.dlg-form { display: flex; flex-direction: column; max-height: calc(100dvh - 2rem); }
+.dlg-entete { flex-shrink: 0; margin-bottom: 0; padding: 1.25rem 1.5rem 0.9rem; }
+.dlg-corps { flex: 1; min-height: 0; padding: 0.2rem 1.5rem 1.1rem; overflow-y: auto; }
+.dlg-colonnes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; }
+.dlg-squelette { height: 400px; }
+
+.champs { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
+.durees { grid-template-columns: repeat(4, 1fr); margin-top: 0; }
+.durees .preset { height: 42px; border-color: var(--field-line); border-radius: 10px; font-size: 0.86rem; }
+.durees .preset.is-active { border-color: transparent; }
+.reu-facultatif { font-weight: 400; color: var(--muted); }
+.reu-texte { display: block; height: auto; min-height: 4.6rem; padding: 0.6rem 0.9rem; line-height: 1.5; resize: vertical; }
+
+.invites { display: flex; flex-direction: column; min-width: 0; margin: 0; padding: 0; border: 0; }
+.invites-legende { display: flex; align-items: center; gap: 0.45rem; padding: 0; }
+.invites-recherche { flex: 0 0 auto; margin-bottom: 0.5rem; }
+.invites-liste {
+  height: 318px;
+  overflow-y: auto;
+  border: 1px solid var(--field-line);
+  border-radius: 10px;
+}
+.invites-groupe {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+  background: #f1f6f3;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.invite {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.invite + .invite { border-top: 1px solid var(--line-soft); }
+.invite:hover { background: #f1f7f4; }
+.invite.est-choisi { background: #e4f6ec; }
+.invite input { flex-shrink: 0; width: 16px; height: 16px; margin: 0; accent-color: #059669; }
+.invite-nom { flex: 1; min-width: 0; color: var(--ink); overflow-wrap: anywhere; }
+.invites-note { margin: 0; padding: 0.6rem 0.75rem; font-size: 0.84rem; line-height: 1.4; color: var(--muted); }
+.invites-manque { background: #fffbeb; color: #92400e; }
+
+.dlg-pied {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1.5rem;
+  border-top: 1px solid var(--line-soft);
+  background: #f8faf9;
+}
+.dlg-pied .dlg-actions { flex-shrink: 0; margin-top: 0; }
+.dlg-aide { margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+/* ============ Adaptation ============ */
+@media (max-width: 1040px) {
+  .reu-grille { grid-template-columns: minmax(0, 1fr); }
+  .etapes { display: none; }
+}
+
+@media (max-width: 720px) {
+  .dlg-colonnes { grid-template-columns: minmax(0, 1fr); }
+  .invites-liste { height: 230px; }
+  .dlg-pied { flex-wrap: wrap; }
+  .dlg-pied .dlg-actions { flex-direction: row; width: 100%; }
+  .dlg-pied .dlg-actions .btn { flex: 1; }
+}
+
+@media (max-width: 640px) {
+  .page-actions, .page-actions .btn { width: 100%; justify-content: center; }
+  .bandeau { flex-wrap: wrap; align-items: flex-start; gap: 0.9rem; padding: 1rem; }
+  .bandeau-date { width: 64px; height: 64px; }
+  .bandeau-date strong { font-size: 1.5rem; }
+  .bandeau-corps { flex-basis: calc(100% - 80px); }
+  .bandeau-personnes { flex-wrap: wrap; }
+  .bandeau-actions { width: 100%; }
+  .bandeau-rejoindre { flex: 1; }
+
+  /* Sur téléphone, un point vert par réunion : le détail est dans la liste */
+  .cal-grille td { height: 48px; padding: 0.2rem; }
+  .cal-numero { width: 22px; height: 22px; font-size: 0.75rem; }
+  .cal-reunion, .cal-reunion.est-terminee {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin: 0 2px 0 0;
+    padding: 0;
+    border-radius: 50%;
+    background: #059669;
+    font-size: 0;
+  }
+  .cal-reunion.est-terminee { background: #94a3b8; }
+  .cal-plus { display: none; }
+}

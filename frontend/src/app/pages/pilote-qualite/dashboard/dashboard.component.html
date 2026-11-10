@@ -157,6 +157,76 @@
         </div>
       </section>
 
+      <!-- Validation des fiches : combien sont validées, et celles qui attendent une décision -->
+      <section class="panel">
+        <h2 class="panel-title">Validation des fiches</h2>
+        <p class="panel-sub">
+          {{ pl(bilanValidation.total, 'fiche') }} au total&nbsp;:
+          {{ pl(bilanValidation.nbProjets, 'fiche projet', 'fiches projet') }} et {{ pl(bilanValidation.nbSuivis, 'fiche de suivi', 'fiches de suivi') }}.
+        </p>
+
+        <p *ngIf="!bilanValidation.total" class="panel-empty">Aucune fiche déposée.</p>
+
+        <div *ngIf="bilanValidation.total">
+          <div class="validation-etats">
+            <div class="validation-etat etat-validee" [class.etat-nul]="!bilanValidation.validees">
+              <span class="etat-label">Validées</span>
+              <span class="etat-valeur">{{ bilanValidation.validees }}</span>
+              <span class="etat-detail">{{ pourcentValidees }}&#8239;% des fiches</span>
+            </div>
+            <div class="validation-etat etat-attente" [class.etat-nul]="!nbNonValidees">
+              <span class="etat-label">Non validées</span>
+              <span class="etat-valeur">{{ nbNonValidees }}</span>
+              <span class="etat-detail">{{ bilanValidation.aValider }} à valider, {{ bilanValidation.aCorriger }} à corriger</span>
+            </div>
+            <div class="validation-etat etat-corriger" [class.etat-nul]="!bilanValidation.aCorriger">
+              <span class="etat-label">À corriger</span>
+              <span class="etat-valeur">{{ bilanValidation.aCorriger }}</span>
+              <span class="etat-detail">En attente du chef de projet</span>
+            </div>
+          </div>
+
+          <div class="panel-head validation-liste-head">
+            <h3 class="panel-title validation-liste-titre">
+              Fiches à valider <span class="count" *ngIf="fichesAValider.length">{{ fichesAValider.length }}</span>
+            </h3>
+            <button *ngIf="fichesAValider.length > nbFichesAValiderVisibles" type="button" class="link-btn"
+                    (click)="fichesAValiderOuvertes = !fichesAValiderOuvertes">
+              {{ fichesAValiderOuvertes ? 'Réduire' : 'Afficher les ' + (fichesAValider.length - nbFichesAValiderVisibles) + ' autres' }}
+            </button>
+          </div>
+
+          <p *ngIf="!fichesAValider.length" class="panel-empty">Aucune fiche n'attend votre décision.</p>
+
+          <div *ngIf="fichesAValider.length" class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th scope="col">Projet</th>
+                  <th scope="col">Fiche</th>
+                  <th scope="col" class="col-sm">Chef de projet</th>
+                  <th scope="col" class="col-md">Déposée le</th>
+                  <th scope="col"><span class="visually-hidden">Action</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let f of fichesAValiderVisibles">
+                  <td class="cell-strong">{{ f.projetNom }}</td>
+                  <td class="nowrap">{{ f.type === 'projet' ? 'Fiche projet' : 'Fiche de suivi' }}</td>
+                  <td class="col-sm">
+                    <span class="person"><span class="avatar" aria-hidden="true">{{ initiales(f.chefProjet) }}</span>{{ f.chefProjet }}</span>
+                  </td>
+                  <td class="nowrap col-md">{{ f.date ? (f.date | date:'dd/MM/yyyy') : '—' }}</td>
+                  <td class="cell-action">
+                    <button type="button" class="btn btn-small btn-fiche" (click)="voirFiche(f)">Voir la fiche</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- Conformité / Échéancier / Complétude -->
       <section class="grid-3">
         <div class="panel">

@@ -63,8 +63,38 @@
 .pj-nom:disabled { cursor: progress; opacity: 0.6; }
 .pj-meta { font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
 
+/* Même hauteur et mêmes angles que la corbeille, à côté de laquelle il se place. */
+.pj-resumer {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 0.8rem;
+  border: 1px solid #b9d6c7;
+  border-radius: 9px;
+  background: var(--surface);
+  color: #047857;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pj-resumer:hover:not(:disabled) { background: #f1f7f4; }
+.pj-resumer:focus-visible { outline: 2px solid #059669; outline-offset: 2px; border-radius: 3px; }
+.pj-resumer:disabled { cursor: not-allowed; opacity: 0.6; }
+
+/* Fenêtre du résumé : plus large que les confirmations, et défilante si le texte dépasse l'écran. */
+.dlg-resume { width: min(560px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+.pj-resume-entete { min-width: 0; }
+.dlg-resume .dlg-sub { max-width: 100%; }
+.pj-resume-texte { margin: 0; color: var(--ink-2); font-size: 0.95rem; line-height: 1.6; overflow-wrap: anywhere; }
+.pj-resume-actions { margin-top: 1.2rem; }
+
 .dlg-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
 
 @media (max-width: 600px) {
   .pj-ajouter { width: 100%; justify-content: center; }
+  /* Trop étroit pour tenir à côté du nom : le bouton passe dessous, toujours à droite. */
+  .pj-ligne { flex-wrap: wrap; row-gap: 0.4rem; }
+  .pj-info { flex-basis: calc(100% - 46px - 36px - 1.7rem); }
+  .pj-resumer { order: 1; margin-left: auto; }
 }

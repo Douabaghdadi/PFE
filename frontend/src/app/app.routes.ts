@@ -32,6 +32,8 @@ import { HistoriqueProjetComponent } from './pages/historique-projet/historique-
 import { PiloteHistoriqueProjetComponent } from './pages/pilote-qualite/historique-projet/historique-projet.component';
 import { TeamSuggestionComponent } from './pages/team-suggestion/team-suggestion.component';
 import { FeaturesComponent } from './pages/features/features.component';
+import { ReunionsComponent } from './pages/reunions/reunions.component';
+import { CalendrierSuiviComponent } from './pages/calendrier-suivi/calendrier-suivi.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -46,6 +48,7 @@ export const routes: Routes = [
   { path: 'fiche-suivi/:id', component: FicheSuiviDetailComponent },
   { path: 'fiche-suivi/:id/gantt', component: FicheSuiviGanttComponent },
   { path: 'fiches-suivi', component: FichesSuiviListComponent },
+  { path: 'calendrier-suivi', component: CalendrierSuiviComponent },
   { path: 'projets', component: ProjetsListComponent },
   { path: 'projets/:id', component: ProjetDetailComponent },
   { path: 'projets/:id/historique', component: HistoriqueProjetComponent },
@@ -81,6 +84,7 @@ export const routes: Routes = [
     ]
   },
   { path: 'team-suggestion', component: TeamSuggestionComponent },
+  { path: 'reunions', component: ReunionsComponent },
   { path: 'features', component: FeaturesComponent },
   { path: '**', redirectTo: '' }
 ];

@@ -5,10 +5,13 @@ import type { TypeFiche, ValidationFiche } from '../../services/validation-fiche
 const FORMATS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'png', 'jpg', 'jpeg'];
 const TAILLE_MAX_OCTETS = 10 * 1024 * 1024;
 const NOMBRE_MAX = 10;
+/** Le serveur ne sait pas lire ces deux anciens formats. */
+const FORMATS_SANS_RESUME = ['doc', 'ppt'];
 
 /**
  * Documents joints à une fiche, communs aux quatre pages de détail. Le serveur indique qui peut les
  * gérer : le chef de projet de la fiche ajoute et retire, le pilote qualité et l'administrateur téléchargent.
+ * Seul le pilote qualité peut demander le résumé d'un document par l'IA.
  */
 @Component({
   selector: 'app-pieces-jointes',
@@ -27,21 +30,28 @@ export class PiecesJointesComponent implements OnInit {
   readonly validationChangee = output<ValidationFiche>();
 
   private dialogue = viewChild<ElementRef<HTMLDialogElement>>('dialogue');
+  private fenetreResume = viewChild<ElementRef<HTMLDialogElement>>('fenetreResume');
   private boutonAjouter = viewChild<ElementRef<HTMLButtonElement>>('boutonAjouter');
 
   readonly formatsAcceptes = FORMATS.map(format => `.${format}`).join(',');
 
   readonly pieces = signal<PieceJointe[]>([]);
   readonly peutGerer = signal(false);
+  private readonly resumeAutorise = signal(false);
   readonly chargement = signal(true);
   readonly envoiEnCours = signal(false);
   readonly telechargementId = signal<string | null>(null);
+  readonly resumeEnCoursId = signal<string | null>(null);
+  private readonly resumeOuvertId = signal<string | null>(null);
+  readonly erreurResume = signal('');
   readonly aRetirer = signal<PieceJointe | null>(null);
   readonly retraitEnCours = signal(false);
   readonly erreur = signal('');
   readonly annonce = signal('');
 
   readonly limiteAtteinte = computed(() => this.pieces().length >= NOMBRE_MAX);
+  /** Lu dans la liste : la fenêtre affiche le résumé dès qu'il arrive. */
+  readonly pieceResumee = computed(() => this.pieces().find(piece => piece.id === this.resumeOuvertId()));
 
   ngOnInit() {
     this.service.lister(this.type(), this.ficheId()).subscribe({
@@ -111,6 +121,50 @@ export class PiecesJointesComponent implements OnInit {
     });
   }
 
+  /** Le résumé s'affiche dans une fenêtre : rédigé au premier clic, simplement relu ensuite. */
+  ouvrirResume(piece: PieceJointe) {
+    this.erreur.set('');
+    this.erreurResume.set('');
+    this.resumeOuvertId.set(piece.id);
+    this.fenetreResume()?.nativeElement.showModal();
+    if (piece.resume || this.resumeEnCoursId()) return;
+
+    this.resumeEnCoursId.set(piece.id);
+    this.service.resumer(piece.id).subscribe({
+      next: (documentResume) => {
+        this.resumeEnCoursId.set(null);
+        this.pieces.update(pieces => pieces.map(p => p.id === documentResume.id ? documentResume : p));
+      },
+      error: (err) => {
+        this.resumeEnCoursId.set(null);
+        const message = err?.error?.message || 'Le résumé n\'a pas pu être produit. Réessayez.';
+        // Si la fenêtre a été refermée entre-temps, le message va dans le panneau
+        (this.resumeOuvertId() === piece.id ? this.erreurResume : this.erreur).set(message);
+      }
+    });
+  }
+
+  fermerResume() {
+    const fenetre = this.fenetreResume()?.nativeElement;
+    if (fenetre?.open) fenetre.close();
+    this.resumeOuvertId.set(null);
+  }
+
+  /** Un clic sur le fond assombri ferme la fenêtre ; le résumé en cours continue et sera gardé. */
+  onResumeClick(evenement: MouseEvent) {
+    if (evenement.target === this.fenetreResume()?.nativeElement) this.fermerResume();
+  }
+
+  libelleResume(piece: PieceJointe): string {
+    if (piece.resume) return 'Voir le résumé';
+    return this.resumeEnCoursId() === piece.id ? 'Résumé en cours…' : 'Résumer ce document';
+  }
+
+  /** Le bouton n'existe que pour le pilote qualité, et pas pour les deux formats que le serveur ne sait pas lire. */
+  peutResumer(piece: PieceJointe): boolean {
+    return this.resumeAutorise() && (!!piece.resume || !FORMATS_SANS_RESUME.includes(extension(piece.nomFichier)));
+  }
+
   demanderRetrait(piece: PieceJointe) {
     this.erreur.set('');
     this.aRetirer.set(piece);
@@ -157,6 +211,7 @@ export class PiecesJointesComponent implements OnInit {
   private appliquer(etat: PiecesJointesFiche) {
     this.pieces.set(etat.pieces);
     this.peutGerer.set(etat.peutGerer);
+    this.resumeAutorise.set(etat.peutResumer);
   }
 
   /** Le format en clair sur la ligne : « PDF », « DOCX ». */

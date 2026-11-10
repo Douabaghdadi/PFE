@@ -53,6 +53,13 @@
             </button>
             <span class="pj-meta">{{ taille(piece.taille) }} · Ajouté le {{ date(piece.dateDepot) }} par {{ piece.deposeParNom }}</span>
           </div>
+          @if (peutResumer(piece)) {
+            <button type="button" class="pj-resumer" (click)="ouvrirResume(piece)" [disabled]="!piece.resume && resumeEnCoursId() !== null"
+                    [attr.aria-label]="libelleResume(piece) + ' : ' + piece.nomFichier"
+                    [title]="piece.resume ? '' : 'Le document est envoyé à Gemini pour en rédiger le résumé'">
+              {{ libelleResume(piece) }}
+            </button>
+          }
           @if (peutGerer()) {
             <button type="button" class="icon-btn is-danger" (click)="demanderRetrait(piece)"
                     [attr.aria-label]="'Retirer ' + piece.nomFichier" title="Retirer ce document">
@@ -66,6 +73,46 @@
     </ul>
   }
 </section>
+
+<!-- ============ Résumé d'un document ============ -->
+<dialog #fenetreResume class="dlg dlg-resume" aria-labelledby="resume-titre" (click)="onResumeClick($event)" (close)="fermerResume()">
+  <div class="dlg-inner">
+    <button type="button" class="icon-btn dlg-close" (click)="fermerResume()" aria-label="Fermer" title="Fermer">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+
+    <div class="dlg-head">
+      <span class="dlg-icon" aria-hidden="true">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </span>
+      <div class="pj-resume-entete">
+        <h2 id="resume-titre" class="dlg-title">Résumé du document</h2>
+        <p class="dlg-sub" [title]="pieceResumee()?.nomFichier">{{ pieceResumee()?.nomFichier }}</p>
+      </div>
+    </div>
+
+    <div role="status">
+      @if (pieceResumee()?.resume; as resume) {
+        <p class="pj-resume-texte">{{ resume }}</p>
+        <p class="pj-aide">Rédigé par l'IA à partir du document : à vérifier avant de s'y fier.</p>
+      } @else if (!erreurResume()) {
+        <p class="pj-resume-texte">Résumé en cours, cela peut prendre quelques secondes…</p>
+      }
+    </div>
+
+    @if (erreurResume()) {
+      <div class="pj-erreur" role="alert">{{ erreurResume() }}</div>
+    }
+
+    <div class="dlg-actions pj-resume-actions">
+      <button type="button" class="btn btn-secondary" (click)="fermerResume()">Fermer</button>
+    </div>
+  </div>
+</dialog>
 
 <!-- ============ Retrait d'un document ============ -->
 <dialog #dialogue class="dlg" aria-labelledby="retrait-titre" (click)="onDialogueClick($event)" (close)="fermerDialogue()">

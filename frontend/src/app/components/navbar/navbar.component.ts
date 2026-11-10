@@ -54,6 +54,11 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
                   Fiches de Suivi
                 </a>
+                <a routerLink="/reunions" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Réunions
+                </a>
                 <a routerLink="/pilote-qualite/notifications" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
                    onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
                    onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
@@ -132,8 +137,22 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                         Mes fiches de suivi
                       </a>
                     </li>
+                    <li><hr class="dropdown-divider" style="margin: 0.5rem 0;"></li>
+                    <li>
+                      <a class="dropdown-item d-flex align-items-center" routerLink="/calendrier-suivi" style="padding: 0.5rem 1rem; border-radius: 0.375rem;">
+                        <svg style="width: 16px; height: 16px; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Calendrier des dépôts
+                      </a>
+                    </li>
                   </ul>
                 </div>
+                <a routerLink="/reunions" class="nav-link px-3 py-2" style="color: #6b7280; font-weight: 500; border-radius: 0.375rem; transition: all 0.2s;"
+                   onmouseover="this.style.backgroundColor='#f3f4f6'; this.style.color='#111827';" 
+                   onmouseout="this.style.backgroundColor='transparent'; this.style.color='#6b7280';">
+                  Réunions
+                </a>
               }
 
               @if (authService.hasRole('ROLE_ADMIN')) {
@@ -322,6 +341,9 @@ import { UserNotificationService, Notification } from '../../services/user-notif
               <a routerLink="/pilote-qualite/fiches-suivi" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
                 Fiches de Suivi
               </a>
+              <a routerLink="/reunions" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
+                Réunions
+              </a>
               <a routerLink="/pilote-qualite/notifications" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500;">
                 Messagerie
               </a>
@@ -363,6 +385,13 @@ import { UserNotificationService, Notification } from '../../services/user-notif
                 </svg>
                 Mes fiches de suivi
               </a>
+              <a routerLink="/calendrier-suivi" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500; padding-left: 1.5rem !important;">
+                <svg style="width: 14px; height: 14px; margin-right: 0.5rem; display: inline-block;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Calendrier des dépôts
+              </a>
+              <a routerLink="/reunions" class="d-block py-2 px-3 text-decoration-none" style="color: #6b7280; font-weight: 500; padding-top: 0.75rem !important;">Réunions</a>
             }
 
             @if (authService.hasRole('ROLE_ADMIN')) {
@@ -481,6 +510,8 @@ export class NavbarComponent implements OnInit {
       } else {
         return `/fiche-suivi/${notification.entityId}`;
       }
+    } else if (notification.entityType === 'REUNION') {
+      return '/reunions';
     }
     return '#';
   }

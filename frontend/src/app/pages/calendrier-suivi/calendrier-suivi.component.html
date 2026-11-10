@@ -1,0 +1,180 @@
+<main class="page">
+  <div class="page-container">
+
+    <!-- ============ En-tête ============ -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Calendrier des dépôts</h1>
+      </div>
+    </header>
+
+    @if (erreur()) {
+      <div class="error-banner" role="alert"><span>{{ erreur() }}</span></div>
+    }
+
+    @if (avisSansEcheance()) {
+      <p class="reu-avis">{{ avisSansEcheance() }}</p>
+    }
+
+    @if (chargement()) {
+      <div aria-busy="true">
+        <div class="skeleton reu-squelette-bandeau"></div>
+        <div class="skeleton reu-squelette-calendrier"></div>
+      </div>
+    } @else if (calendrierCharge()) {
+
+      <!-- ============ Fiche la plus urgente ============ -->
+      @if (plusUrgente(); as urgente) {
+        <section class="bandeau" [class.est-en-retard]="estEnRetard(urgente)" aria-labelledby="bandeau-titre">
+          <span class="bandeau-date" aria-hidden="true">
+            <strong>{{ jour(urgente) }}</strong>
+            <span>{{ mois(urgente) }}</span>
+          </span>
+
+          <div class="bandeau-corps">
+            <h2 id="bandeau-titre" class="bandeau-titre">{{ urgente.nomProjet }}</h2>
+            <p class="bandeau-quand">
+              <span class="bandeau-echeance">{{ delai(urgente) }}</span>
+              <span>Attendue le {{ dateLongue(urgente) }}</span>
+            </p>
+          </div>
+
+          <div class="bandeau-actions">
+            <a class="btn btn-primary bandeau-rejoindre" routerLink="/fiche-suivi/new" [queryParams]="{ projetId: urgente.projetId }"
+               [attr.aria-label]="'Déposer la fiche de suivi du projet ' + urgente.nomProjet">
+              Déposer la fiche
+            </a>
+          </div>
+        </section>
+      } @else {
+        <section class="bandeau bandeau-vide" aria-labelledby="bandeau-titre">
+          <span class="bandeau-icone" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </span>
+          <div class="bandeau-corps">
+            <h2 id="bandeau-titre" class="bandeau-titre">Aucune fiche à déposer</h2>
+            <p class="bandeau-texte">Les dates apparaîtront ici dès qu'un de vos projets en cours aura une périodicité de suivi.</p>
+          </div>
+        </section>
+      }
+
+      <div class="reu-grille" [class.sans-rail]="!ensuite().length && !recentes().length">
+
+        @if (ensuite().length || recentes().length) {
+          <div class="rail">
+            <!-- ============ Fiches attendues ensuite ============ -->
+            @if (ensuite().length) {
+              <section class="panel rail-section" aria-labelledby="ensuite-titre">
+                <h2 id="ensuite-titre" class="panel-title">
+                  À déposer ensuite
+                  <span class="count">{{ ensuite().length }}</span>
+                </h2>
+                <ul class="rail-liste">
+                  @for (echeance of ensuite(); track echeance.projetId) {
+                    <li class="rail-ligne">
+                      <span class="tuile" [class.est-en-retard]="estEnRetard(echeance)" aria-hidden="true">
+                        <strong>{{ jour(echeance) }}</strong>
+                        <span>{{ mois(echeance) }}</span>
+                      </span>
+                      <div class="rail-info">
+                        <span class="rail-titre">{{ echeance.nomProjet }}</span>
+                        <span class="rail-meta" [class.meta-retard]="estEnRetard(echeance)">{{ delai(echeance) }}</span>
+                      </div>
+                      <a class="btn btn-small rail-rejoindre rail-action" routerLink="/fiche-suivi/new" [queryParams]="{ projetId: echeance.projetId }"
+                         [attr.aria-label]="'Déposer la fiche de suivi du projet ' + echeance.nomProjet">
+                        Déposer
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+
+            <!-- ============ Fiches déposées ============ -->
+            @if (recentes().length) {
+              <section class="panel rail-section" aria-labelledby="deposees-titre">
+                <h2 id="deposees-titre" class="panel-title">Récemment déposées</h2>
+                <ul class="rail-liste">
+                  @for (depot of recentes(); track depot.ficheSuiviId) {
+                    <li class="rail-ligne">
+                      <span class="tuile" aria-hidden="true">
+                        <strong>{{ jour(depot) }}</strong>
+                        <span>{{ mois(depot) }}</span>
+                      </span>
+                      <div class="rail-info">
+                        <span class="rail-titre">{{ depot.nomProjet }}</span>
+                        <span class="rail-meta">Déposée le {{ dateLongue(depot) }}</span>
+                      </div>
+                      <a class="btn btn-small rail-rejoindre rail-action" [routerLink]="['/fiche-suivi', depot.ficheSuiviId]"
+                         [attr.aria-label]="'Voir la fiche de suivi du projet ' + depot.nomProjet + ' déposée le ' + dateLongue(depot)">
+                        Voir
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+          </div>
+        }
+
+        <!-- ============ Calendrier du mois ============ -->
+        <section class="panel cal" aria-labelledby="cal-titre">
+          <div class="cal-tete">
+            <h2 id="cal-titre" class="cal-titre" aria-live="polite">{{ titreMois() }}</h2>
+            <div class="cal-nav">
+              <button type="button" class="icon-btn" (click)="changerMois(-1)" aria-label="Mois précédent" title="Mois précédent">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+              <button type="button" class="icon-btn" (click)="changerMois(1)" aria-label="Mois suivant" title="Mois suivant">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <table class="cal-grille">
+            <caption class="visually-hidden">Fiches de suivi du mois, par jour</caption>
+            <thead>
+              <tr>
+                @for (nom of joursSemaine; track nom.court) {
+                  <th scope="col" [attr.abbr]="nom.long">{{ nom.court }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (semaine of semaines(); track semaine[0].cle) {
+                <tr>
+                  @for (cellule of semaine; track cellule.cle) {
+                    <td [class.hors-mois]="!cellule.dansLeMois" [class.aujourdhui]="cellule.aujourdhui">
+                      <span class="cal-numero">{{ cellule.numero }}</span>
+                      @for (echeance of cellule.elements.slice(0, 2); track $index) {
+                        <span class="cal-reunion" [attr.data-statut]="echeance.statut"
+                              [title]="libelle(echeance.statut) + ' : ' + echeance.nomProjet">
+                          <span class="visually-hidden">{{ libelle(echeance.statut) }} : </span>{{ echeance.nomProjet }}
+                        </span>
+                      }
+                      @if (cellule.elements.length > 2) {
+                        <span class="cal-plus" [title]="nomsEnPlus(cellule.elements)">+{{ cellule.elements.length - 2 }}</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+
+          <ul class="legende" aria-label="Légende du calendrier">
+            @for (statut of legende; track statut) {
+              <li><span class="legende-point" [attr.data-statut]="statut" aria-hidden="true"></span>{{ libelle(statut) }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+    }
+  </div>
+</main>

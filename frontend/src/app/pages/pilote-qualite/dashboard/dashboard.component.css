@@ -163,10 +163,40 @@
 .sev-modere { background: var(--amber); }
 
 /* Relancer : l'action de la ligne, en vert doux pour rester discrète */
-.btn-relance { gap: 0.4rem; border-color: #bde8d0; background: #f0fdf6; color: #047857; font-weight: 600; }
+.btn-relance, .btn-fiche { gap: 0.4rem; border-color: #bde8d0; background: #f0fdf6; color: #047857; font-weight: 600; }
 .btn-relance svg { width: 15px; height: 15px; }
-.btn-relance:hover:not(:disabled) { border-color: #8fd8b3; background: #dff7ea; color: #065f46; }
+.btn-relance:hover:not(:disabled), .btn-fiche:hover:not(:disabled) { border-color: #8fd8b3; background: #dff7ea; color: #065f46; }
 .btn-relance.is-sent { border-color: transparent; background: transparent; color: #047857; }
+
+/* ============ Validation des fiches : un seul bandeau, trois états aux teintes des pastilles ============ */
+.validation-etats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px; /* un filet blanc entre les états : un seul bloc, comme le groupe de boutons de l'en-tête */
+  margin-bottom: 1.35rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.validation-etat {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.9rem;
+  align-content: center;
+  padding: 0.85rem 1.25rem;
+  background: var(--etat-fond);
+  color: var(--etat-texte);
+}
+.etat-label { grid-column: 2; align-self: end; font-size: 0.9rem; font-weight: 600; color: var(--etat-titre); }
+.etat-detail { grid-column: 2; align-self: start; font-size: 0.8rem; text-wrap: pretty; }
+/* Le chiffre ne s'aligne sur aucune colonne : chiffres proportionnels, sans le « 1 » à empattement des chiffres tabulaires */
+.etat-valeur { grid-column: 1; grid-row: 1 / span 2; align-self: center; font-size: 2.1rem; font-weight: 600; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: proportional-nums; color: var(--etat-chiffre); }
+.etat-validee { --etat-fond: #eaf7f0; --etat-chiffre: #047857; --etat-titre: #0b5d43; --etat-texte: #2f5a45; }
+.etat-attente { --etat-fond: #fef5e3; --etat-chiffre: #b45309; --etat-titre: #92400e; --etat-texte: #7a4a12; }
+.etat-corriger { --etat-fond: #fdeeee; --etat-chiffre: #b91c1c; --etat-titre: #991b1b; --etat-texte: #8a2c2c; }
+/* Un zéro n'est ni une réussite ni une alerte : pas de couleur d'état */
+.etat-nul { --etat-fond: #f1f5f3; --etat-chiffre: var(--muted); --etat-titre: var(--ink-2); --etat-texte: var(--muted); }
+.validation-liste-head { align-items: center; margin-bottom: 0.7rem; }
+.validation-liste-titre { font-size: 0.95rem; }
 
 /* ============ Grilles ============ */
 .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
@@ -343,6 +373,9 @@
   .page-title { font-size: 1.5rem; }
   /* Téléphone : l'indicateur de tête sur toute la largeur, les quatre autres en 2 × 2 */
   .kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+  .validation-etats { grid-template-columns: minmax(0, 1fr); }
+  /* États empilés : même largeur de chiffre, pour que les libellés s'alignent */
+  .etat-valeur { min-width: 2.75rem; }
   .kpi-lead { grid-column: 1 / -1; grid-row: auto; }
   .kpi { padding: 0.95rem 1rem 1rem; }
   .kpi-value { font-size: 1.75rem; }
@@ -427,4 +460,12 @@
   .depot-score { width: 2.6rem; font-size: 0.8rem; }
 
   .bar-cell { min-width: 0; }
+
+  .validation-etats { margin-bottom: 0.6rem; border-radius: 8px; }
+  .validation-etat { column-gap: 0.5rem; padding: 0.4rem 0.7rem; }
+  .etat-valeur { font-size: 1.2rem; }
+  .etat-label { font-size: 0.72rem; }
+  .etat-detail { font-size: 0.64rem; }
+  .validation-liste-head { margin-bottom: 0.3rem; }
+  .validation-liste-titre { font-size: 0.78rem; }
 }
