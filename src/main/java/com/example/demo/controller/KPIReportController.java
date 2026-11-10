@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.AIKPIReportDTO;
-import com.example.demo.dto.AuditReportingExportDTO;
 import com.example.demo.dto.ProjetKPIReportDTO;
 import com.example.demo.service.AIKPIService;
 import com.example.demo.service.KPIService;
@@ -131,30 +130,6 @@ public class KPIReportController {
         } catch (RuntimeException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * Export Excel de l'audit du reporting affiché sur le tableau de bord du pilote qualité.
-     * La page envoie les lignes qu'elle a calculées : le classeur reprend exactement ce qui est à l'écran.
-     */
-    @PostMapping("/audit-reporting/excel")
-    public ResponseEntity<byte[]> downloadAuditReportingExcel(@RequestBody AuditReportingExportDTO audit) {
-        try {
-            byte[] excelContent = excelReportService.generateAuditReportingExcel(audit);
-
-            String filename = "audit_reporting_qualite_"
-                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(new MediaType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-            headers.setContentDispositionFormData("attachment", filename);
-            headers.setContentLength(excelContent.length);
-
-            return new ResponseEntity<>(excelContent, headers, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
