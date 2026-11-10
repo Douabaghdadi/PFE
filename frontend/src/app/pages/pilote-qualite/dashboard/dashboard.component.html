@@ -12,21 +12,13 @@
       </div>
 
       <div class="page-actions">
-        <!-- Deux actions secondaires jointes, une seule action principale à côté -->
-        <div class="btn-group" role="group" aria-label="Exporter ou imprimer">
-          <button type="button" class="btn btn-secondary" (click)="exportExcel()" [disabled]="loading || !rows.length || exportEnCours" title="Exporter l'audit de reporting au format Excel">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-9-4l4 4m0 0l4-4m-4 4V4"/>
-            </svg>
-            {{ exportEnCours ? 'Génération…' : 'Export Excel' }}
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-            </svg>
-            Imprimer
-          </button>
-        </div>
+        <!-- Une action secondaire, l'action principale à côté -->
+        <button type="button" class="btn btn-secondary" (click)="imprimer()" title="Imprimer ou enregistrer en PDF">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          Imprimer
+        </button>
         <a class="btn btn-primary" routerLink="/pilote-qualite/rapport-bi" title="Ouvrir le tableau de bord Power BI">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
@@ -36,11 +28,6 @@
         </a>
       </div>
     </header>
-
-    <div *ngIf="exportErreur" class="error-banner export-error" role="alert">
-      <span>{{ exportErreur }}</span>
-      <button type="button" class="btn btn-secondary" (click)="exportExcel()">Réessayer</button>
-    </div>
 
     <!-- ============ Chargement ============ -->
     <div *ngIf="loading" class="skeleton-wrap" aria-busy="true">
@@ -447,6 +434,3 @@
     </div>
   </div>
 </main>
-
-<!-- Chatbot IA -->
-<app-chatbot context="pilote_qualite"></app-chatbot>

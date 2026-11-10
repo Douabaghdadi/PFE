@@ -148,46 +148,15 @@
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.identite { display: flex; flex-direction: column; min-width: 0; }
-/* projets-ui.css garde le dernier élément d'une « personne » sur une ligne : ici nom et email peuvent se replier */
-.person > span.identite { overflow: visible; white-space: normal; }
-.identite strong { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
-.identite span { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; }
-.role-mobile { display: none; }
-.role-plus { margin-left: 0.35rem; font-size: 0.78rem; font-weight: 600; color: var(--muted); }
-
 /* Part du portefeuille : nombre de projets, barre, pourcentage */
 .part { display: flex; align-items: center; gap: 0.6rem; min-width: 150px; }
 .part-nb { width: 1.5rem; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
 .part .track { flex: 1; min-width: 50px; }
 .part-pct { width: 2.6rem; text-align: right; font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* Tri des comptes : boutons groupés, celui en cours en vert doux */
-.sort-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 0.3rem; }
-.sort-label { margin-right: 0.2rem; font-size: 0.82rem; color: var(--muted); }
-.sort-group button {
-  height: 32px;
-  padding: 0 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--ink-2);
-  font: inherit;
-  font-size: 0.83rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
-}
-.sort-group button:hover { border-color: #b9d6c7; background: #f1f7f4; }
-.sort-group button.is-active { border-color: #9fd3b8; background: #e9f6ef; color: #065f46; font-weight: 600; }
-.sort-group button:focus-visible { outline: 2px solid #059669; outline-offset: 2px; }
-
 /* ============ Adaptation ============ */
 @media (max-width: 1100px) {
   .grid-2 { grid-template-columns: minmax(0, 1fr); }
-}
-@media (max-width: 900px) {
-  .col-md { display: none; }
 }
 @media (max-width: 720px) {
   .panel-pad { padding: 1.1rem 1rem 0; }
@@ -199,27 +168,22 @@
   .volume-total { font-size: 0.7rem; }
 }
 @media (max-width: 600px) {
-  .col-sm, .col-role { display: none; }
-  .identite .role-mobile { display: block; margin-top: 0.1rem; font-size: 0.78rem; font-weight: 600; color: var(--ink-2); }
+  .col-sm { display: none; }
   /* Part du portefeuille : le pourcentage suffit, la barre laisse la place aux fiches */
   .part { min-width: 0; }
   .part .track { display: none; }
-  /* Colonnes de nombres à largeur fixe : nom et email prennent le reste et se terminent par « … » */
+  /* Colonnes de nombres à largeur fixe : le nom prend le reste et se termine par « … » */
   .data-table { table-layout: fixed; }
   .data-table th.num { width: 3.8rem; }
   .data-table th.col-part { width: 5.8rem; }
   .person { max-width: 100%; }
-  .person > span.identite, .person > .nom { overflow: hidden; }
-  .identite strong, .identite span, .person > .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .person > .nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .part-pct { width: 2.3rem; }
   .data-table th, .data-table td { padding-left: 0.5rem; padding-right: 0.5rem; }
   .data-table th:first-child, .data-table td:first-child { padding-left: 1rem; }
   .data-table th:last-child, .data-table td:last-child { padding-right: 1rem; }
   .item { flex-wrap: wrap; }
   .item .btn-small { margin-left: calc(36px + 1rem); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sort-group button { transition: none; }
 }
 
 /* ============ Impression : une mise en page A4 compacte, pas une copie de l'écran ============
@@ -232,7 +196,7 @@
   .page.is-admin { padding: 0; }
 
   /* Ce qui sert à agir à l'écran, et les initiales, n'apportent rien sur papier */
-  .page-actions, .item .btn-small, .panel-link, .panel-more, .sort-group, .avatar, .act-icone { display: none !important; }
+  .page-actions, .item .btn-small, .panel-link, .panel-more, .avatar, .act-icone { display: none !important; }
 
   .page-header { margin-bottom: 0.6rem; }
   .page-title { font-size: 1.3rem; }
@@ -293,20 +257,13 @@
   .panel-pad { padding: 0.6rem 0.8rem 0; break-after: avoid; }
   .table-scroll { overflow: visible; }
   .data-table { font-size: 0.68rem; table-layout: auto; }
-  .data-table .col-md, .data-table .col-sm, .data-table .col-role { display: table-cell; }
+  .data-table .col-sm { display: table-cell; }
   .data-table th { padding: 0.25rem 0.4rem; font-size: 0.62rem; }
   .data-table td { padding: 0.22rem 0.4rem; }
   .data-table th:first-child, .data-table td:first-child { padding-left: 0.8rem; }
   .data-table th:last-child, .data-table td:last-child { padding-right: 0.8rem; }
   .data-table tr { break-inside: avoid; }
   .person { gap: 0; font-size: 0.68rem; }
-  /* Une ligne par compte : nom et email côte à côte, le rôle reste dans sa colonne */
-  .identite { flex-direction: row; align-items: baseline; gap: 0.45rem; }
-  .identite strong { font-size: 0.68rem; }
-  .identite span { font-size: 0.6rem; }
-  .identite .role-mobile { display: none; }
-  .pill { height: 16px; padding: 0 0.4rem; font-size: 0.58rem; }
-  .pill::before { display: none; }
   .part { min-width: 0; gap: 0.35rem; }
   .part-nb { width: 1rem; }
   .part-pct { width: 2rem; font-size: 0.62rem; }

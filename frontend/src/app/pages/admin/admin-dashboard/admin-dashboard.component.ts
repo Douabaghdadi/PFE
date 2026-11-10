@@ -50,7 +50,6 @@ const NOMENCLATURE_DEFS: { key: string; label: string }[] = [
 interface UserRow {
   id: string;
   username: string;
-  email: string;
   roles: string[];
   rolePrincipal: string;
   roleLabel: string;
@@ -151,14 +150,8 @@ export class AdminDashboardComponent implements OnInit {
   fiches: FicheSuivi[] = [];
   nomenclatures: Nomenclature[] = [];
 
-  // --- Tri du tableau des comptes ---
-  sortKey: 'username' | 'createdAt' | 'projets' | 'fiches' = 'createdAt';
-  sortAsc = false;
-  tableComplete = false;
-
   // --- Données calculées ---
   rowsAll: UserRow[] = [];
-  rows: UserRow[] = [];
   kpis: KpiCard[] = [];
   roleSegments: DonutSegment[] = [];
   moisBars: MoisBar[] = [];
@@ -173,7 +166,7 @@ export class AdminDashboardComponent implements OnInit {
   nomenclaturesActives = 0;
   nomenclaturesInactives = 0;
   activitesCompletes = false;
-  /** Pendant l'impression, la liste des comptes sort en entier et l'activité se limite aux dernières entrées. */
+  /** Pendant l'impression, l'activité se limite aux dernières entrées. */
   impression = false;
   readonly activitesImprimees = NB_ACTIVITES_IMPRIMEES;
 
@@ -201,8 +194,6 @@ export class AdminDashboardComponent implements OnInit {
       this.nomenclatures = nomenclatures || [];
       this.generatedAt = new Date();
       this.construireLignes();
-      this.rows = [...this.rowsAll];
-      this.trierLignes();
       this.calculerIndicateurs();
       this.loading = false;
     }).catch(err => {
@@ -244,7 +235,6 @@ export class AdminDashboardComponent implements OnInit {
       return {
         id: u.id,
         username: u.username || '—',
-        email: u.email || '',
         roles,
         rolePrincipal: principal,
         roleLabel: def.label,
@@ -587,34 +577,6 @@ export class AdminDashboardComponent implements OnInit {
     this.attentions = items.filter(a => a.count > 0);
   }
 
-  // ==================== Tri ====================
-
-  trier(key: 'username' | 'createdAt' | 'projets' | 'fiches') {
-    if (this.sortKey === key) {
-      this.sortAsc = !this.sortAsc;
-    } else {
-      this.sortKey = key;
-      this.sortAsc = key === 'username';
-    }
-    this.trierLignes();
-  }
-
-  private trierLignes() {
-    const sens = this.sortAsc ? 1 : -1;
-    this.rows = [...this.rows].sort((a, b) => {
-      switch (this.sortKey) {
-        case 'username': return a.username.localeCompare(b.username, 'fr') * sens;
-        case 'projets': return (a.projets - b.projets) * sens;
-        case 'fiches': return (a.fiches - b.fiches) * sens;
-        default: return (this.temps(a.createdAt) - this.temps(b.createdAt)) * sens;
-      }
-    });
-  }
-
-  get rowsVisibles(): UserRow[] {
-    return this.tableComplete || this.impression ? this.rows : this.rows.slice(0, 10);
-  }
-
   // ==================== Utilitaires d'affichage ====================
 
   private temps(date?: string): number {
@@ -628,16 +590,6 @@ export class AdminDashboardComponent implements OnInit {
     const parts = (nom || '').split(/[\s._-]+/).filter(Boolean);
     if (!parts.length) return '?';
     return (parts.length === 1 ? parts[0].slice(0, 2) : parts[0][0] + parts[1][0]).toUpperCase();
-  }
-
-  /** Pastille de rôle : mêmes teintes que la page Utilisateurs. */
-  roleClass(key: string): string {
-    switch (key) {
-      case 'ROLE_ADMIN': return 'role-admin';
-      case 'ROLE_PILOTE_QUALITE': return 'role-pilote';
-      case 'ROLE_CHEF_PROJET': return 'role-chef';
-      default: return 'role-sans';
-    }
   }
 
   libelleType(type: ActiviteItem['type']): string {

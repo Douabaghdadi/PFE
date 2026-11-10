@@ -109,8 +109,16 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     this.sendMessage(question);
   }
 
+  /** L'assistant reste affiché d'une page à l'autre : il ne descend en bas qu'à l'ouverture
+   *  ou à l'arrivée d'un message, pour laisser relire le début de la conversation. */
+  private lastScrollState = '';
+
   ngAfterViewChecked() {
-    this.scrollToBottom();
+    const state = this.isOpen ? `${this.messages.length}-${this.isLoading}` : '';
+    if (state !== this.lastScrollState) {
+      this.lastScrollState = state;
+      this.scrollToBottom();
+    }
   }
 
   toggleChat() {

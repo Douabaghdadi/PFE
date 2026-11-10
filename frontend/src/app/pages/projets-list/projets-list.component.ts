@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { ChatbotComponent } from '../../components/chatbot/chatbot.component';
 import { environment } from '../../../environments/environment';
 import { pl, statutDef, statutKey, statutStats } from '../shared/projet-stats';
 import { NomenclatureService, Nomenclature } from '../../services/nomenclature.service';
@@ -27,7 +26,7 @@ interface FicheProjet {
 @Component({
   selector: 'app-projets-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ChatbotComponent],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './projets-list.component.html',
   styleUrls: ['../pilote-qualite/pilote-ui.css', '../shared/projets-ui.css']
 })

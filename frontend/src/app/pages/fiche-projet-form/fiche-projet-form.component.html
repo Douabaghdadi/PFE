@@ -107,7 +107,7 @@
             <div class="field">
               <label class="field-label" for="f-desig-projet">Désignation projet</label>
               <input id="f-desig-projet" type="text" class="control" [(ngModel)]="formData.designationProjet" name="designationProjet"
-                     placeholder="Nom du projet">
+                     placeholder="Intitulé complet, ex. Gestion électronique du courrier">
             </div>
             <div class="field">
               <label class="field-label" for="f-desig-client">Désignation client<span class="req" aria-hidden="true">*</span></label>
@@ -136,7 +136,7 @@
             <div class="field">
               <label class="field-label" for="f-nom">Nom du projet<span class="req" aria-hidden="true">*</span></label>
               <input id="f-nom" type="text" class="control" [(ngModel)]="formData.nomProjet" name="nomProjet" required
-                     placeholder="Entrez le nom du projet"
+                     placeholder="Nom court, ex. GED Courrier"
                      [class.is-invalid]="errors['nomProjet']"
                      [attr.aria-invalid]="errors['nomProjet'] ? 'true' : null"
                      [attr.aria-describedby]="errors['nomProjet'] ? 'e-nom' : null">

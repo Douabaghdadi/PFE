@@ -267,7 +267,7 @@
   .page-container { max-width: none; padding: 0; }
 
   /* Tout ce qui sert à agir à l'écran disparaît du papier */
-  .page-actions, .panel-more, .link-btn, .cell-action, app-chatbot { display: none !important; }
+  .page-actions, .panel-more, .link-btn, .cell-action { display: none !important; }
 
   .page-header { margin-bottom: 0.8rem; }
   .page-title { font-size: 1.3rem; }

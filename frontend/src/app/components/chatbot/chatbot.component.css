@@ -366,6 +366,11 @@
   .chat-window { position: fixed; left: 1rem; right: 1rem; bottom: 4.5rem; width: auto; max-width: none; height: min(440px, calc(100dvh - 9rem)); }
 }
 
+/* L'assistant suit toutes les pages : il ne doit jamais sortir sur papier */
+@media print {
+  :host { display: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chat-window, .chat-row, .chat-suggestions { animation: none; }
   .chat-messages { scroll-behavior: auto; }

@@ -1,14 +1,11 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { PiloteQualiteFicheProjetService, FicheProjet, ProjetSuiviStatus } from '../../../services/pilote-qualite-fiche-projet.service';
 import { PiloteQualiteFicheSuiviService } from '../../../services/pilote-qualite-fiche-suivi.service';
 import { PiloteQualiteNotificationService } from '../../../services/pilote-qualite-notification.service';
 import { FicheSuivi } from '../../../services/fiche-suivi.service';
-import { ChatbotComponent } from '../../../components/chatbot/chatbot.component';
 import { statutValidation } from '../../shared/validation-stats';
 import type { StatutValidation } from '../../../services/validation-fiche.service';
 
@@ -163,7 +160,7 @@ const NB_MOIS_PONCTUALITE = 12;
 @Component({
   selector: 'app-pilote-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, ChatbotComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['../pilote-ui.css', './dashboard.component.css']
 })
@@ -173,7 +170,6 @@ export class PiloteDashboardComponent implements OnInit {
   private notificationService = inject(PiloteQualiteNotificationService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
-  private http = inject(HttpClient);
 
   loading = true;
   error: string | null = null;
@@ -185,10 +181,6 @@ export class PiloteDashboardComponent implements OnInit {
   suiviStatus: ProjetSuiviStatus[] = [];
   /** Nom du compte de chaque chef de projet, par identifiant. */
   nomsChefs = new Map<string, string>();
-
-  // --- Export Excel de l'audit ---
-  exportEnCours = false;
-  exportErreur: string | null = null;
 
   // --- Options d'affichage ---
   /** Les alertes s'ouvrent repliées : les plus en retard d'abord, les autres sur demande. */
@@ -749,10 +741,6 @@ export class PiloteDashboardComponent implements OnInit {
     return CONFORMITE_DEFS.find(d => d.key === c)?.color || '#94a3b8';
   }
 
-  conformiteLabel(c: Conformite): string {
-    return CONFORMITE_DEFS.find(d => d.key === c)?.label || c;
-  }
-
   completudeColor(score: number): string {
     if (score >= 100) return '#09C82C';
     if (score >= 67) return '#f59e0b';
@@ -794,78 +782,7 @@ export class PiloteDashboardComponent implements OnInit {
     }
   }
 
-  // ==================== Export & navigation ====================
-
-  /**
-   * Classeur Excel de l'audit : la page envoie ce qu'elle affiche (indicateurs et lignes par projet),
-   * le serveur met en forme le fichier comme l'export Excel du rapport KPI.
-   */
-  exportExcel() {
-    if (this.exportEnCours || !this.rows.length) return;
-    this.exportEnCours = true;
-    this.exportErreur = null;
-
-    // Les projets en retard d'abord (du plus ancien retard), puis les jamais suivis, puis ceux à jour
-    const ordre: Record<Conformite, number> = { EN_RETARD: 0, JAMAIS_SUIVI: 1, A_JOUR: 2 };
-    const projets = [...this.rows]
-      .sort((a, b) => ordre[a.conformite] - ordre[b.conformite] || b.joursRetard - a.joursRetard || a.nom.localeCompare(b.nom))
-      .map(r => ({
-        nom: r.nom,
-        statut: r.statut,
-        chefProjet: r.chefProjet,
-        conformite: this.conformiteLabel(r.conformite),
-        joursRetard: r.joursRetard,
-        periodiciteMois: r.periodicite ?? null,
-        derniereFiche: this.jourIso(r.derniereFiche),
-        prochaineEcheance: this.jourIso(r.prochaineFiche),
-        fichesDeposees: r.nbFiches,
-        completude: r.completude,
-        rubriquesManquantes: r.manquantes,
-      }));
-
-    const audit = {
-      nbProjets: this.rows.length,
-      nbFichesDeposees: this.fichesSuivi.length,
-      tauxConformite: this.tauxConformite,
-      nbEnRetard: this.nbEnRetard,
-      nbJamaisSuivi: this.nbJamaisSuivi,
-      completudeMoyenne: this.completudeMoyenne,
-      nbRubriques: RUBRIQUES.length,
-      nbEcheances30j: this.nbEcheances30j,
-      projets,
-    };
-
-    this.http.post(`${environment.apiUrl}/api/pilote-qualite/rapports/audit-reporting/excel`, audit,
-      { responseType: 'blob', observe: 'response' }).subscribe({
-      next: (response) => {
-        const disposition = response.headers.get('Content-Disposition');
-        const nom = disposition ? /filename="?([^"]+)"?/.exec(disposition)?.[1] : undefined;
-        if (response.body) {
-          const url = URL.createObjectURL(response.body);
-          const lien = document.createElement('a');
-          lien.href = url;
-          lien.download = nom || `audit-reporting-qualite-${this.jourIso(new Date().toISOString())}.xlsx`;
-          lien.click();
-          URL.revokeObjectURL(url);
-        }
-        this.exportEnCours = false;
-      },
-      error: (err) => {
-        console.error('Erreur lors de l\'export Excel:', err);
-        this.exportErreur = 'L\'export Excel n\'a pas pu être généré.';
-        this.exportEnCours = false;
-      }
-    });
-  }
-
-  /** Date du jour au format AAAA-MM-JJ, lue en heure locale comme à l'écran (undefined si absente). */
-  private jourIso(valeur?: string): string | undefined {
-    if (!valeur) return undefined;
-    const d = new Date(valeur);
-    if (isNaN(d.getTime())) return undefined;
-    const deux = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
-  }
+  // ==================== Impression & navigation ====================
 
   imprimer() {
     this.avantImpression();

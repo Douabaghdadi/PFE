@@ -33,13 +33,9 @@
 .page-meta { margin-top: 0.45rem; font-size: 0.95rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .page-actions { align-items: center; gap: 0.75rem; }
 
-/* Actions secondaires jointes : un seul bloc, une seule bordure */
-.btn-group { display: inline-flex; border: 1px solid #c9d8d0; border-radius: 9px; background: var(--surface); box-shadow: 0 1px 2px rgba(10, 50, 40, 0.05); }
-.btn-group .btn { height: 38px; border: 0; border-radius: 0; background: transparent; color: var(--ink-2); box-shadow: none; }
-.btn-group .btn:first-child { border-radius: 8px 0 0 8px; }
-.btn-group .btn:last-child { border-radius: 0 8px 8px 0; border-left: 1px solid var(--line); }
-.btn-group .btn:hover:not(:disabled) { background: #f1f7f4; color: var(--ink); }
-.btn-group .btn:focus-visible { position: relative; z-index: 1; outline-offset: -2px; }
+/* Action secondaire (Imprimer) : même hauteur que l'action principale, bordure discrète */
+.page-actions > .btn-secondary { height: 40px; border-color: #c9d8d0; border-radius: 9px; box-shadow: 0 1px 2px rgba(10, 50, 40, 0.05); }
+.page-actions > .btn-secondary:hover:not(:disabled) { background: #f1f7f4; color: var(--ink); }
 /* Action principale : le vert de la marque, plus affirmé */
 .page-actions > .btn-primary {
   height: 40px;
@@ -56,7 +52,6 @@
 .count { background: #e6f3ec; color: #0b5d43; }
 
 .skeleton-strip { height: 112px; margin-bottom: 1.25rem; }
-.export-error { margin-bottom: 1.25rem; }
 .skeleton-panel { height: 280px; }
 
 /* ============ Indicateurs ============
@@ -395,7 +390,7 @@
 
 /* ============ Impression ============ */
 @media print {
-  .item .btn, .export-error { display: none !important; }
+  .item .btn { display: none !important; }
 
   /* Sur papier : fond blanc, ni lavis ni ombres, pas d'initiales */
   .page { background: #fff; }
